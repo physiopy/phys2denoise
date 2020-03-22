@@ -1,0 +1,47 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "CesarCaballeroGaudes",
+      "name": "Cesar Caballero Gaudes",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/7611340?v=4",
+      "profile": "https://github.com/CesarCaballeroGaudes",
+      "contributions": [
+        "code",
+        "data",
+        "ideas"
+      ]
+    },
+    {
+      "login": "rmarkello",
+      "name": "Ross Markello",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/14265705?v=4",
+      "profile": "http://rossmarkello.com",
+      "contributions": [
+        "infra"
+      ]
+    },
+    {
+      "login": "smoia",
+      "name": "Stefano Moia",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/35300580?v=4",
+      "profile": "https://github.com/smoia",
+      "contributions": [
+        "data",
+        "infra",
+        "projectManagement",
+        "doc"
+      ]
+    }
+  ],
+  "contributorsPerLine": 5,
+  "projectName": "phys2denoise",
+  "projectOwner": "physiopy",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
