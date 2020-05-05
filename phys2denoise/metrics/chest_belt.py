@@ -107,7 +107,7 @@ def rvt(belt_ts, samplerate, out_samplerate, window=10, lags=(0,)):
     pass
 
 
-def rrf(samplerate, oversampling=50, time_length=32, onset=0.):
+def rrf(samplerate, oversampling=50, time_length=50, onset=0.):
     """
     Calculate the respiratory response function using the definition
     supplied in Chang and Glover (2009).
@@ -117,11 +117,11 @@ def rrf(samplerate, oversampling=50, time_length=32, onset=0.):
     samplerate : :obj:`float`
         Sampling rate of data, in seconds.
     oversampling : :obj:`int`, optional
-        Temporal oversampling factor, in seconds
+        Temporal oversampling factor, in seconds. Default is 50.
     time_length : :obj:`int`, optional
-        RRF kernel length, in seconds
+        RRF kernel length, in seconds. Default is 50.
     onset : :obj:`float`, optional
-        Onset of the response, in seconds
+        Onset of the response, in seconds. Default is 0.
 
     Outputs
     -------
@@ -153,8 +153,3 @@ def rrf(samplerate, oversampling=50, time_length=32, onset=0.):
     rrf_arr = _rrf(time_stamps)
     rrf_arr = rrf_arr / max(abs(rrf_arr))
     return rrf_arr
-
-def rrf(samplerate):
-    """Respiratory response function
-    """
-    pass
