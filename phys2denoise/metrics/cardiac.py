@@ -2,6 +2,9 @@
 """
 import numpy as np
 
+from ..due import due
+from .. import references
+
 
 def iht():
     """Instantaneous heart rate
@@ -9,6 +12,7 @@ def iht():
     pass
 
 
+@due.dcite(references.CHANG_GLOVER_2009)
 def crf(samplerate, oversampling=50, time_length=32, onset=0.):
     """
     Calculate the cardiac response function using the definition

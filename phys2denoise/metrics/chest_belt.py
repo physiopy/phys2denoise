@@ -8,8 +8,11 @@ from scipy.signal import resample, detrend
 from scipy.stats import zscore
 
 from . import utils
+from ..due import due
+from .. import references
 
 
+@due.dcite(references.POWER_2018)
 def rpv(belt_ts, window):
     """Respiratory pattern variability
 
@@ -48,6 +51,7 @@ def rpv(belt_ts, window):
     return rpv_arr
 
 
+@due.dcite(references.POWER_2020)
 def env(belt_ts, samplerate, out_samplerate, window=10, lags=(0,)):
     """Respiratory pattern variability calculated across a sliding window
 
@@ -94,6 +98,7 @@ def env(belt_ts, samplerate, out_samplerate, window=10, lags=(0,)):
     return env_arr
 
 
+@due.dcite(references.CHANG_GLOVER_2009)
 def rv(belt_ts, samplerate, out_samplerate, window=6, lags=(0,)):
     """Respiratory variance
 
@@ -170,6 +175,7 @@ def rvt(belt_ts, samplerate, out_samplerate, window=10, lags=(0,)):
     pass
 
 
+@due.dcite(references.CHANG_GLOVER_2009)
 def rrf(samplerate, oversampling=50, time_length=50, onset=0.):
     """
     Calculate the respiratory response function using the definition
