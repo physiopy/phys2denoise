@@ -7,28 +7,91 @@ from scipy.ndimage.filters import convolve1d
 from scipy.signal import resample, detrend
 from scipy.stats import zscore
 
-from .utils import apply_lags
+from . import utils
 
 
-def rpv(belt_ts):
+def rpv(belt_ts, window):
     """Respiratory pattern variability
+
+    Parameters
+    ----------
+    belt_ts
+    window
+
+    Returns
+    -------
+    rpv_arr
+
+    Notes
+    -----
+    This metric was first introduced in [1]_.
 
     1. Z-score respiratory belt signal
     2. Calculate upper envelope
     3. Calculate standard deviation of envelope
+
+    References
+    ----------
+    .. [1] J. D. Power et al., "Ridding fMRI data of motion-related influences:
+       Removal of signals with distinct spatial and physical bases in multiecho
+       data," Proceedings of the National Academy of Sciences, issue 9, vol.
+       115, pp. 2105-2114, 2018.
     """
-    pass
+    # First, z-score respiratory traces
+    resp_z = zscore(belt_ts)
+
+    # Collect upper envelope
+    rpv_upper_env = utils.rms_envelope_1d(resp_z, window)
+
+    # Calculate standard deviation
+    rpv_arr = np.std(rpv_upper_env)
+    return rpv_arr
 
 
-def env(belt_ts, samplerate, out_samplerate, window=10):
+def env(belt_ts, samplerate, out_samplerate, window=10, lags=(0,)):
     """Respiratory pattern variability calculated across a sliding window
+
+    Parameters
+    ----------
+    belt_ts : (X,) :obj:`numpy.ndarray`
+        A 1D array with the respiratory belt time series.
+    samplerate : :obj:`float`
+        Sampling rate for belt_ts, in Hertz.
+    out_samplerate : :obj:`float`
+        Sampling rate for the output time series in seconds.
+        Corresponds to TR in fMRI data.
+    window : :obj:`int`, optional
+        Size of the sliding window, in the same units as out_samplerate.
+        Default is 6.
+    lags : (Y,) :obj:`tuple` of :obj:`int`, optional
+        List of lags to apply to the rv estimate. In the same units as
+        out_samplerate.
+
+    Returns
+    -------
+    env_arr
+
+    Notes
+    -----
+    This metric was first introduced in [1]_.
 
     Across a sliding window, do the following:
     1. Z-score respiratory belt signal
     2. Calculate upper envelope
     3. Calculate standard deviation of envelope
+
+    References
+    ----------
+    .. [1] J. D. Power et al., "Characteristics of respiratory measures in
+       young adults scanned at rest, including systematic changes and 'missed'
+       deep breaths," Neuroimage, vol. 204, 2020.
     """
-    pass
+    window = window * samplerate / out_samplerate
+    # Calculate RPV across a rolling window
+    env_arr = pd.Series(belt_ts).rolling(window=window, center=True).apply(
+        rpv, window=window)
+    env_arr[np.isnan(env_arr)] = 0.
+    return env_arr
 
 
 def rv(belt_ts, samplerate, out_samplerate, window=6, lags=(0,)):
@@ -72,7 +135,7 @@ def rv(belt_ts, samplerate, out_samplerate, window=6, lags=(0,)):
     ----------
     .. [1] C. Chang & G. H. Glover, "Relationship between respiration,
        end-tidal CO2, and BOLD signals in resting-state fMRI," Neuroimage,
-       issue 47, vol. 4, pp. 1381-1393, 2009.
+       issue 4, vol. 47, pp. 1381-1393, 2009.
     """
     # Raw respiratory variance
     rv_arr = pd.Series(belt_ts).rolling(window=window, center=True).std()
@@ -82,13 +145,13 @@ def rv(belt_ts, samplerate, out_samplerate, window=6, lags=(0,)):
     n_out_samples = int((belt_ts.shape[0] / samplerate) / out_samplerate)
     # convert lags from out_samplerate to samplerate
     delays = [abs(int(lag * samplerate)) for lag in lags]
-    rv_with_lags = apply_lags(rv_arr, lags=delays)
+    rv_with_lags = utils.apply_lags(rv_arr, lags=delays)
 
     # Downsample to out_samplerate
     rv_with_lags = resample(rv_with_lags, num=n_out_samples, axis=0)
 
     # Convolve with rrf
-    rrf_arr = rrf(out_samplerate)
+    rrf_arr = rrf(out_samplerate, oversampling=1)
     rv_convolved = convolve1d(rv_with_lags, rrf_arr, axis=0)
 
     # Concatenate the raw and convolved versions
