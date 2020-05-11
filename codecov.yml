@@ -27,7 +27,6 @@ ignore:
   - "**/__init__.py"
   - "**/**/__init__.py"
   - "phys2denoise/tests"
-  - "phys2denoise/heuristics"
 
 comment:
   layout: "reach,diff,flags,tree"

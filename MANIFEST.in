@@ -1,6 +1,5 @@
 include README.* LICENSE setup* MANIFEST.in requirements.txt
 recursive-include phys2denoise/data *
-recursive-include phys2denoise/heuristics *
 recursive-include phys2denoise/tests/data *
 
 include versioneer.py

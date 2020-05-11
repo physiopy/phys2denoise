@@ -33,12 +33,11 @@
       "contributions": [
         "data",
         "infra",
-        "projectManagement",
-        "doc"
+        "projectManagement"
       ]
     }
   ],
-  "contributorsPerLine": 5,
+  "contributorsPerLine": 8,
   "projectName": "phys2denoise",
   "projectOwner": "physiopy",
   "repoType": "github",
