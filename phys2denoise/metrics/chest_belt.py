@@ -2,7 +2,6 @@
 """
 import numpy as np
 import pandas as pd
-import peakdet
 from scipy.ndimage.filters import convolve1d
 from scipy.signal import resample, detrend
 from scipy.stats import zscore
@@ -176,7 +175,7 @@ def rvt(belt_ts, samplerate, out_samplerate, window=10, lags=(0,)):
 
 
 @due.dcite(references.CHANG_GLOVER_2009)
-def rrf(samplerate, oversampling=50, time_length=50, onset=0.):
+def rrf(samplerate, oversampling=50, time_length=50, onset=0., tr=2.):
     """
     Calculate the respiratory response function using the definition
     supplied in Chang and Glover (2009).
@@ -212,8 +211,7 @@ def rrf(samplerate, oversampling=50, time_length=50, onset=0.):
        issue 47, vol. 4, pp. 1381-1393, 2009.
     """
     def _rrf(t):
-        rf = (0.6 * t ** 2.1 * np.exp(-t / 1.6) -
-              0.0023 * t ** 3.54 * np.exp(-t / 4.25))
+        rf = (0.6 * t ** 2.1 * np.exp(-t / 1.6) - 0.0023 * t ** 3.54 * np.exp(-t / 4.25))
         return rf
     dt = tr / oversampling
     time_stamps = np.linspace(0, time_length,

@@ -81,12 +81,12 @@ def apply_lags(arr1d, lags):
     arr_with_lags : (X, Y) :obj:`numpy.ndarray`
         arr1d shifted according to lags. Each column corresponds to a lag.
     """
-    arr_with_lags = np.zeros((rv_arr.shape[0], len(lags)))
+    arr_with_lags = np.zeros((arr1d.shape[0], len(lags)))
     for i_lag, lag in enumerate(lags):
         if lag < 0:
-            arr_delayed = np.hstack((arr1d[delay:], np.zeros(delay)))
+            arr_delayed = np.hstack((arr1d[lag:], np.zeros(lag)))
         elif lag > 0:
-            arr_delayed = np.hstack((np.zeros(delay), arr1d[delay:]))
+            arr_delayed = np.hstack((np.zeros(lag), arr1d[lag:]))
         else:
             arr_delayed = arr1d.copy()
         arr_with_lags[:, i_lag] = arr_delayed

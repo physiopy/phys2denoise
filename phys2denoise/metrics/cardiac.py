@@ -13,7 +13,7 @@ def iht():
 
 
 @due.dcite(references.CHANG_GLOVER_2009)
-def crf(samplerate, oversampling=50, time_length=32, onset=0.):
+def crf(samplerate, oversampling=50, time_length=32, onset=0., tr=2.):
     """
     Calculate the cardiac response function using the definition
     supplied in Chang and Glover (2009).
@@ -49,8 +49,8 @@ def crf(samplerate, oversampling=50, time_length=32, onset=0.):
        issue 47, vol. 4, pp. 1381-1393, 2009.
     """
     def _crf(t):
-        rf = (0.6 * t ** 2.7 * np.exp(-t / 1.6) -
-              16 * (1 / np.sqrt(2 * np.pi * 9)) * np.exp(-0.5 * (((t - 12) ** 2)/9)))
+        rf = (0.6 * t ** 2.7 * np.exp(-t / 1.6) - 16 * (1 / np.sqrt(2 * np.pi * 9))
+              * np.exp(-0.5 * (((t - 12) ** 2) / 9)))
         return rf
 
     dt = tr / oversampling
