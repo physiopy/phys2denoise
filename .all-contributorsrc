@@ -12,7 +12,6 @@
       "profile": "https://github.com/CesarCaballeroGaudes",
       "contributions": [
         "code",
-        "data",
         "ideas"
       ]
     },
@@ -34,14 +33,27 @@
         "data",
         "infra",
         "projectManagement",
-        "doc"
+        "code",
+        "ideas"
+      ]
+    },
+    {
+      "login": "tsalo",
+      "name": "Taylor Salo",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/8228902?v=4",
+      "profile": "https://github.com/tsalo",
+      "contributions": [
+        "code",
+        "ideas",
+        "review"
       ]
     }
   ],
-  "contributorsPerLine": 5,
+  "contributorsPerLine": 8,
   "projectName": "phys2denoise",
   "projectOwner": "physiopy",
   "repoType": "github",
   "repoHost": "https://github.com",
-  "skipCi": true
+  "skipCi": true,
+  "commitConvention": "none"
 }
