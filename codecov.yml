@@ -27,6 +27,9 @@ ignore:
   - "**/__init__.py"
   - "**/**/__init__.py"
   - "phys2denoise/tests"
+  - "phys2denoise/due.py"
+  - ".*rc"
+  - ".github"
 
 comment:
   layout: "reach,diff,flags,tree"
