@@ -208,24 +208,9 @@ workflows:
   build_test:
     jobs:
       - makeenv_37
-      # - unittest_36
-      # - unittest_37:
-      #     requires:
-      #       - makeenv_37
-      # - integrationtest_36
-      # - integrationtest_37:
-      #     requires:
-      #       - makeenv_37
       - style_check:
           requires:
             - makeenv_37
-      # - build_docs:
-      #     requires:
-      #       - makeenv_37
       - merge_coverage:
           requires:
-            # - unittest_36
-            # - unittest_37
-            # - integrationtest_36
-            # - integrationtest_37
             - style_check
