@@ -41,7 +41,7 @@ def _get_parser():
                         dest='metric_list',
                         action='append_const',
                         const='rpv',
-                        help='REspiratory pattern variability. Needs the following '
+                        help='<span class="x x-first x-last">Respiratory</span> pattern variability. Needs the following '
                              'inputs: bts and win.',
                         default=False)
     metric.add_argument('-env', '--env',
