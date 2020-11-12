@@ -23,174 +23,159 @@ def _get_parser():
     parser = argparse.ArgumentParser()
     optional = parser._action_groups.pop()
     metric = parser._action_groups.pop()
-    required = parser.add_argument_group('Required Argument:')
-    required.add_argument('-in', '--input-file',
-                          dest='filename',
+    required = parser.add_argument_group("Required Argument:")
+    required.add_argument("-in", "--input-file",
+                          dest="filename",
                           type=str,
-                          help='Path/name of the file containing physiological '
-                               'data, with or without extension.',
+                          help="Full path and name of the file containing "
+                               "physiological data, with or without extension.",
                           required=True)
-    metric.add_argument('-crf', '--crf',
-                        dest='metric_list',
-                        action='append_const',
-                        const='crf',
-                        help='Cardiac response function. Needs the following '
-                             'inputs:sr, os, tl, onset and tr.',
+    metric.add_argument("-crf", "--cardiac-response-function",
+                        dest="metrics",
+                        action="append_const",
+                        const="crf",
+                        help="Cardiac response function. Needs the following "
+                             "inputs:sample-rate, oversampling, time-length, "
+                             "onset and tr.",
                         default=False)
-    metric.add_argument('-rpv', '--rpv',
-                        dest='metric_list',
-                        action='append_const',
-                        const='rpv',
-                        help='REspiratory pattern variability. Needs the following '
-                             'inputs: bts and win.',
+    metric.add_argument("-rpv", "--respiratory-pattern-variability",
+                        dest="metrics",
+                        action="append_const",
+                        const="rpv",
+                        help="Respiratory pattern variability. Needs the following "
+                             "input: window.",
                         default=False)
-    metric.add_argument('-env', '--env',
-                        dest='metric_list',
-                        action='append_const',
-                        const='env',
-                        help='Respiratory pattern variability calculated across a sliding '
-                             'window. Needs the following inputs: bts, sr, osr, win and lags.',
+    metric.add_argument("-env", "--envelope",
+                        dest="metrics",
+                        action="append_const",
+                        const="env",
+                        help="Respiratory pattern variability calculated across a sliding "
+                             "window. Needs the following inputs: sample-rate, window and lags.",
                         default=False)
-    metric.add_argument('-rv', '--rv',
-                        dest='metric_list',
-                        action='append_const',
-                        const='rv',
-                        help='Respiratory variance. Needs the following inputs: '
-                             'bts, sr, osr, win and lags.',
+    metric.add_argument("-rv", "--respiratory-variance",
+                        dest="metrics",
+                        action="append_const",
+                        const="rv",
+                        help="Respiratory variance. Needs the following inputs: "
+                             "sample-rate, window and lags.",
                         default=False)
-    metric.add_argument('-rvt', '--rvt',
-                        dest='metric_list',
-                        action='append_const',
-                        const='rvt',
-                        help='Respiratory volume-per-time. Needs the following inputs: '
-                             'bts, sr, osr, win and lags.',
+    metric.add_argument("-rvt", "--respiratory-volume-per-time",
+                        dest="metrics",
+                        action="append_const",
+                        const="rvt",
+                        help="Respiratory volume-per-time. Needs the following inputs: "
+                             "sample-rate, window and lags.",
                         default=False)
-    metric.add_argument('-rrf', '--rrf',
-                        dest='metric_list',
-                        action='append_const',
-                        const='rrf',
-                        help='Respiratory response function. Needs the following inputs: '
-                             'sr, os, tl, onset and tr.',
+    metric.add_argument("-rrf", "--respiratory-response-function",
+                        dest="metrics",
+                        action="append_const",
+                        const="rrf",
+                        help="Respiratory response function. Needs the following inputs: "
+                             "sample-rate, oversampling, time-length, onset and tr.",
                         default=False)
-    metric.add_argument('-rcard', '--retroicor-card',
-                        dest='metric_list',
-                        action='append_const',
-                        const='r_card',
-                        help='Computes regressors for cardiac signal. Needs the following '
-                             'inputs: tr, nscans, slt and n_harm.',
+    metric.add_argument("-rcard", "--retroicor-card",
+                        dest="metrics",
+                        action="append_const",
+                        const="r_card",
+                        help="Computes regressors for cardiac signal. Needs the following "
+                             "inputs: tr, nscans and n_harm.",
                         default=False)
-    metric.add_argument('-rresp', '--retroicor-resp',
-                        dest='metric_list',
-                        action='append_const',
-                        const='r_resp',
-                        help='Computes regressors for respiratory signal. Needs the following  '
-                             'inputs: tr, nscans, slt and n_harm.',
+    metric.add_argument("-rresp", "--retroicor-resp",
+                        dest="metrics",
+                        action="append_const",
+                        const="r_resp",
+                        help="Computes regressors for respiratory signal. Needs the following  "
+                             "inputs: tr, nscans and n_harm.",
                         default=False)
-    optional.add_argument('-outdir', '--output-dir',
-                          dest='outdir',
+    optional.add_argument("-outdir", "--output-dir",
+                          dest="outdir",
                           type=str,
-                          help='Folder where output should be placed. '
-                               'Default is current folder.',
-                          default='.')
-    optional.add_argument('-sr', '--sample-rate',
-                          dest='sample_rate',
+                          help="Folder where output should be placed. "
+                               "Default is current folder.",
+                          default=".")
+    optional.add_argument("-sr", "--sample-rate",
+                          dest="sample_rate",
                           type=float,
-                          help='Sampling rate of the physiological data in Hz.',
+                          help="Sampling rate of the physiological data in Hz.",
                           default=None)
-    optional.add_argument('-pk', '--peaks',
-                          dest='peaks',
+    optional.add_argument("-pk", "--peaks",
+                          dest="peaks",
                           type=str,
-                          help='Filename of the list with the indexed peaks\' positions'
-                               ' of the physiological data.',
+                          help="Full path and filename of the list with the indexed peaks' "
+                               "positions of the physiological data.",
                           default=None)
-    optional.add_argument('-thr', '--throughts',
-                          dest='throughts',
+    optional.add_argument("-tg", "--throughts",
+                          dest="throughts",
                           type=str,
-                          help='Filename of the list with the indexed peaks\' positions'
-                               ' of the physiological data.',
+                          help="Full path and filename of the list with the indexed peaks' "
+                               "positions of the physiological data.",
                           default=None)
-    optional.add_argument('-os', '--oversampling',
-                          dest='oversampling',
+    optional.add_argument("-os", "--oversampling",
+                          dest="oversampling",
                           type=int,
-                          help='Temporal oversampling factor in seconds. '
-                               'Default is 50.',
+                          help="Temporal oversampling factor in seconds. "
+                               "Default is 50.",
                           default=50)
-    optional.add_argument('-tl', '--time-length',
-                          dest='time_length',
+    optional.add_argument("-tl", "--time-length",
+                          dest="time_length",
                           type=int,
-                          help='RRF Kernel length in seconds.',
+                          help="RRF Kernel length in seconds.",
                           default=None)
-    optional.add_argument('-onset', '--onset',
-                          dest='onset',
+    optional.add_argument("-onset", "--onset",
+                          dest="onset",
                           type=float,
-                          help='Onset of the response in seconds. '
-                               'Default is 0.',
+                          help="Onset of the response in seconds. "
+                               "Default is 0.",
                           default=0)
-    optional.add_argument('-tr', '--tr',
-                          dest='tr',
+    optional.add_argument("-tr", "--tr",
+                          dest="tr",
                           type=float,
-                          help='TR of sequence in seconds.',
+                          help="TR of sequence in seconds.",
                           default=None)
-    optional.add_argument('-bts', '--belt-ts',
-                          dest='belt_ts',
-                          type=str,
-                          help='Filename of the 1D array containing the .'
-                               'respiratory belt time series.',
-                          default=None)
-    optional.add_argument('-win', '--window',
-                          dest='window',
+    optional.add_argument("-win", "--window",
+                          dest="window",
                           type=int,
-                          help='Size of the sliding window in seconds. '
-                               'Default is 6 seconds.',
+                          help="Size of the sliding window in seconds. "
+                               "Default is 6 seconds.",
                           default=6)
-    optional.add_argument('-osr', '--out-samplerate',
-                          dest='out_samplerate',
-                          type=float,
-                          help='Sampling rate for the output time series '
-                               'in seconds. Corresponds to TR in fMRI data.',
-                          default=None)
-    optional.add_argument('-lags', '--lags',
-                          dest='lags',
-                          nargs='*',
+    optional.add_argument("-lags", "--lags",
+                          dest="lags",
+                          nargs="*",
                           type=int,
-                          action='append',
-                          help='List of lags to apply to the rv estimate '
-                               'in seconds.',
+                          action="append",
+                          help="List of lags to apply to the RV estimate "
+                               "in seconds.",
                           default=None)
-    optional.add_argument('-nscans', '--nscans',
-                          dest='nscans',
+    optional.add_argument("-nscans", "--number-scans",
+                          dest="nscans",
                           type=int,
-                          help='Number of scans. Default is 1.',
+                          help="Number of scans. Default is 1.",
                           default=1)
-    optional.add_argument('-slt', '--slice-timings',
-                          dest='slice_timings',
-                          type=str,
-                          help='Filename with the slice timings.',
-                          default=None)
-    optional.add_argument('-nharm', '--number-harmonics',
-                          dest='n_harm',
+    optional.add_argument("-nharm", "--number-harmonics",
+                          dest="n_harm",
                           type=int,
-                          help='Number of harmonics. ',
+                          help="Number of harmonics.",
                           default=None)
-    optional.add_argument('-debug', '--debug',
-                          dest='debug',
-                          action='store_true',
-                          help='Only print debugging info to log file. Default is False.',
+    optional.add_argument("-debug", "--debug",
+                          dest="debug",
+                          action="store_true",
+                          help="Only print debugging info to log file. Default is False.",
                           default=False)
-    optional.add_argument('-quiet', '--quiet',
-                          dest='quiet',
-                          action='store_true',
-                          help='Only print warnings to log file. Default is False.',
+    optional.add_argument("-quiet", "--quiet",
+                          dest="quiet",
+                          action="store_true",
+                          help="Only print warnings to log file. Default is False.",
                           default=False)
-    optional.add_argument('-v', '--version', action='version',
-                          version=('%(prog)s ' + __version__))
+    optional.add_argument("-v", "--version", action="version",
+                          version=("%(prog)s " + __version__))
 
     parser._action_groups.append(optional)
+    parser._action_groups.append(metric)
 
     return parser
 
 
-if __name__ == '__main__':
-    raise RuntimeError('phys2denoise/cli/run.py should not be run directly;\n'
-                       'Please `pip install` phys2denoise and use the '
-                       '`phys2denoise` command')
+if __name__ == "__main__":
+    raise RuntimeError("phys2denoise/cli/run.py should not be run directly;\n"
+                       "Please `pip install` phys2denoise and use the "
+                       "`phys2denoise` command")
