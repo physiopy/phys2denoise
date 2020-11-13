@@ -19,42 +19,16 @@ from shutil import copy as cp
 
 import numpy as np
 
-from phys2denoise import utils, viz, _version
+from phys2denoise import utils, _version
 from phys2denoise.cli.run import _get_parser
-# from phys2denoise.metrics import cardiac, chest_belt, retroicor
+from phys2denoise.metrics.cardiac import crf
+from phys2denoise.metrics.chest_belt import rpv, rv, rvt, rrf
+from phys2denoise.metrics.retroicor import compute_retroicor_regressors
 
 from . import __version__
 from .due import due, Doi
 
 LGR = logging.getLogger(__name__)
-
-
-def print_json(outfile, samp_freq, time_offset, ch_name):
-    """
-    Print the json required by BIDS format.
-
-    Parameters
-    ----------
-    outfile: str or path
-        Fullpath to output file.
-    samp_freq: float
-        Frequency of sampling for the output file.
-    time_offset: float
-        Difference between beginning of file and first TR.
-    ch_name: list of str
-        List of channel names, as specified by BIDS format.
-
-    Notes
-    -----
-    Outcome:
-    outfile: .json file
-        File containing information for BIDS.
-    """
-    start_time = -time_offset
-    summary = dict(SamplingFrequency=samp_freq,
-                   StartTime=round(start_time, 4),
-                   Columns=ch_name)
-    utils.writejson(outfile, summary, indent=4, sort_keys=False)
 
 
 @due.dcite(
@@ -63,7 +37,7 @@ def print_json(outfile, samp_freq, time_offset, ch_name):
      description='Creation of regressors for physiological denoising',
      version=__version__,
      cite_module=True)
-def phys2denoise(filename, outdir='.', debug=False, quiet=False):
+def phys2denoise(filename, outdir='.', metrics=[], debug=False, quiet=False):
     """
     Run main workflow of phys2denoise.
 
@@ -129,7 +103,11 @@ def phys2denoise(filename, outdir='.', debug=False, quiet=False):
     # Read input file
     phys_in = np.genfromtxt(filename)
 
+    # Goes through the list of metrics and calls them
+    if not metrics:
+        metrics = ['crf', 'rpv', 'rv', 'rvt', 'rrf', 'rcard', 'r']
 
+    for 
 
 
 
