@@ -59,13 +59,15 @@ def _get_parser():
                         help="Respiratory variance. Needs the following inputs: "
                              "sample-rate, window and lags.",
                         default=False)
+    """
     metric.add_argument("-rvt", "--respiratory-volume-per-time",
                         dest="metrics",
                         action="append_const",
                         const="rvt",
                         help="Respiratory volume-per-time. Needs the following inputs: "
-                             "sample-rate, window and lags.",
+                             "sample-rate, window, lags, peaks and troughs.",
                         default=False)
+     """
     metric.add_argument("-rrf", "--respiratory-response-function",
                         dest="metrics",
                         action="append_const",
@@ -104,10 +106,10 @@ def _get_parser():
                           help="Full path and filename of the list with the indexed peaks' "
                                "positions of the physiological data.",
                           default=None)
-    optional.add_argument("-tg", "--throughts",
-                          dest="throughts",
+    optional.add_argument("-tg", "--troughs",
+                          dest="troughs",
                           type=str,
-                          help="Full path and filename of the list with the indexed peaks' "
+                          help="Full path and filename of the list with the indexed troughs' "
                                "positions of the physiological data.",
                           default=None)
     optional.add_argument("-os", "--oversampling",
