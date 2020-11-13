@@ -113,13 +113,13 @@ def _get_parser():
     optional.add_argument("-os", "--oversampling",
                           dest="oversampling",
                           type=int,
-                          help="Temporal oversampling factor in seconds. "
+                          help="Temporal oversampling factor. "
                                "Default is 50.",
                           default=50)
     optional.add_argument("-tl", "--time-length",
                           dest="time_length",
                           type=int,
-                          help="RRF Kernel length in seconds.",
+                          help="RRF or CRF Kernel length in seconds.",
                           default=None)
     optional.add_argument("-onset", "--onset",
                           dest="onset",
