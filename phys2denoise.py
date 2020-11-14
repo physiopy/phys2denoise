@@ -18,6 +18,7 @@ from copy import deepcopy
 from shutil import copy as cp
 
 import numpy as np
+import pandas as pd
 
 from phys2denoise import utils, _version
 from phys2denoise.cli.run import _get_parser
@@ -101,18 +102,34 @@ def phys2denoise(filename, outdir='.', metrics=[], debug=False, quiet=False):
         raise FileNotFoundError(f'The file {filename} does not exist!')
 
     # Read input file
-    phys_in = np.genfromtxt(filename)
+    physio = np.genfromtxt(filename)
+
+    # Prepare pandas dataset
+    regr = pd.DataFrame()
+
+    # If no metrics was specified, calls all of them.
+    if not metrics:
+        metrics = ['crf', 'rpv', 'rv', 'rvt', 'rrf', 'retroicor_card', 'retroicor_resp']
 
     # Goes through the list of metrics and calls them
-    if not metrics:
-        metrics = ['crf', 'rpv', 'rv', 'rvt', 'rrf', 'rcard', 'r']
+    for metric in metrics:
+        if metrics == 'retroicor_card':
+            regr['retroicor_card'] = compute_retroicor_regressors(physio,
+                                                                  vars(metric_args),
+                                                                  card=True)
+        elif metrics == 'retroicor_resp':
+            regr['retroicor_resp'] = compute_retroicor_regressors(physio,
+                                                                  vars(metric_args),
+                                                                  resp=True)
+        else:
+            regr[f'{metric}'] = metric(physio, vars(metric_args))
 
-    for 
+    #!# Add regressors visualisation
 
-
-
-
-
+    # Export regressors and sidecar
+    out_filename = os.join(outdir, 'derivatives', filename)
+    regr.to_csv(out_filename, sep='\t', index=False, float_format='%.6e')
+    #!# Add sidecar export
 
 
 def _main(argv=None):
