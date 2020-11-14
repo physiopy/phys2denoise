@@ -14,13 +14,11 @@ import datetime
 import logging
 import os
 import sys
-from copy import deepcopy
-from shutil import copy as cp
 
 import numpy as np
 import pandas as pd
 
-from phys2denoise import utils, _version
+from phys2denoise import _version
 from phys2denoise.cli.run import _get_parser
 from phys2denoise.metrics.cardiac import crf
 from phys2denoise.metrics.chest_belt import rpv, rv, rvt, rrf
@@ -38,7 +36,9 @@ LGR = logging.getLogger(__name__)
      description='Creation of regressors for physiological denoising',
      version=__version__,
      cite_module=True)
-def phys2denoise(filename, outdir='.', metrics=[], debug=False, quiet=False):
+def phys2denoise(filename, outdir='.',
+                 metrics=[crf, rpv, rv, rvt, rrf, 'retroicor_card', 'retroicor_resp'],
+                 debug=False, quiet=False):
     """
     Run main workflow of phys2denoise.
 
@@ -106,10 +106,6 @@ def phys2denoise(filename, outdir='.', metrics=[], debug=False, quiet=False):
 
     # Prepare pandas dataset
     regr = pd.DataFrame()
-
-    # If no metrics was specified, calls all of them.
-    if not metrics:
-        metrics = ['crf', 'rpv', 'rv', 'rvt', 'rrf', 'retroicor_card', 'retroicor_resp']
 
     # Goes through the list of metrics and calls them
     for metric in metrics:
