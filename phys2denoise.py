@@ -71,7 +71,7 @@ def select_input_args(metric, metric_args):
      description='Creation of regressors for physiological denoising',
      version=__version__,
      cite_module=True)
-def phys2denoise(filename, outdir='.',
+def phys2denoise(filename, metric_args, outdir='.',
                  metrics=[crf, rpv, rv, rvt, rrf, 'retroicor_card', 'retroicor_resp'],
                  debug=False, quiet=False):
     """
@@ -89,14 +89,14 @@ def phys2denoise(filename, outdir='.',
     outdir = os.path.abspath(outdir)
     os.makedirs(outdir)
     os.makedirs(os.path.join(outdir, 'code'))
-    conversion_path = os.path.join(outdir, 'code', 'conversion')
-    os.makedirs(conversion_path)
+    log_path = os.path.join(outdir, 'code', 'logs')
+    os.makedirs(log_path)
 
     # Create logfile name
     basename = 'phys2denoise_'
     extension = 'tsv'
     isotime = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')
-    logname = os.path.join(conversion_path, (basename + isotime + '.' + extension))
+    logname = os.path.join(log_path, (basename + isotime + '.' + extension))
 
     # Set logging format
     log_formatter = logging.Formatter(
@@ -110,13 +110,16 @@ def phys2denoise(filename, outdir='.',
 
     if quiet:
         logging.basicConfig(level=logging.WARNING,
-                            handlers=[log_handler, sh], format='%(levelname)-10s %(message)s')
+                            handlers=[log_handler, sh],
+                            format='%(levelname)-10s %(message)s')
     elif debug:
         logging.basicConfig(level=logging.DEBUG,
-                            handlers=[log_handler, sh], format='%(levelname)-10s %(message)s')
+                            handlers=[log_handler, sh],
+                            format='%(levelname)-10s %(message)s')
     else:
         logging.basicConfig(level=logging.INFO,
-                            handlers=[log_handler, sh], format='%(levelname)-10s %(message)s')
+                            handlers=[log_handler, sh],
+                            format='%(levelname)-10s %(message)s')
 
     version_number = _version.get_versions()['version']
     LGR.info(f'Currently running phys2denoise version {version_number}')
@@ -125,7 +128,7 @@ def phys2denoise(filename, outdir='.',
     # Save call.sh
     arg_str = ' '.join(sys.argv[1:])
     call_str = f'phys2denoise {arg_str}'
-    f = open(os.path.join(conversion_path, 'call.sh'), "a")
+    f = open(os.path.join(log_path, 'call.sh'), "a")
     f.write(f'#!bin/bash \n{call_str}')
     f.close()
 
