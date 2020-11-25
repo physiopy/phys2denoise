@@ -14,6 +14,7 @@ import datetime
 import logging
 import os
 import sys
+from inspect import signature
 
 import numpy as np
 import pandas as pd
@@ -28,6 +29,40 @@ from . import __version__
 from .due import due, Doi
 
 LGR = logging.getLogger(__name__)
+
+
+def select_input_args(metric, metric_args):
+    """
+    Retrieve required args for metric from a dictionary of possible arguments.
+
+    Parameters
+    ----------
+    metric : function
+        Metric function to retrieve arguments for
+    metric_args : dict
+        Dictionary containing all arguments for all functions requested by the
+        user
+
+    Returns
+    -------
+    args : dict
+        Arguments to provide as input to metric
+
+    Raises
+    ------
+    ValueError
+        If a required argument is missing
+
+    """
+    req_args = [str(arg) for arg in signature(metric).parameters.values()]
+
+    for arg in req_args:
+        if arg not in metric_args:
+            raise ValueError(f'Missing parameter {arg} required to run {metric}')
+
+    args = {arg: metric_args[arg] for arg in req_args}
+
+    return args
 
 
 @due.dcite(
@@ -110,15 +145,18 @@ def phys2denoise(filename, outdir='.',
     # Goes through the list of metrics and calls them
     for metric in metrics:
         if metrics == 'retroicor_card':
+            args = select_input_args(compute_retroicor_regressors, metric_args)
             regr['retroicor_card'] = compute_retroicor_regressors(physio,
-                                                                  vars(metric_args),
+                                                                  **args,
                                                                   card=True)
         elif metrics == 'retroicor_resp':
+            args = select_input_args(compute_retroicor_regressors, metric_args)
             regr['retroicor_resp'] = compute_retroicor_regressors(physio,
-                                                                  vars(metric_args),
+                                                                  **args,
                                                                   resp=True)
         else:
-            regr[f'{metric}'] = metric(physio, vars(metric_args))
+            args = select_input_args(metric, metric_args)
+            regr[f'{metric}'] = metric(physio, **args)
 
     #!# Add regressors visualisation
 
