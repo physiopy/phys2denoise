@@ -14,7 +14,7 @@ import datetime
 import logging
 import os
 import sys
-from inspect import signature
+from inspect import signature, _empty
 
 import numpy as np
 import pandas as pd
@@ -35,6 +35,12 @@ def select_input_args(metric, metric_args):
     """
     Retrieve required args for metric from a dictionary of possible arguments.
 
+    This function checks what parameters are accepted by a metric.
+    Then, for each parameter, check if the user provided it or not.
+    If they did not, but the parameter is required, throw an error -
+    unless it's "physio", reserved name for the timeseries input to a metric.
+    Otherwise, use the default.
+
     Parameters
     ----------
     metric : function
@@ -54,15 +60,46 @@ def select_input_args(metric, metric_args):
         If a required argument is missing
 
     """
-    req_args = [str(arg) for arg in signature(metric).parameters.values()]
+    args = {}
 
-    for arg in req_args:
-        if arg not in metric_args:
-            raise ValueError(f'Missing parameter {arg} required to run {metric}')
-
-    args = {arg: metric_args[arg] for arg in req_args}
+    # Check the parameters required by the metric and given by the user (see docstring)
+    for param in signature(metric).parameters.values():
+        if param.name not in metric_args:
+            if param.default == _empty and param.name != 'physio':
+                raise ValueError(f'Missing parameter {param} required '
+                                 f'to run {metric}')
+            else:
+                args[param.name] = param.default
+        else:
+            args[param.name] = metric_args[param.name]
 
     return args
+
+
+def print_metric_call(metric, args):
+    """
+    Log a message to describe how a metric is being called.
+
+    Parameters
+    ----------
+    metric : function
+        Metric function that is being called
+    args : dict
+        Dictionary containing all arguments that are used to parametrise metric
+
+    Notes
+    -----
+    Outcome
+        An info-level message for the logger.
+    """
+    msg = f'The {metric} regressor will be computed using the following parameters:'
+
+    for arg in args:
+        msg = f'{msg}\n    {arg} = {args[arg]}'
+
+    msg = f'{msg}\n'
+
+    LGR.info(msg)
 
 
 @due.dcite(
@@ -149,16 +186,19 @@ def phys2denoise(filename, metric_args, outdir='.',
     for metric in metrics:
         if metrics == 'retroicor_card':
             args = select_input_args(compute_retroicor_regressors, metric_args)
+            args['card'] = True
+            print_metric_call(metric, args)
             regr['retroicor_card'] = compute_retroicor_regressors(physio,
-                                                                  **args,
-                                                                  card=True)
+                                                                  **args)
         elif metrics == 'retroicor_resp':
             args = select_input_args(compute_retroicor_regressors, metric_args)
+            args['resp'] = True
+            print_metric_call(metric, args)
             regr['retroicor_resp'] = compute_retroicor_regressors(physio,
-                                                                  **args,
-                                                                  resp=True)
+                                                                  **args)
         else:
             args = select_input_args(metric, metric_args)
+            print_metric_call(metric, args)
             regr[f'{metric}'] = metric(physio, **args)
 
     #!# Add regressors visualisation
