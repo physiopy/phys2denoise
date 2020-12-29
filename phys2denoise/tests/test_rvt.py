@@ -1,6 +1,6 @@
 import peakdet
 import numpy as np
-from phys2denoise.metrics.rvt import rvt
+from phys2denoise.metrics.chest_belt import rvt
 
 
 def read_fake_phys():
