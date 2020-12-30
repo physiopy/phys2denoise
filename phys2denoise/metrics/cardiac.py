@@ -27,7 +27,7 @@ def crf(samplerate, oversampling=50, time_length=32, onset=0.0, tr=2.0):
 
     Returns
     -------
-    crf: array-like
+    crf : array-like
         Cardiac or "heart" response function
 
     Notes

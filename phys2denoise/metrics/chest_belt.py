@@ -185,7 +185,7 @@ def rrf(samplerate, oversampling=50, time_length=50, onset=0.0, tr=2.0):
 
     Returns
     -------
-    rrf: array-like
+    rrf : array-like
         respiratory response function
 
     Notes
