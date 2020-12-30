@@ -172,18 +172,18 @@ def rv(belt_ts, samplerate, out_samplerate, window=6, lags=(0,)):
 def rrf(samplerate, oversampling=50, time_length=50, onset=0.0, tr=2.0):
     """Calculate the respiratory response function using Chang and Glover's definition.
 
-    Inputs
-    ------
+    Parameters
+    ----------
     samplerate : :obj:`float`
         Sampling rate of data, in seconds.
     oversampling : :obj:`int`, optional
-        Temporal oversampling factor, in seconds. Default is 50.
+        Temporal oversampling factor. Default is 50.
     time_length : :obj:`int`, optional
         RRF kernel length, in seconds. Default is 50.
     onset : :obj:`float`, optional
         Onset of the response, in seconds. Default is 0.
 
-    Outputs
+    Returns
     -------
     rrf: array-like
         respiratory response function

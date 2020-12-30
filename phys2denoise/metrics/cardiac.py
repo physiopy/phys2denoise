@@ -14,8 +14,8 @@ def iht():
 def crf(samplerate, oversampling=50, time_length=32, onset=0.0, tr=2.0):
     """Calculate the cardiac response function using Chang and Glover's definition.
 
-    Inputs
-    ------
+    Parameters
+    ----------
     samplerate : :obj:`float`
         Sampling rate of data, in seconds.
     oversampling : :obj:`int`, optional
@@ -25,7 +25,7 @@ def crf(samplerate, oversampling=50, time_length=32, onset=0.0, tr=2.0):
     onset : :obj:`float`, optional
         Onset of the response, in seconds. Default is 0.
 
-    Outputs
+    Returns
     -------
     crf: array-like
         Cardiac or "heart" response function
