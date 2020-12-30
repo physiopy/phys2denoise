@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import signal
 
-from .utils import butter_bandpass_filter, split_complex, interp_nans
+from .utils import butter_bandpass_filter, interp_nans, split_complex
 
 
 def hilbert_rvt(resp, sampling_freq):
@@ -29,7 +29,9 @@ def hilbert_rvt(resp, sampling_freq):
     # and remove high-frequency noise above 2.0 Hz.
     # Lowpass filter the data again to more aggressively remove high-frequency noise above 0.75 Hz.
     # Simplified to just bandpass filtering between 0.01-0.75 in one go.
-    resp_filt = butter_bandpass_filter(resp, fs=sampling_freq, lowcut=0.01, highcut=0.75, order=1)
+    resp_filt = butter_bandpass_filter(
+        resp, fs=sampling_freq, lowcut=0.01, highcut=0.75, order=1
+    )
 
     # Decompose the signal into magnitude and phase components via the Hilbert transform.
     analytic_signal = signal.hilbert(resp_filt)
