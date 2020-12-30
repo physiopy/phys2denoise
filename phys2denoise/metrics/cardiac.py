@@ -1,5 +1,4 @@
-"""Denoising metrics for cardio recordings
-"""
+"""Denoising metrics for cardio recordings."""
 import numpy as np
 
 from .. import references
@@ -7,15 +6,13 @@ from ..due import due
 
 
 def iht():
-    """Instantaneous heart rate"""
+    """Calculate instantaneous heart rate."""
     pass
 
 
 @due.dcite(references.CHANG_GLOVER_2009)
 def crf(samplerate, oversampling=50, time_length=32, onset=0.0, tr=2.0):
-    """
-    Calculate the cardiac response function using the definition
-    supplied in Chang and Glover (2009).
+    """Calculate the cardiac response function using Chang and Glover's definition.
 
     Inputs
     ------

@@ -43,6 +43,7 @@ class InactiveDueCreditCollector(object):
     activate = add = cite = dump = load = _donothing
 
     def __repr__(self):
+        """Perform magic."""
         return self.__class__.__name__ + "()"
 
 

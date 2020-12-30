@@ -1,9 +1,9 @@
+"""Miscellaneous utility functions for metric calculation."""
 import numpy as np
 
 
 def mirrorpad_1d(arr, buffer=250):
-    """
-    Pad both sides of array with flipped values from array of length 'buffer'.
+    """Pad both sides of array with flipped values from array of length 'buffer'.
 
     Parameters
     ----------
@@ -24,9 +24,7 @@ def mirrorpad_1d(arr, buffer=250):
 
 
 def rms_envelope_1d(arr, window=500):
-    """
-    Conceptual translation of MATLAB 2017b's envelope(X, x, 'rms') function.
-    https://www.mathworks.com/help/signal/ref/envelope.html
+    """Conceptual translation of MATLAB 2017b's envelope(X, x, 'rms') function.
 
     Parameters
     ----------
@@ -37,6 +35,10 @@ def rms_envelope_1d(arr, window=500):
     -------
     rms_env : numpy.ndarray
         The upper envelope.
+
+    Notes
+    -----
+    https://www.mathworks.com/help/signal/ref/envelope.html
     """
     assert arr.ndim == 1, "Input data must be 1D"
     assert window % 2 == 0, "Window must be even"
@@ -65,8 +67,7 @@ def rms_envelope_1d(arr, window=500):
 
 
 def apply_lags(arr1d, lags):
-    """
-    Apply delays (lags) to an array.
+    """Apply delays (lags) to an array.
 
     Parameters
     ----------

@@ -1,5 +1,4 @@
-"""Denoising metrics for chest belt recordings
-"""
+"""Denoising metrics for chest belt recordings."""
 import numpy as np
 import pandas as pd
 from scipy.ndimage.filters import convolve1d
@@ -13,7 +12,7 @@ from . import utils
 
 @due.dcite(references.POWER_2018)
 def rpv(belt_ts, window):
-    """Respiratory pattern variability
+    """Calculate respiratory pattern variability.
 
     Parameters
     ----------
@@ -52,7 +51,7 @@ def rpv(belt_ts, window):
 
 @due.dcite(references.POWER_2020)
 def env(belt_ts, samplerate, out_samplerate, window=10, lags=(0,)):
-    """Respiratory pattern variability calculated across a sliding window
+    """Calculate respiratory pattern variability across a sliding window.
 
     Parameters
     ----------
@@ -100,7 +99,7 @@ def env(belt_ts, samplerate, out_samplerate, window=10, lags=(0,)):
 
 @due.dcite(references.CHANG_GLOVER_2009)
 def rv(belt_ts, samplerate, out_samplerate, window=6, lags=(0,)):
-    """Respiratory variance
+    """Calculate respiratory variance.
 
     Parameters
     ----------
@@ -171,9 +170,7 @@ def rv(belt_ts, samplerate, out_samplerate, window=6, lags=(0,)):
 
 @due.dcite(references.CHANG_GLOVER_2009)
 def rrf(samplerate, oversampling=50, time_length=50, onset=0.0, tr=2.0):
-    """
-    Calculate the respiratory response function using the definition
-    supplied in Chang and Glover (2009).
+    """Calculate the respiratory response function using Chang and Glover's definition.
 
     Inputs
     ------

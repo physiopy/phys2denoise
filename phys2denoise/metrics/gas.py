@@ -1,2 +1,1 @@
-"""Denoising metrics for gas recordings
-"""
+"""Denoising metrics for gas recordings."""
