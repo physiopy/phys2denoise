@@ -1,3 +1,4 @@
+"""Miscellaneous utility functions for metric calculations."""
 import numpy as np
 from scipy import signal
 
@@ -116,7 +117,7 @@ def to_phase(real, imag):
 
 
 def nan_helper(y):
-    """Helper to handle indices and logical indices of NaNs.
+    """Handle indices and logical indices of NaNs.
 
     Parameters
     ----------
@@ -141,7 +142,6 @@ def nan_helper(y):
     -----
     From https://stackoverflow.com/a/6520696
     """
-
     return np.isnan(y), lambda z: z.nonzero()[0]
 
 

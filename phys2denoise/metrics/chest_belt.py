@@ -1,3 +1,4 @@
+"""Metrics derived from chest belt (respiration) recordings."""
 import numpy as np
 from scipy import signal
 
