@@ -3,12 +3,12 @@
 import numpy as np
 import pandas as pd
 from scipy.ndimage.filters import convolve1d
-from scipy.signal import resample, detrend
+from scipy.signal import detrend, resample
 from scipy.stats import zscore
 
-from . import utils
-from ..due import due
 from .. import references
+from ..due import due
+from . import utils
 
 
 @due.dcite(references.POWER_2018)
@@ -91,9 +91,10 @@ def env(belt_ts, samplerate, out_samplerate, window=10, lags=(0,)):
     """
     window = window * samplerate / out_samplerate
     # Calculate RPV across a rolling window
-    env_arr = pd.Series(belt_ts).rolling(window=window, center=True).apply(
-        rpv, window=window)
-    env_arr[np.isnan(env_arr)] = 0.
+    env_arr = (
+        pd.Series(belt_ts).rolling(window=window, center=True).apply(rpv, window=window)
+    )
+    env_arr[np.isnan(env_arr)] = 0.0
     return env_arr
 
 
@@ -143,7 +144,7 @@ def rv(belt_ts, samplerate, out_samplerate, window=6, lags=(0,)):
     """
     # Raw respiratory variance
     rv_arr = pd.Series(belt_ts).rolling(window=window, center=True).std()
-    rv_arr[np.isnan(rv_arr)] = 0.
+    rv_arr[np.isnan(rv_arr)] = 0.0
 
     # Apply lags
     n_out_samples = int((belt_ts.shape[0] / samplerate) / out_samplerate)
@@ -168,14 +169,8 @@ def rv(belt_ts, samplerate, out_samplerate, window=6, lags=(0,)):
     return rv_out
 
 
-def rvt(belt_ts, samplerate, out_samplerate, window=10, lags=(0,)):
-    """Respiratory volume-per-time
-    """
-    pass
-
-
 @due.dcite(references.CHANG_GLOVER_2009)
-def rrf(samplerate, oversampling=50, time_length=50, onset=0., tr=2.):
+def rrf(samplerate, oversampling=50, time_length=50, onset=0.0, tr=2.0):
     """
     Calculate the respiratory response function using the definition
     supplied in Chang and Glover (2009).
@@ -210,12 +205,15 @@ def rrf(samplerate, oversampling=50, time_length=50, onset=0., tr=2.):
        end-tidal CO2, and BOLD signals in resting-state fMRI," Neuroimage,
        issue 47, vol. 4, pp. 1381-1393, 2009.
     """
+
     def _rrf(t):
-        rf = (0.6 * t ** 2.1 * np.exp(-t / 1.6) - 0.0023 * t ** 3.54 * np.exp(-t / 4.25))
+        rf = 0.6 * t ** 2.1 * np.exp(-t / 1.6) - 0.0023 * t ** 3.54 * np.exp(-t / 4.25)
         return rf
+
     dt = tr / oversampling
-    time_stamps = np.linspace(0, time_length,
-                              np.rint(float(time_length) / dt).astype(np.int))
+    time_stamps = np.linspace(
+        0, time_length, np.rint(float(time_length) / dt).astype(np.int)
+    )
     time_stamps -= onset
     rrf_arr = _rrf(time_stamps)
     rrf_arr = rrf_arr / max(abs(rrf_arr))

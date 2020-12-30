@@ -2,18 +2,17 @@
 """
 import numpy as np
 
-from ..due import due
 from .. import references
+from ..due import due
 
 
 def iht():
-    """Instantaneous heart rate
-    """
+    """Instantaneous heart rate"""
     pass
 
 
 @due.dcite(references.CHANG_GLOVER_2009)
-def crf(samplerate, oversampling=50, time_length=32, onset=0., tr=2.):
+def crf(samplerate, oversampling=50, time_length=32, onset=0.0, tr=2.0):
     """
     Calculate the cardiac response function using the definition
     supplied in Chang and Glover (2009).
@@ -48,14 +47,17 @@ def crf(samplerate, oversampling=50, time_length=32, onset=0., tr=2.):
        end-tidal CO2, and BOLD signals in resting-state fMRI," Neuroimage,
        issue 47, vol. 4, pp. 1381-1393, 2009.
     """
+
     def _crf(t):
-        rf = (0.6 * t ** 2.7 * np.exp(-t / 1.6) - 16 * (1 / np.sqrt(2 * np.pi * 9))
-              * np.exp(-0.5 * (((t - 12) ** 2) / 9)))
+        rf = 0.6 * t ** 2.7 * np.exp(-t / 1.6) - 16 * (
+            1 / np.sqrt(2 * np.pi * 9)
+        ) * np.exp(-0.5 * (((t - 12) ** 2) / 9))
         return rf
 
     dt = tr / oversampling
-    time_stamps = np.linspace(0, time_length,
-                              np.rint(float(time_length) / dt).astype(np.int))
+    time_stamps = np.linspace(
+        0, time_length, np.rint(float(time_length) / dt).astype(np.int)
+    )
     time_stamps -= onset
     crf_arr = _crf(time_stamps)
     crf_arr = crf_arr / max(abs(crf_arr))

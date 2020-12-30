@@ -38,8 +38,8 @@ def rms_envelope_1d(arr, window=500):
     rms_env : numpy.ndarray
         The upper envelope.
     """
-    assert arr.ndim == 1, 'Input data must be 1D'
-    assert window % 2 == 0, 'Window must be even'
+    assert arr.ndim == 1, "Input data must be 1D"
+    assert window % 2 == 0, "Window must be even"
     n_t = arr.shape[0]
     buf = int(window / 2)
 
