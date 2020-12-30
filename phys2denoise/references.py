@@ -1,6 +1,4 @@
-"""
-References to be imported and injected throughout the package
-"""
+"""References to be imported and injected throughout the package."""
 from .due import Doi
 
 CHANG_GLOVER_2009 = Doi("10.1016/j.neuroimage.2009.04.048")
