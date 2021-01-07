@@ -5,7 +5,7 @@ from scipy.interpolate import interp1d
 
 def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
     """
-    Implements the Respiratory Variance over Time (Birn et al. (2006)).
+    Implement the Respiratory Variance over Time (Birn et al. (2006)).
 
     Procedural choices influenced by RetroTS
 
