@@ -3,19 +3,19 @@ import numpy as np
 from scipy import signal
 
 
-def cpm(samplerate, PPGlocs, HR, cardiac):
+def cpm(cardiac, i_hr, peaks, samplerate):
     """Calculate cardiac pulsatility model (CPM) regressors.
 
     Parameters
     ----------
-    samplerate : float
-        Sample rate in Hertz.
-    PPGlocs : 1D numpy.ndarray
-        Index of PPG peaks.
-    HR : numpy.ndarray
-        Instantaneous heart rate?
     cardiac : 1D numpy.ndarray
         Raw PPG signal.
+    i_hr : numpy.ndarray
+        Instantaneous heart rate?
+    peaks : 1D numpy.ndarray
+        Index of PPG peaks.
+    samplerate : float
+        Sample rate in Hertz.
 
     Returns
     -------
@@ -56,7 +56,7 @@ def cpm(samplerate, PPGlocs, HR, cardiac):
     N_SECS_TO_REMOVE = 5  # delete first and last 5 seconds from output
     n_vals_to_remove = int(N_SECS_TO_REMOVE * samplerate)
 
-    HRmean = np.mean(HR)  # mean heart-rate in beats-per-second?
+    HRmean = np.mean(i_hr)  # mean heart-rate in beats-per-second?
     memory = 60 / HRmean  # average minutes-per-beat?
 
     cardiac_reduced = cardiac[n_vals_to_remove:-n_vals_to_remove]
@@ -73,7 +73,7 @@ def cpm(samplerate, PPGlocs, HR, cardiac):
     peak_timeseries = np.zeros(time.shape)
     # peak amplitudes in timeseries form (peaks are amplitude value, all other timepoints are 0)
     peak_amplitudes = peak_timeseries.copy()
-    for peak_time in PPGlocs:
+    for peak_time in peaks:
         time_distance = np.abs(time - peak_time)
         closest_time_idx = np.argmin(time_distance)
         peak_timeseries[closest_time_idx] = 1
@@ -92,7 +92,7 @@ def cpm(samplerate, PPGlocs, HR, cardiac):
     cpm_regressors = signal.filtfilt(filt_b, filt_a, cpm_regressors)
     cpm_amplitude_regressors = signal.filtfilt(filt_b, filt_a, cpm_amplitude_regressors)
 
-    retroicor_regressors = RETR_Card_regressors_v2(time, PPGlocs, MODEL_ORDER)
+    retroicor_regressors = RETR_Card_regressors_v2(time, peaks, MODEL_ORDER)
     retroicor_regressors = signal.filtfilt(filt_b, filt_a, retroicor_regressors)
 
     # Select relevant timepoints from regressors.
