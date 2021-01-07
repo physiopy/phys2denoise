@@ -1,10 +1,12 @@
+"""Denoising metrics for chest belt recordings."""
 import numpy as np
 from scipy.interpolate import interp1d
 
 
 def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
-    """ "
+    """
     Implements the Respiratory Variance over Time as described in Birn et al. (2006).
+
     Procedural choices influenced by RetroTS
 
     Parameters
@@ -24,9 +26,7 @@ def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
     -------
     rvt: array_like
         calculated RVT and associated lags.
-
     """
-
     timestep = 1 / samplerate
     # respiration belt timing
     time = np.array([i * timestep for i in range(len(belt_ts))])
