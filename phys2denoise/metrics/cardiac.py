@@ -160,7 +160,7 @@ def RETR_Card_regressors_v2(time, locsECG, M):
 
 
 def func_CPM_cos(timestep, memory, M):
-    """Calculate CPM?
+    """Calculate CPM cosine values.
 
     Parameters
     ----------
