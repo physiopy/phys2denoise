@@ -175,16 +175,18 @@ def phys2denoise(filename, outdir='.',
         if metric == 'retroicor_card':
             args = select_input_args(compute_retroicor_regressors, kwargs)
             args['card'] = True
-            regr['retroicor_card'] = compute_retroicor_regressors(physio,
-                                                                  **args)
+            retroicor_regrs = compute_retroicor_regressors(physio, **args)
+            for vslice in range(len(args['slice_timings'])):
+                regr[f'retroicor_card_slice-{vslice}'] = retroicor_regrs[vslice]
         elif metric == 'retroicor_resp':
             args = select_input_args(compute_retroicor_regressors, kwargs)
             args['resp'] = True
-            regr['retroicor_resp'] = compute_retroicor_regressors(physio,
-                                                                  **args)
+            retroicor_regrs = compute_retroicor_regressors(physio, **args)
+            for vslice in range(len(args['slice_timings'])):
+                regr[f'retroicor_resp_slice-{vslice}'] = retroicor_regrs[vslice]
         else:
             args = select_input_args(metric, kwargs)
-            regr[f'{metric}'] = metric(physio, **args)
+            regr[metric.__name__] = metric(physio, **args)
 
     #!# Add regressors visualisation
 
