@@ -31,6 +31,28 @@ LGR = logging.getLogger(__name__)
 LGR.setLevel(logging.INFO)
 
 
+def save_bash_call(outdir):
+    """
+    Save the bash call into file `p2d_call.sh`.
+
+    Parameters
+    ----------
+    metric : function
+        Metric function to retrieve arguments for
+    metric_args : dict
+        Dictionary containing all arguments for all functions requested by the
+        user
+    """
+    arg_str = ' '.join(sys.argv[1:])
+    call_str = f'phys2denoise {arg_str}'
+    outdir = os.path.abspath(outdir)
+    log_path = os.path.join(outdir, 'code', 'logs')
+    os.makedirs(log_path)
+    f = open(os.path.join(log_path, 'p2d_call.sh'), "a")
+    f.write(f'#!bin/bash \n{call_str}')
+    f.close()
+
+
 def select_input_args(metric, metric_args):
     """
     Retrieve required args for metric from a dictionary of possible arguments.
@@ -135,13 +157,6 @@ def phys2denoise(filename, outdir='.',
     LGR.info(f'Currently running phys2denoise version {version_number}')
     LGR.info(f'Input file is {filename}')
 
-    # Save call.sh
-    arg_str = ' '.join(sys.argv[1:])
-    call_str = f'phys2denoise {arg_str}'
-    f = open(os.path.join(log_path, 'call.sh'), "a")
-    f.write(f'#!bin/bash \n{call_str}')
-    f.close()
-
     # Check options to make them internally coherent pt. II
     # #!# This can probably be done while parsing?
     # filename, ftype = utils.check_input_type(filename)
@@ -181,6 +196,9 @@ def phys2denoise(filename, outdir='.',
 
 def _main(argv=None):
     options = _get_parser().parse_args(argv)
+
+    save_bash_call(options.outdir)
+
     phys2denoise(**vars(options))
 
 
