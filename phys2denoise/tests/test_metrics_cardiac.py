@@ -23,7 +23,7 @@ def test_crf_smoke():
     assert crf_arr.shape == pred_len
 
 
-def test_cardiac_phase():
+def test_cardiac_phase_smoke():
     """Basic smoke test for cardiac phase calculation."""
     t_r = 1.0
     n_scans = 200
