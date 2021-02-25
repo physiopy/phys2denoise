@@ -112,7 +112,7 @@ def compute_phase_resp(resp, sample_rate, n_scans, slice_timings, t_r):
 
 
 @due.dcite(references.GLOVER_2000)
-def compute_retroicor_regressors(
+def retroicor(
     physio,
     sample_rate,
     t_r,
