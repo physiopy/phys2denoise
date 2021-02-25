@@ -64,6 +64,8 @@ def retroicor(
     phase = np.empty((n_scans, n_slices))
 
     for i_slice in range(n_slices):
+        retroicor_regressors.append(np.empty((n_scans, 2 * n_harmonics)))
+
         # Initialize slice timings for current slice
         crslice_timings = t_r * np.arange(n_scans) + slice_timings[i_slice]
 
