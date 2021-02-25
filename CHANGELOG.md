@@ -1,3 +1,17 @@
+# 0.2.0 (Thu Feb 25 2021)
+
+#### 💥 Breaking Change during development
+
+- Add initial set of metrics [#19](https://github.com/physiopy/phys2denoise/pull/19) ([@CesarCaballeroGaudes](https://github.com/CesarCaballeroGaudes) [@tsalo](https://github.com/tsalo) [@smoia](https://github.com/smoia))
+
+#### Authors: 3
+
+- Cesar Caballero Gaudes ([@CesarCaballeroGaudes](https://github.com/CesarCaballeroGaudes))
+- Stefano Moia ([@smoia](https://github.com/smoia))
+- Taylor Salo ([@tsalo](https://github.com/tsalo))
+
+---
+
 # 0.1.0 (Thu Feb 25 2021)
 
 :tada: This release contains work from new contributors! :tada:
