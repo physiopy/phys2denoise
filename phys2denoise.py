@@ -19,7 +19,6 @@ from inspect import signature, _empty
 import numpy as np
 import pandas as pd
 
-from phys2denoise import _version
 from phys2denoise.cli.run import _get_parser
 from phys2denoise.metrics.cardiac import crf
 from phys2denoise.metrics.chest_belt import rpv, rv, rvt, rrf
@@ -158,7 +157,7 @@ def phys2denoise(filename, metric_args, outdir='.',
                             handlers=[log_handler, sh],
                             format='%(levelname)-10s %(message)s')
 
-    version_number = _version.get_versions()['version']
+    version_number = __version__
     LGR.info(f'Currently running phys2denoise version {version_number}')
     LGR.info(f'Input file is {filename}')
 
