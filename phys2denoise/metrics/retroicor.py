@@ -173,7 +173,13 @@ def retroicor(
         # Compute physiological phases using the timings of physio events (e.g. peaks)
         # slice sampling times
         if card:
-            phase[:, i_slice] = compute_phase_card(physio, crslice_timings)
+            phase[:, i_slice] = compute_phase_card(
+                physio,
+                crslice_timings,
+                n_scans,
+                t_r,
+            )
+
         if resp:
             phase[:, i_slice] = compute_phase_resp(
                 physio,
