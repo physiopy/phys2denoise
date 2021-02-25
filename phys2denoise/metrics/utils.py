@@ -1,5 +1,36 @@
 """Miscellaneous utility functions for metric calculation."""
+import logging
+
 import numpy as np
+
+LGR = logging.getLogger(__name__)
+LGR.setLevel(logging.INFO)
+
+
+def print_metric_call(metric, args):
+    """
+    Log a message to describe how a metric is being called.
+
+    Parameters
+    ----------
+    metric : function
+        Metric function that is being called
+    args : dict
+        Dictionary containing all arguments that are used to parametrise metric
+
+    Notes
+    -----
+    Outcome
+        An info-level message for the logger.
+    """
+    msg = f'The {metric} regressor will be computed using the following parameters:'
+
+    for arg in args:
+        msg = f'{msg}\n    {arg} = {args[arg]}'
+
+    msg = f'{msg}\n'
+
+    LGR.info(msg)
 
 
 def mirrorpad_1d(arr, buffer=250):
