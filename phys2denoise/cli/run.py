@@ -9,6 +9,22 @@ from phys2denoise.metrics.cardiac import crf
 from phys2denoise.metrics.chest_belt import rpv, rv, rvt, rrf, env
 
 
+class MetricsArgDict(argparse.Action):
+    """
+    Custom Argparse Action to create a dictionary with the metrics' arguments in parser's output.
+
+    """
+    def __call__(self, parser, namespace, values, option_strings):
+        if not hasattr(namespace, "metrics_arg"):
+            setattr(namespace, "metrics_arg", dict())
+            Keys = ["sample_rate", "peaks", "throughs", "oversampling", "time_length", "onset",
+                    "tr", "window", "lags", "nscans", "nharm"]
+            Vals = ["None", "None", "None", "50", "None", "0", "None", "6", "None", "1", "None"]
+            for k, v in zip(Keys, Vals):
+                getattr(namespace, "metrics_arg")[k] = v
+        getattr(namespace, "metrics_arg")[self.dest] = values
+
+
 def _get_parser():
     """
     Parse command line inputs for this function.
@@ -23,6 +39,7 @@ def _get_parser():
     # Argument parser follow template provided by RalphyZ.
     # https://stackoverflow.com/a/43456577
     """
+
     parser = argparse.ArgumentParser()
     optional = parser._action_groups.pop()
     required = parser.add_argument_group("Required Argument")
@@ -89,12 +106,19 @@ def _get_parser():
                          help="Respiratory response function. Requires the following inputs: "
                               "sample-rate, oversampling, time-length, onset and tr.",
                          default=[])
-    metrics.add_argument("-rcor", "--retroicor",
+    metrics.add_argument("-rcard", "--retroicor-card",
                          dest="metrics",
                          action="append_const",
                          const="r_card",
                          help="Computes regressors for cardiac signal. Requires the following "
-                              "inputs: either card or resp, tr, nscans and n_harm.",
+                              "inputs: tr, nscans and n_harm.",
+                         default=[])
+    metrics.add_argument("-rresp", "--retroicor-resp",
+                         dest="metrics",
+                         action="append_const",
+                         const="r_resp",
+                         help="Computes regressors for respiratory signal. Requires the following  "
+                              "inputs: tr, nscans and n_harm.",
                          default=[])
     # Metric arguments
     metric_arg.add_argument("-sr", "--sample-rate",
@@ -161,18 +185,6 @@ def _get_parser():
                             type=int,
                             help="Number of harmonics.",
                             default=None)
-    metric_arg.add_argument("-card", "--cardiac",
-                            dest="card",
-                            type=bool,
-                            action="store_true",
-                            help="Compute *cardiac* RETROICOR.",
-                            default=False)
-    metric_arg.add_argument("-resp", "--resp",
-                            dest="resp",
-                            type=bool,
-                            action="store_true",
-                            help="Compute *respiratory* RETROICOR.",
-                            default=False)
 
     # Other optional arguments
     optional.add_argument("-debug", "--debug",
