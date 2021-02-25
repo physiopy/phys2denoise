@@ -240,14 +240,15 @@ def respiratory_phase(resp, sample_rate, n_scans, slice_timings, t_r):
     Returns
     -------
     phase_resp : array_like
-        Respiratory phase signal.
+        Respiratory phase signal, of shape (n_scans, n_slices).
     """
-    n_slices = np.shape(slice_timings)
+    assert slice_timings.ndim == 1, "Slice times must be a 1D array"
+    n_slices = np.size(slice_timings)
     phase_resp = np.zeros((n_scans, n_slices))
 
     # generate histogram from respiratory signal
     # TODO: Replace with numpy.histogram
-    resp_hist, resp_hist_bins = plt.hist(resp, bins=100)
+    resp_hist, resp_hist_bins, _ = plt.hist(resp, bins=100)
 
     # first compute derivative of respiration signal
     resp_diff = np.diff(resp, n=1)
