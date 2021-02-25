@@ -22,7 +22,7 @@ import pandas as pd
 from phys2denoise.cli.run import _get_parser
 from phys2denoise.metrics.cardiac import crf
 from phys2denoise.metrics.chest_belt import rpv, rv, rvt, rrf
-from phys2denoise.metrics.retroicor import compute_retroicor_regressors
+from phys2denoise.metrics.retroicor import retroicor
 
 from . import __version__
 from .due import due, Doi
@@ -173,18 +173,18 @@ def phys2denoise(filename, outdir='.',
     # Goes through the list of metrics and calls them
     for metric in metrics:
         if metric == 'retroicor_card':
-            args = select_input_args(compute_retroicor_regressors, kwargs)
+            args = select_input_args(retroicor, kwargs)
             args['card'] = True
-            retroicor_regrs = compute_retroicor_regressors(physio, **args)
+            retroicor_regrs = retroicor(physio, **args)
             for vslice in range(len(args['slice_timings'])):
                 for harm in range(args['n_harm']):
                     key = f'rcor-card_s-{vslice}_hrm-{harm}'
                     regr[f'{key}_cos'] = retroicor_regrs[vslice][:, harm*2]
                     regr[f'{key}_sin'] = retroicor_regrs[vslice][:, harm*2+1]
         elif metric == 'retroicor_resp':
-            args = select_input_args(compute_retroicor_regressors, kwargs)
+            args = select_input_args(retroicor, kwargs)
             args['resp'] = True
-            retroicor_regrs = compute_retroicor_regressors(physio, **args)
+            retroicor_regrs = retroicor(physio, **args)
             for vslice in range(len(args['slice_timings'])):
                 for harm in range(args['n_harm']):
                     key = f'rcor-resp_s-{vslice}_hrm-{harm}'

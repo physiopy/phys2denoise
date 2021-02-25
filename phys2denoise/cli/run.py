@@ -9,22 +9,6 @@ from phys2denoise.metrics.cardiac import crf
 from phys2denoise.metrics.chest_belt import rpv, rv, rvt, rrf, env
 
 
-class MetricsArgDict(argparse.Action):
-    """
-    Custom Argparse Action to create a dictionary with the metrics' arguments in parser's output.
-
-    """
-    def __call__(self, parser, namespace, values, option_strings):
-        if not hasattr(namespace, "metrics_arg"):
-            setattr(namespace, "metrics_arg", dict())
-            Keys = ["sample_rate", "peaks", "throughs", "oversampling", "time_length", "onset",
-                    "tr", "window", "lags", "nscans", "nharm"]
-            Vals = ["None", "None", "None", "50", "None", "0", "None", "6", "None", "1", "None"]
-            for k, v in zip(Keys, Vals):
-                getattr(namespace, "metrics_arg")[k] = v
-        getattr(namespace, "metrics_arg")[self.dest] = values
-
-
 def _get_parser():
     """
     Parse command line inputs for this function.
