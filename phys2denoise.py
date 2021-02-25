@@ -107,9 +107,9 @@ def print_metric_call(metric, args):
      description='Creation of regressors for physiological denoising',
      version=__version__,
      cite_module=True)
-def phys2denoise(filename, metric_args, outdir='.',
+def phys2denoise(filename, outdir='.',
                  metrics=[crf, rpv, rv, rvt, rrf, 'retroicor_card', 'retroicor_resp'],
-                 debug=False, quiet=False):
+                 debug=False, quiet=False, **kwargs):
     """
     Run main workflow of phys2denoise.
 
@@ -117,14 +117,13 @@ def phys2denoise(filename, metric_args, outdir='.',
 
     Notes
     -----
+    Any metric argument should go into kwargs!
     The code was greatly copied from phys2bids (copyright the physiopy community)
 
     """
     # Check options to make them internally coherent pt. I
     # #!# This can probably be done while parsing?
     outdir = os.path.abspath(outdir)
-    os.makedirs(outdir)
-    os.makedirs(os.path.join(outdir, 'code'))
     log_path = os.path.join(outdir, 'code', 'logs')
     os.makedirs(log_path)
 
@@ -184,19 +183,19 @@ def phys2denoise(filename, metric_args, outdir='.',
     # Goes through the list of metrics and calls them
     for metric in metrics:
         if metrics == 'retroicor_card':
-            args = select_input_args(compute_retroicor_regressors, metric_args)
+            args = select_input_args(compute_retroicor_regressors, kwargs)
             args['card'] = True
             print_metric_call(metric, args)
             regr['retroicor_card'] = compute_retroicor_regressors(physio,
                                                                   **args)
         elif metrics == 'retroicor_resp':
-            args = select_input_args(compute_retroicor_regressors, metric_args)
+            args = select_input_args(compute_retroicor_regressors, kwargs)
             args['resp'] = True
             print_metric_call(metric, args)
             regr['retroicor_resp'] = compute_retroicor_regressors(physio,
                                                                   **args)
         else:
-            args = select_input_args(metric, metric_args)
+            args = select_input_args(metric, kwargs)
             print_metric_call(metric, args)
             regr[f'{metric}'] = metric(physio, **args)
 
