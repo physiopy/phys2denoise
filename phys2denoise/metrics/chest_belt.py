@@ -1,9 +1,13 @@
 """Denoising metrics for chest belt recordings."""
+import matplotlib as mpl
 import numpy as np
 import pandas as pd
 from scipy.ndimage.filters import convolve1d
 from scipy.signal import detrend, resample
 from scipy.stats import zscore
+
+mpl.use("TkAgg")
+import matplotlib.pyplot as plt
 
 from .. import references
 from ..due import due
@@ -215,3 +219,54 @@ def rrf(samplerate, oversampling=50, time_length=50, onset=0.0, tr=2.0):
     rrf_arr = _rrf(time_stamps)
     rrf_arr = rrf_arr / max(abs(rrf_arr))
     return rrf_arr
+
+
+def respiratory_phase(resp, sample_rate, n_scans, slice_timings, t_r):
+    """Calculate respiratory phase from respiratory signal.
+
+    Parameters
+    ----------
+    resp : 1D array_like
+        Respiratory signal.
+    sample_rate : float
+        Sample rate of physio, in Hertz.
+    n_scans
+        Number of volumes in the imaging run.
+    slice_timings
+        Slice times, in seconds.
+    t_r
+        Sample rate of the imaging run, in seconds.
+
+    Returns
+    -------
+    phase_resp : array_like
+        Respiratory phase signal.
+    """
+    n_slices = np.shape(slice_timings)
+    phase_resp = np.zeros((n_scans, n_slices))
+
+    # generate histogram from respiratory signal
+    # TODO: Replace with numpy.histogram
+    resp_hist, resp_hist_bins = plt.hist(resp, bins=100)
+
+    # first compute derivative of respiration signal
+    resp_diff = np.diff(resp, n=1)
+
+    for i_slice in range(n_slices):
+        # generate slice acquisition timings across all scans
+        times_crSlice = t_r * np.arange(n_scans) + slice_timings[i_slice]
+        phase_resp_crSlice = np.zeros(n_scans)
+        for j_scan in range(n_scans):
+            iphys = int(
+                max([1, round(times_crSlice[j_scan] * sample_rate)])
+            )  # closest idx in resp waveform
+            iphys = min([iphys, len(resp_diff)])  # cannot be longer than resp_diff
+            thisBin = np.argmin(abs(resp[iphys] - resp_hist_bins))
+            numerator = np.sum(resp_hist[0:thisBin])
+            phase_resp_crSlice[j_scan] = (
+                np.math.pi * np.sign(resp_diff[iphys]) * (numerator / len(resp))
+            )
+
+        phase_resp[:, i_slice] = phase_resp_crSlice
+
+    return phase_resp

@@ -59,3 +59,53 @@ def crf(samplerate, oversampling=50, time_length=32, onset=0.0, tr=2.0):
     crf_arr = _crf(time_stamps)
     crf_arr = crf_arr / max(abs(crf_arr))
     return crf_arr
+
+
+def cardiac_phase(peaks, slice_timings, n_scans, t_r):
+    """Calculate cardiac phase from cardiac peaks.
+
+    Assumes that timing of cardiac events are given in same units
+    as slice timings, for example seconds.
+
+    Parameters
+    ----------
+    peaks : 1D array_like
+        Cardiac peak times, in seconds.
+    slice_timings : 1D array_like
+        Slice times, in seconds.
+    n_scans : int
+        Number of volumes in the imaging run.
+    t_r : float
+        Sampling rate of the imaging run, in seconds.
+
+    Returns
+    -------
+    phase_card : array_like
+        Cardiac phase signal.
+    """
+    n_slices = np.shape(slice_timings)
+    phase_card = np.zeros(n_scans)
+
+    for i_slice in range(n_slices):
+        # find previous cardiac peaks
+        previous_card_peaks = np.asarray(np.nonzero(peaks < slice_timings[i_slice]))
+        if np.size(previous_card_peaks) == 0:
+            t1 = 0
+        else:
+            last_peak = previous_card_peaks[0][-1]
+            t1 = peaks[last_peak]
+
+        # find posterior cardiac peaks
+        next_card_peaks = np.asarray(np.nonzero(peaks > slice_timings[i_slice]))
+        if np.size(next_card_peaks) == 0:
+            t2 = n_scans * t_r
+        else:
+            next_peak = next_card_peaks[0][0]
+            t2 = peaks[next_peak]
+
+        # compute cardiac phase
+        phase_card[i_slice] = (2 * np.math.pi * (slice_timings[i_slice] - t1)) / (
+            t2 - t1
+        )
+
+    return phase_card

@@ -1,114 +1,11 @@
 """These functions compute RETROICOR regressors (Glover et al. 2000)."""
 
 import numpy as np
-import matplotlib as mpl
 
-mpl.use("TkAgg")
-import matplotlib.pyplot as plt
-
+from .cardiac import cardiac_phase
+from .chest_belt import respiratory_phase
 from .. import references
 from ..due import due
-
-
-def compute_phase_card(peaks, slice_timings, n_scans, t_r):
-    """Calculate cardiac phase from cardiac peaks.
-
-    Assumes that timing of cardiac events are given in same units
-    as slice timings, for example seconds.
-
-    Parameters
-    ----------
-    peaks : 1D array_like
-        Cardiac peak times, in seconds.
-    slice_timings : 1D array_like
-        Slice times, in seconds.
-    n_scans : int
-        Number of volumes in the imaging run.
-    t_r : float
-        Sampling rate of the imaging run, in seconds.
-
-    Returns
-    -------
-    phase_card : array_like
-        Cardiac phase signal.
-    """
-    n_slices = np.shape(slice_timings)
-    phase_card = np.zeros(n_scans)
-
-    for i_slice in range(n_slices):
-        # find previous cardiac peaks
-        previous_card_peaks = np.asarray(np.nonzero(peaks < slice_timings[i_slice]))
-        if np.size(previous_card_peaks) == 0:
-            t1 = 0
-        else:
-            last_peak = previous_card_peaks[0][-1]
-            t1 = peaks[last_peak]
-
-        # find posterior cardiac peaks
-        next_card_peaks = np.asarray(np.nonzero(peaks > slice_timings[i_slice]))
-        if np.size(next_card_peaks) == 0:
-            t2 = n_scans * t_r
-        else:
-            next_peak = next_card_peaks[0][0]
-            t2 = peaks[next_peak]
-
-        # compute cardiac phase
-        phase_card[i_slice] = (2 * np.math.pi * (slice_timings[i_slice] - t1)) / (
-            t2 - t1
-        )
-
-    return phase_card
-
-
-def compute_phase_resp(resp, sample_rate, n_scans, slice_timings, t_r):
-    """Calculate respiratory phase from respiratory signal.
-
-    Parameters
-    ----------
-    resp : 1D array_like
-        Respiratory signal.
-    sample_rate : float
-        Sample rate of physio, in Hertz.
-    n_scans
-        Number of volumes in the imaging run.
-    slice_timings
-        Slice times, in seconds.
-    t_r
-        Sample rate of the imaging run, in seconds.
-
-    Returns
-    -------
-    phase_resp : array_like
-        Respiratory phase signal.
-    """
-    n_slices = np.shape(slice_timings)
-    phase_resp = np.zeros((n_scans, n_slices))
-
-    # generate histogram from respiratory signal
-    # TODO: Replace with numpy.histogram
-    resp_hist, resp_hist_bins = plt.hist(resp, bins=100)
-
-    # first compute derivative of respiration signal
-    resp_diff = np.diff(resp, n=1)
-
-    for i_slice in range(n_slices):
-        # generate slice acquisition timings across all scans
-        times_crSlice = t_r * np.arange(n_scans) + slice_timings[i_slice]
-        phase_resp_crSlice = np.zeros(n_scans)
-        for j_scan in range(n_scans):
-            iphys = int(
-                max([1, round(times_crSlice[j_scan] * sample_rate)])
-            )  # closest idx in resp waveform
-            iphys = min([iphys, len(resp_diff)])  # cannot be longer than resp_diff
-            thisBin = np.argmin(abs(resp[iphys] - resp_hist_bins))
-            numerator = np.sum(resp_hist[0:thisBin])
-            phase_resp_crSlice[j_scan] = (
-                np.math.pi * np.sign(resp_diff[iphys]) * (numerator / len(resp))
-            )
-
-        phase_resp[:, i_slice] = phase_resp_crSlice
-
-    return phase_resp
 
 
 @due.dcite(references.GLOVER_2000)
@@ -173,7 +70,7 @@ def retroicor(
         # Compute physiological phases using the timings of physio events (e.g. peaks)
         # slice sampling times
         if card:
-            phase[:, i_slice] = compute_phase_card(
+            phase[:, i_slice] = cardiac_phase(
                 physio,
                 crslice_timings,
                 n_scans,
@@ -181,7 +78,7 @@ def retroicor(
             )
 
         if resp:
-            phase[:, i_slice] = compute_phase_resp(
+            phase[:, i_slice] = respiratory_phase(
                 physio,
                 sample_rate,
                 n_scans,
