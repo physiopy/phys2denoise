@@ -172,19 +172,8 @@ def phys2denoise(filename, outdir='.',
 
     # Goes through the list of metrics and calls them
     for metric in metrics:
-        if metric == 'retroicor_card':
-            args = select_input_args(compute_retroicor_regressors, kwargs)
-            args['card'] = True
-            regr['retroicor_card'] = compute_retroicor_regressors(physio,
-                                                                  **args)
-        elif metric == 'retroicor_resp':
-            args = select_input_args(compute_retroicor_regressors, kwargs)
-            args['resp'] = True
-            regr['retroicor_resp'] = compute_retroicor_regressors(physio,
-                                                                  **args)
-        else:
-            args = select_input_args(metric, kwargs)
-            regr[f'{metric}'] = metric(physio, **args)
+        args = select_input_args(metric, kwargs)
+        regr[f'{metric}'] = metric(physio, **args)
 
     #!# Add regressors visualisation
 
