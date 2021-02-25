@@ -28,6 +28,7 @@ from . import __version__
 from .due import due, Doi
 
 LGR = logging.getLogger(__name__)
+LGR.setLevel(logging.INFO)
 
 
 def select_input_args(metric, metric_args):
@@ -73,32 +74,6 @@ def select_input_args(metric, metric_args):
             args[param.name] = metric_args[param.name]
 
     return args
-
-
-def print_metric_call(metric, args):
-    """
-    Log a message to describe how a metric is being called.
-
-    Parameters
-    ----------
-    metric : function
-        Metric function that is being called
-    args : dict
-        Dictionary containing all arguments that are used to parametrise metric
-
-    Notes
-    -----
-    Outcome
-        An info-level message for the logger.
-    """
-    msg = f'The {metric} regressor will be computed using the following parameters:'
-
-    for arg in args:
-        msg = f'{msg}\n    {arg} = {args[arg]}'
-
-    msg = f'{msg}\n'
-
-    LGR.info(msg)
 
 
 @due.dcite(
@@ -182,21 +157,18 @@ def phys2denoise(filename, outdir='.',
 
     # Goes through the list of metrics and calls them
     for metric in metrics:
-        if metrics == 'retroicor_card':
+        if metric == 'retroicor_card':
             args = select_input_args(compute_retroicor_regressors, kwargs)
             args['card'] = True
-            print_metric_call(metric, args)
             regr['retroicor_card'] = compute_retroicor_regressors(physio,
                                                                   **args)
-        elif metrics == 'retroicor_resp':
+        elif metric == 'retroicor_resp':
             args = select_input_args(compute_retroicor_regressors, kwargs)
             args['resp'] = True
-            print_metric_call(metric, args)
             regr['retroicor_resp'] = compute_retroicor_regressors(physio,
                                                                   **args)
         else:
             args = select_input_args(metric, kwargs)
-            print_metric_call(metric, args)
             regr[f'{metric}'] = metric(physio, **args)
 
     #!# Add regressors visualisation
