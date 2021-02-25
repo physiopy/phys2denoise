@@ -1,7 +1,7 @@
 """Metrics derived from physiological signals."""
 from .cardiac import crf, cardiac_phase
 from .chest_belt import rpv, env, rv, rrf, respiratory_phase
-from .retroicor import retroicor
+from .multimodal import retroicor
 
 __all__ = [
     "crf",

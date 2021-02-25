@@ -48,6 +48,11 @@ def retroicor(
     phase : array_like
         2D array of shape (n_scans, n_slices)
 
+    Notes
+    -----
+    RETROICOR regressors should be regressed from the imaging data *before*
+    any other preprocessing, including slice-timing correction and motion correction.
+
     References
     ----------
     *   Glover, G. H., Li, T. Q., & Ress, D. (2000).
