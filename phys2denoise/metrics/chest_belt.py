@@ -92,9 +92,7 @@ def env(resp, samplerate, window=10):
 
     # Calculate RPV across a rolling window
     env_arr = (
-        pd.Series(resp)
-        .rolling(window=window, center=True)
-        .apply(rpv, args=(window,))
+        pd.Series(resp).rolling(window=window, center=True).apply(rpv, args=(window,))
     )
     env_arr[np.isnan(env_arr)] = 0.0
     return env_arr
