@@ -9,4 +9,4 @@ POWER_2018 = Doi("10.1073/pnas.1720985115")
 
 POWER_2020 = Doi("10.1016/j.neuroimage.2019.116234")
 
-SCHMUELI_2007 = Doi("")
+SHMUELI_2007 = Doi("10.1016/j.neuroimage.2007.07.037")
