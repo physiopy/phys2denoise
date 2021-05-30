@@ -11,6 +11,7 @@ def iht():
 
 
 @due.dcite(references.CHANG_GLOVER_2009)
+@due.dcite(references.SCHMUELI_2007)
 def crf(samplerate, oversampling=50, time_length=32, onset=0.0, tr=2.0):
     """Calculate the cardiac response function using Chang and Glover's definition.
 
