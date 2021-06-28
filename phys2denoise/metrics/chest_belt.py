@@ -150,7 +150,7 @@ def rv(belt_ts, samplerate, out_samplerate, window=6, lags=(0,)):
     # Apply lags
     n_out_samples = int((belt_ts.shape[0] / samplerate) / out_samplerate)
     # convert lags from out_samplerate to samplerate
-    delays = [abs(int(lag * samplerate)) for lag in lags]
+    delays = [int(lag * samplerate) for lag in lags]
     rv_with_lags = utils.apply_lags(rv_arr, lags=delays)
 
     # Downsample to out_samplerate
