@@ -54,7 +54,7 @@ def rpv(belt_ts, window):
 
 
 @due.dcite(references.POWER_2020)
-def env(belt_ts, samplerate, out_samplerate, window=10, lags=(0,)):
+def env(belt_ts, samplerate, out_samplerate, window=10):
     """Calculate respiratory pattern variability across a sliding window.
 
     Parameters
@@ -69,10 +69,6 @@ def env(belt_ts, samplerate, out_samplerate, window=10, lags=(0,)):
     window : :obj:`int`, optional
         Size of the sliding window, in the same units as out_samplerate.
         Default is 6.
-    lags : (Y,) :obj:`tuple` of :obj:`int`, optional
-        List of lags to apply to the env estimate.
-        Lags can be negative, zero, and/or positive.
-        In seconds (like out_samplerate).
 
     Returns
     -------
