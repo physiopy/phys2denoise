@@ -70,8 +70,9 @@ def env(belt_ts, samplerate, out_samplerate, window=10, lags=(0,)):
         Size of the sliding window, in the same units as out_samplerate.
         Default is 6.
     lags : (Y,) :obj:`tuple` of :obj:`int`, optional
-        List of lags to apply to the rv estimate. In the same units as
-        out_samplerate.
+        List of lags to apply to the env estimate.
+        Lags can be negative, zero, and/or positive.
+        In seconds (like out_samplerate).
 
     Returns
     -------
@@ -118,8 +119,9 @@ def rv(belt_ts, samplerate, out_samplerate, window=6, lags=(0,)):
         Size of the sliding window, in the same units as out_samplerate.
         Default is 6.
     lags : (Y,) :obj:`tuple` of :obj:`int`, optional
-        List of lags to apply to the rv estimate. In the same units as
-        out_samplerate.
+        List of lags to apply to the rv estimate.
+        Lags can be negative, zero, and/or positive.
+        In seconds (like out_samplerate).
 
     Returns
     -------
