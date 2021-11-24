@@ -1,6 +1,8 @@
-from phys2denoise.metrics.utils import mirrorpad_1d, rms_envelope_1d
 import numpy as np 
 import pytest 
+
+from phys2denoise.metrics.utils import mirrorpad_1d, rms_envelope_1d
+
 
 @pytest.fixture
 def short_arr(): 
