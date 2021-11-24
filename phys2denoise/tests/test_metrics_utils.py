@@ -1,4 +1,4 @@
-from phys2denoise.metrics.utils import mirrorpad_1d, rms_envelope_1d, print_metric_call
+from phys2denoise.metrics.utils import mirrorpad_1d, rms_envelope_1d
 import numpy as np 
 import pytest 
 
@@ -28,11 +28,3 @@ def test_rms_envelope():
     arr_env = rms_envelope_1d(arr, window=4)
     expected_arr_env =  np.tile(2.,10)
     assert all(arr_env == expected_arr_env)
-
-
-def test_print_metric_call(): 
-    import logging
-    LGR = logging.getLogger(__name__)
-    metric = 'test_metric'
-    args = {'arg1':1, 'arg2':'some_random_arg2'}
-    print_metric_call(metric, args)
