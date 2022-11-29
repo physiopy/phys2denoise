@@ -34,7 +34,8 @@
         "infra",
         "projectManagement",
         "code",
-        "ideas"
+        "ideas",
+        "doc"
       ]
     },
     {
@@ -46,6 +47,15 @@
         "code",
         "ideas",
         "review"
+      ]
+    },
+    {
+      "login": "ineschh",
+      "name": "Inés Chavarría",
+      "avatar_url": "https://avatars.githubusercontent.com/u/72545702?v=4",
+      "profile": "https://github.com/ineschh",
+      "contributions": [
+        "infra"
       ]
     }
   ],
