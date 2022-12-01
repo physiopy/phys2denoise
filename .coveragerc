@@ -9,11 +9,11 @@ omit =
     .*rc
     versioneer.py
     setup.py
-    */tests/*
-    */_version.py
-    */__init__.py
-    */**/__init__.py
-    */due.py
-    */.*rc
-    */versioneer.py
-    */setup.py
+    phys2denoise/tests/*
+    phys2denoise/_version.py
+    phys2denoise/__init__.py
+    phys2denoise/**/__init__.py
+    phys2denoise/due.py
+    phys2denoise/.*rc
+    phys2denoise/versioneer.py
+    phys2denoise/setup.py
