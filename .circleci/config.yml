@@ -1,200 +1,123 @@
-# Python CircleCI 2.1 configuration file
-#
-#
-#
+# Use the latest 2.1 version of CircleCI pipeline process engine.
+# See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
+
+# Orbs are reusable packages of CircleCI configuration that you may share across projects, enabling you to create encapsulated, parameterized commands, jobs, and executors that can be used across multiple projects.
+# See: https://circleci.com/docs/2.0/orb-intro/
 orbs:
-  codecov: codecov/codecov@1.0.5
+  # The python orb contains a set of prepackaged CircleCI configuration you can use repeatedly in your configuration files
+  # Orb commands and jobs help you with common scripting around a language/tool
+  # so you dont have to copy and paste it everywhere.
+  # See the orb documentation here: https://circleci.com/developer/orbs/orb/circleci/python
+  python: circleci/python@2.0.3
+  codecov: codecov/codecov@3.2.2
+
+# Define a job to be invoked later in a workflow.
+# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-
-  makeenv_37:
+  test37: # This is the name of the job, feel free to change it to better match what you're trying to do!
+    # These next lines defines a Docker executors: https://circleci.com/docs/2.0/executor-types/
+    # You can specify an image from Dockerhub or use one of the convenience images from CircleCI's Developer Hub
+    # A list of available CircleCI Docker convenience images are available here: https://circleci.com/developer/images/image/cimg/python
+    # The executor is the environment in which the steps below will be executed - below will use a python 3.6.14 container
+    # Change the version below to your required version of python
     docker:
-      - image: continuumio/miniconda3
+      - image: cimg/python:3.7
     working_directory: /tmp/src/phys2denoise
+    resource_class: medium
+    # Checkout the code as the first step. This is a dedicated CircleCI step.
+    # The python orb's install-packages step will install the dependencies from a Pipfile via Pipenv by default.
+    # Here we're making sure we use just use the system-wide pip. By default it uses the project root's requirements.txt.
+    # Then run your tests!
+    # CircleCI will report the results back to your VCS provider.
     steps:
       - checkout
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-              - src/phys2denoise
-      - restore_cache:
-          key: conda-py37-v1-{{ checksum "setup.cfg" }}
+      # Install Pillow first to avoid jpsg and zlib issues
+      - python/install-packages:
+          path-args: .[test]
+          pypi-cache: false
+          venv-cache: false
+          pkg-manager: pip-dist
+          # app-dir: ~/project/package-directory/  # If you're requirements.txt isn't in the root directory.
+          # pip-dependency-file: test-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
       - run:
-          name: Generate environment
+          name: Run tests
+          # This assumes pytest is installed via the install-package step above
           command: |
-            if [[ -e /opt/conda/envs/py36_env ]]; then
-              echo "Restoring environment from cache"
-                source activate phys2denoise_py37
-            else
-              conda create -yq -n phys2denoise_py37 python=3.7
-              source activate phys2denoise_py37
-              pip install -e ".[test,doc]"
-            fi
-      - save_cache:
-          key: conda-py37-v1-{{ checksum "setup.cfg" }}
-          paths:
-              - /opt/conda/envs/phys2denoise_py37
-
-  unittest_36:
-    docker:
-      - image: continuumio/miniconda3
-    working_directory: /tmp/src/phys2denoise
-    steps:
-      - checkout
-      - restore_cache:
-          key: conda-py36-v1-{{ checksum "setup.cfg" }}
-      - run:
-          name: Generate environment
-          command: |
-            apt-get install -yqq make
-            if [ ! -d /opt/conda/envs/phys2denoise_py36 ]; then
-              conda create -yq -n phys2denoise_py36 python=3.6
-              source activate phys2denoise_py36
-              pip install -e ".[test]"
-            fi
-      - run:
-          name: Running unit tests
-          command: |
-            source activate phys2denoise_py36
-            make unittest
+            pytest --cov=./phys2denoise
             mkdir /tmp/src/coverage
-            mv /tmp/src/phys2denoise/.coverage /tmp/src/coverage/.coverage.py36
-      - save_cache:
-          key: conda-py36-v1-{{ checksum "setup.cfg" }}
-          paths:
-              - /opt/conda/envs/phys2denoise_py36
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-              - src/coverage/.coverage.py36
-
-  unittest_37:
-    docker:
-      - image: continuumio/miniconda3
-    working_directory: /tmp/src/phys2denoise
-    steps:
-      - checkout
-      - restore_cache:
-          key: conda-py37-v1-{{ checksum "setup.cfg" }}
-      - run:
-          name: Running unit tests
-          command: |
-            apt-get install -y make
-            source activate phys2denoise_py37  # depends on makeenv_37
-            make unittest
-            mkdir /tmp/src/coverage
-            mv /tmp/src/phys2denoise/.coverage /tmp/src/coverage/.coverage.py37
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-              - src/coverage/.coverage.py37
-
-  integrationtest_36:
-    docker:
-      - image: continuumio/miniconda3
-    working_directory: /tmp/src/phys2denoise
-    steps:
-      - checkout
-      - restore_cache:
-          key: conda-py36-v1-{{ checksum "setup.cfg" }}
-      - run:
-          name: Generate environment
-          command: |
-            apt-get install -yqq make
-            if [ ! -d /opt/conda/envs/phys2denoise_py36 ]; then
-              conda create -yq -n phys2denoise_py36 python=3.6
-              source activate phys2denoise_py36
-              pip install -e ".[test]"
-            fi
-      - run:
-          name: Run integration tests
-          no_output_timeout: 10m
-          command: |
-            source activate phys2denoise_py36
-            make integration
-            mkdir /tmp/src/coverage
-            mv /tmp/src/phys2denoise/.coverage /tmp/src/coverage/.coverage.integration36
+            mv ./.coverage /tmp/src/coverage/.coverage.py37
       - store_artifacts:
-          path: /tmp/data
+          path: /tmp/src/coverage
+      # Persist the specified paths (workspace/echo-output) into the workspace for use in downstream job.
       - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
+          # taken to be the root directory of the workspace.
           root: /tmp
+          # Must be relative path from root
           paths:
-              - src/coverage/.coverage.integration36
+            - src/coverage/.coverage.py37
 
-  integrationtest_37:
+  test310:
     docker:
-      - image: continuumio/miniconda3
+      - image: cimg/python:3.10
     working_directory: /tmp/src/phys2denoise
+    resource_class: medium
     steps:
       - checkout
-      - restore_cache:
-          key: conda-py37-v1-{{ checksum "setup.cfg" }}
+      - python/install-packages:
+          path-args: .[test]
+          pypi-cache: false
+          venv-cache: false
+          pkg-manager: pip-dist
       - run:
-          name: Run integration tests
-          no_output_timeout: 10m
+          name: Run tests
           command: |
-            apt-get install -yqq make
-            source activate phys2denoise_py37  # depends on makeenv_37
-            make integration
+            pytest --cov=./phys2denoise
             mkdir /tmp/src/coverage
-            mv /tmp/src/phys2denoise/.coverage /tmp/src/coverage/.coverage.integration37
+            mv ./.coverage /tmp/src/coverage/.coverage.py310
       - store_artifacts:
-          path: /tmp/data
+          path: /tmp/src/coverage
       - persist_to_workspace:
           root: /tmp
           paths:
-              - src/coverage/.coverage.integration37
+            - src/coverage/.coverage.py310
 
   style_check:
     docker:
-      - image: continuumio/miniconda3
+      - image: cimg/python:3.7
     working_directory: /tmp/src/phys2denoise
+    resource_class: small
     steps:
       - checkout
-      - restore_cache:
-          key: conda-py37-v1-{{ checksum "setup.cfg" }}
+      - python/install-packages:
+          path-args: .[style]
+          pypi-cache: false
+          venv-cache: false
+          pkg-manager: pip-dist
       - run:
-          name: Style check
-          command: |
-            apt-get install -yqq make
-            source activate phys2denoise_py37  # depends on makeenv37
-            make lint
-      - store_artifacts:
-          path: /tmp/data/lint
-
-  build_docs:
-    working_directory: /tmp/src/phys2denoise
-    docker:
-      - image: continuumio/miniconda3
-    steps:
-      - attach_workspace:  # get phys2denoise
-          at: /tmp
-      - restore_cache:  # load environment
-          key: conda-py37-v1-{{ checksum "setup.cfg" }}
-      - run:
-          name: Build documentation
-          command: |
-            apt-get install -yqq make
-            source activate phys2denoise_py37  # depends on makeenv_37
-            make -C docs html
-      - store_artifacts:
-          path: /tmp/src/phys2denoise/docs/_build/html
+          name: Check style
+          command: echo "Skipping for now"  # |
+            # isort --check .
+            # black --check phys2denoise
+            # flake8 ./phys2denoise
 
   merge_coverage:
     working_directory: /tmp/src/phys2denoise
     docker:
-      - image: continuumio/miniconda3
+      - image: cimg/python:3.10
+    resource_class: small
     steps:
       - attach_workspace:
           at: /tmp
       - checkout
-      - restore_cache:
-          key: conda-py37-v1-{{ checksum "setup.cfg" }}
+      - python/install-packages:
+          args: coverage
+          pkg-manager: pip-dist
       - run:
           name: Merge coverage files
           command: |
-            apt-get install -yqq curl
-            source activate phys2denoise_py37  # depends on makeenv37
+            sudo apt update && sudo apt install curl
             cd /tmp/src/coverage/
             coverage combine
             coverage xml
@@ -203,14 +126,20 @@ jobs:
       - codecov/upload:
           file: /tmp/src/coverage/coverage.xml
 
+# Invoke jobs via workflows
+# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  version: 2.1
-  build_test:
+  build_test: # This is the name of the workflow, feel free to change it to better match your workflow.
+    # Inside the workflow, you define the jobs you want to run.
     jobs:
-      - makeenv_37
-      - style_check:
-          requires:
-            - makeenv_37
-      - merge_coverage:
+      - style_check
+      - test37:
           requires:
             - style_check
+      - test310:
+          requires:
+            - style_check
+      - merge_coverage:
+          requires:
+            - test37
+            - test310
