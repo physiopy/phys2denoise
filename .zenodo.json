@@ -1,9 +1,8 @@
 {
-  "metadata": {
-    "license": {
-      "id": "Apache-2.0"
-    }, 
+    "license":"Apache-2.0",
     "title": "physiopy/phys2denoise: Creation of physiological regressors for fMRI", 
+    "upload_type":"software",
+    "access_right":"open",
     "creators": [ 
       {
         "affiliation": "BCBL - Basque Center on Cognition, Brain and Language", 
@@ -18,11 +17,5 @@
         "affiliation": "BCBL - Basque Center on Cognition, Brain and Language", 
         "name": "Stefano Moia"
       }
-    ], 
-    "access_right": "open", 
-    "resource_type": {
-      "type": "software", 
-      "title": "Software"
-    },
-  }
+    ]
 }
