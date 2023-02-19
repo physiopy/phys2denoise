@@ -1,6 +1,5 @@
 """Miscellaneous utility functions for metric calculation."""
 import logging
-import warnings
 
 import numpy as np
 
@@ -35,7 +34,8 @@ def print_metric_call(metric, args):
 
 
 def mirrorpad_1d(arr, buffer=250):
-    """Pad both sides of array with flipped values from array of length 'buffer'.
+    """
+    Pad both sides of array with flipped values from array of length 'buffer'.
 
     Parameters
     ----------
@@ -45,8 +45,7 @@ def mirrorpad_1d(arr, buffer=250):
     Returns
     -------
     arr_out
-    """
-        
+    """ 
     mirror = np.flip(arr, axis=0)
     # If buffer is too long, fix it and issue a warning
     try: 
@@ -55,13 +54,14 @@ def mirrorpad_1d(arr, buffer=250):
         idx = range(0, buffer)
         post_mirror = np.take(mirror, idx, axis=0)
     except IndexError:
-        fixed_buffer = len(arr)
-        warnings.warn('Requested buffer size ({}) is longer than arr length ({}). Fixing buffer size to {}.'.format(
-            buffer, len(arr), fixed_buffer
-        ))
-        idx = range(arr.shape[0] - fixed_buffer, arr.shape[0])
+        len(arr)
+        LGR.warning(
+            f'Requested buffer size ({buffer}) is longer than input array length '
+            f'({len(arr)}). Fixing buffer size to array length.'
+        )
+        idx = range(arr.shape[0] - len(arr), arr.shape[0])
         pre_mirror = np.take(mirror, idx, axis=0)
-        idx = range(0, fixed_buffer)
+        idx = range(len(arr))
         post_mirror = np.take(mirror, idx, axis=0)
     arr_out = np.concatenate((pre_mirror, arr, post_mirror), axis=0)
     return arr_out
