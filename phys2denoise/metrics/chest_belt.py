@@ -2,10 +2,8 @@
 import matplotlib as mpl
 import numpy as np
 import pandas as pd
-from scipy.ndimage.filters import convolve1d
-from scipy.signal import detrend
-from scipy.stats import zscore
 from scipy.interpolate import interp1d
+from scipy.ndimage.filters import convolve1d
 
 mpl.use("TkAgg")
 import matplotlib.pyplot as plt
@@ -108,7 +106,7 @@ def rpv(resp, window=6):
        115, pp. 2105-2114, 2018.
     """
     # First, z-score respiratory traces
-    resp_z = zscore(resp)
+    resp_z = utils.zscore(resp)
 
     # Collect upper envelope
     rpv_upper_env = utils.rms_envelope_1d(resp_z, window)
@@ -155,6 +153,7 @@ def env(resp, samplerate, window=10):
     window = int(window * samplerate)
 
     # Calculate RPV across a rolling window
+
     env_arr = (
         pd.Series(resp).rolling(window=window, center=True).apply(rpv, args=(window,))
     )
@@ -180,8 +179,8 @@ def rv(resp, samplerate, window=6, lags=(0,)):
     -------
     rv_out : (X, 2) :obj:`numpy.ndarray`
         Respiratory variance values.
-        The first column is raw RV values, after detrending/normalization.
-        The second column is RV values convolved with the RRF, after detrending/normalization.
+        The first column is raw RV values, after normalization.
+        The second column is RV values convolved with the RRF, after normalization.
 
     Notes
     -----
@@ -215,8 +214,7 @@ def rv(resp, samplerate, window=6, lags=(0,)):
 
     # Detrend and normalize
     rv_combined = rv_combined - np.mean(rv_combined, axis=0)
-    rv_combined = detrend(rv_combined, axis=0)
-    rv_out = zscore(rv_combined, axis=0)
+    rv_out = utils.zscore(rv_combined, axis=0)
     return rv_out
 
 
