@@ -1,18 +1,13 @@
 """Denoising metrics for chest belt recordings."""
-import matplotlib as mpl
 import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
-from scipy.ndimage.filters import convolve1d
-
-mpl.use("TkAgg")
-import matplotlib.pyplot as plt
 
 from .. import references
 from ..due import due
 from .responses import rrf
 from .utils import apply_function_in_sliding_window as afsw
-from .utils import rms_envelope_1d, zscore
+from .utils import convolve_and_resize, rms_envelope_1d, zscore
 
 
 def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
@@ -46,8 +41,8 @@ def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
     trough_vals = belt_ts[troughs]
     peak_time = time[peaks]
     trough_time = time[troughs]
-    mid_peak_time = (peak_time[:-1] + peak_time[1:]) / 2
-    period = peak_time[1:] - peak_time[:-1]
+    mid_peak_time = afsw(peak_time, np.mean, incomplete=False)
+    period = np.diff(peak_time)
     # interpolate peak values over all timepoints
     peak_interp = interp1d(
         peak_time, peak_vals, bounds_error=False, fill_value="extrapolate"
@@ -208,8 +203,7 @@ def rv(resp, samplerate, window=6, lags=(0,)):
     rv_arr = afsw(resp, np.std, halfwindow_samples)
 
     # Convolve with rrf
-    rrf_arr = rrf(samplerate, oversampling=1)
-    rv_convolved = convolve1d(rv_arr, rrf_arr, axis=0)
+    rv_convolved = convolve_and_resize(rv_arr, rrf(samplerate))
 
     # Concatenate the raw and convolved versions
     rv_combined = np.stack((rv_arr, rv_convolved), axis=-1)
@@ -247,7 +241,7 @@ def respiratory_phase(resp, sample_rate, n_scans, slice_timings, t_r):
 
     # generate histogram from respiratory signal
     # TODO: Replace with numpy.histogram
-    resp_hist, resp_hist_bins, _ = plt.hist(resp, bins=100)
+    resp_hist, resp_hist_bins = np.histogram(resp, bins=100)
 
     # first compute derivative of respiration signal
     resp_diff = np.diff(resp, n=1)
