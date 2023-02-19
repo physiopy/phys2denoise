@@ -1,7 +1,9 @@
 """Denoising metrics for cardio recordings."""
 import numpy as np
 
-from .responses import crf
+from .responses import icrf
+from .utils import apply_function_in_sliding_window as afsw
+from .utils import convolve_and_resize, zscore
 
 
 def iht():
@@ -14,9 +16,9 @@ def heart_beat_interval(card, peaks, samplerate, window, central_measure="mean")
 
     Parameters
     ----------
-    card : str or 1D numpy.ndarray
+    card : list or 1D numpy.ndarray
         Timeseries of recorded cardiac signal
-    peaks : str or 1D numpy.ndarray
+    peaks : list or 1D numpy.ndarray
         array of peak indexes for card.
     samplerate : float
         Sampling rate for card, in Hertz.
@@ -47,37 +49,27 @@ def heart_beat_interval(card, peaks, samplerate, window, central_measure="mean")
     .. [1] J. E. Chen & L. D. Lewis, "Resting-state "physiological networks"", Neuroimage,
         vol. 213, pp. 116707, 2020.
     """
-    # Convert window to time points
-    size = len(card)
+    # Convert window to samples, but halves it.
     halfwindow_samples = int(round(window * samplerate / 2))
-    hbi_arr = np.empty(size)
 
-    for i in range(size):
-        if i < 120:
-            window_tp = i + halfwindow_samples
-        elif i > (size - 1 - 120):
-            window_tp = (size - 1 - i) + halfwindow_samples
-        else:
-            window_tp = window_size
+    if central_measure in ["mean", "average", "avg"]:
+        cmo = np.mean
+    elif central_measure in ["median", "mdn"]:
+        cmo = np.median
 
-        condition = (card.peaks >= (i - window_tp / 2)) & (card.peaks <= (i + window_tp / 2))
-        peaks = card.peaks[condition]
+    idx_arr = np.arange(len(card))
+    idx_min = afsw(idx_arr, np.min, halfwindow_samples)
+    idx_max = afsw(idx_arr, np.max, halfwindow_samples)
 
-        if central_measure == "mean":
-            hbi_arr[i] = np.mean(np.ediff1d(peaks))
-        elif central_measure == "median":
-            hbi_arr[i] = np.median(np.ediff1d(peaks))
-        else:
-            return
+    hbi_arr = np.empty_like(card)
+    for n, i in enumerate(idx_min):
+        diff = np.diff(peaks[np.logical_and(peaks >= i, peaks <= idx_max[n])])
+        hbi_arr[n] = cmo(diff) if diff.size > 0 else 0
 
     hbi_arr[np.isnan(hbi_arr)] = 0.0
 
-    # Convolve with crf
-    crf_arr = crf(samplerate)
-    icrf_arr = -crf_arr  # geometric mean
-    hbi_convolved = np.convolve(hbi_arr, icrf_arr)
-    hbi_convolved = np.interp(hbi_convolved, (hbi_convolved.min(), hbi_convolved.max()), (hbi_arr.min(), hbi_arr.max()))
-    #hbi_convolved = convolve1d(hbi_arr, icrf_arr, axis=0)
+    # Convolve with icrf
+    hbi_convolved = convolve_and_resize(hbi_arr, icrf(samplerate))
 
     # Concatenate the raw and convolved versions
     hbi_combined = np.stack((hbi_arr, hbi_convolved), axis=-1)
