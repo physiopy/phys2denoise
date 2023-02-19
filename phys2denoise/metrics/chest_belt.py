@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from .. import references
 from ..due import due
 from . import utils
+from .responses import rrf
 
 
 def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
@@ -217,55 +218,6 @@ def rv(resp, samplerate, window=6, lags=(0,)):
     rv_combined = detrend(rv_combined, axis=0)
     rv_out = zscore(rv_combined, axis=0)
     return rv_out
-
-
-@due.dcite(references.CHANG_GLOVER_2009)
-def rrf(samplerate, oversampling=50, time_length=50, onset=0.0, tr=2.0):
-    """Calculate the respiratory response function using Chang and Glover's definition.
-
-    Parameters
-    ----------
-    samplerate : :obj:`float`
-        Sampling rate of data, in seconds.
-    oversampling : :obj:`int`, optional
-        Temporal oversampling factor. Default is 50.
-    time_length : :obj:`int`, optional
-        RRF kernel length, in seconds. Default is 50.
-    onset : :obj:`float`, optional
-        Onset of the response, in seconds. Default is 0.
-
-    Returns
-    -------
-    rrf : array-like
-        respiratory response function
-
-    Notes
-    -----
-    This respiratory response function was defined in [1]_, Appendix A.
-
-    The core code for this function comes from metco2, while several of the
-    parameters, including oversampling, time_length, and onset, are modeled on
-    nistats' HRF functions.
-
-    References
-    ----------
-    .. [1] C. Chang & G. H. Glover, "Relationship between respiration,
-       end-tidal CO2, and BOLD signals in resting-state fMRI," Neuroimage,
-       issue 47, vol. 4, pp. 1381-1393, 2009.
-    """
-
-    def _rrf(t):
-        rf = 0.6 * t ** 2.1 * np.exp(-t / 1.6) - 0.0023 * t ** 3.54 * np.exp(-t / 4.25)
-        return rf
-
-    dt = tr / oversampling
-    time_stamps = np.linspace(
-        0, time_length, np.rint(float(time_length) / dt).astype(np.int)
-    )
-    time_stamps -= onset
-    rrf_arr = _rrf(time_stamps)
-    rrf_arr = rrf_arr / max(abs(rrf_arr))
-    return rrf_arr
 
 
 def respiratory_phase(resp, sample_rate, n_scans, slice_timings, t_r):
