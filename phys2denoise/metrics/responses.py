@@ -12,19 +12,20 @@ LGR.setLevel(logging.INFO)
 
 @due.dcite(references.CHANG_GLOVER_2009)
 @due.dcite(references.SHMUELI_2007)
-def crf(samplerate, oversampling=50, time_length=32, onset=0.0, tr=2.0):
-    """Calculate the cardiac response function using Chang and Glover's definition.
+def crf(samplerate, time_length=32, onset=0.0, inverse=False):
+    """
+    Calculate the cardiac response function using Chang and Glover's definition.
 
     Parameters
     ----------
     samplerate : :obj:`float`
         Sampling rate of data, in seconds.
-    oversampling : :obj:`int`, optional
-        Temporal oversampling factor, in seconds. Default is 50.
     time_length : :obj:`int`, optional
         RRF kernel length, in seconds. Default is 32.
     onset : :obj:`float`, optional
         Onset of the response, in seconds. Default is 0.
+    inverse: `bool`, optional
+        If True, return the additive inverse of the CRF, i.e. the iCRF.
 
     Returns
     -------
@@ -36,7 +37,7 @@ def crf(samplerate, oversampling=50, time_length=32, onset=0.0, tr=2.0):
     This cardiac response function was defined in [1]_, Appendix A.
 
     The core code for this function comes from metco2, while several of the
-    parameters, including oversampling, time_length, and onset, are modeled on
+    parameters, including time_length, and onset, are modeled on
     nistats' HRF functions.
 
     References
@@ -47,31 +48,57 @@ def crf(samplerate, oversampling=50, time_length=32, onset=0.0, tr=2.0):
     """
 
     def _crf(t):
-        rf = 0.6 * t ** 2.7 * np.exp(-t / 1.6) - 16 * (
+        rf = 0.6 * t**2.7 * np.exp(-t / 1.6) - 16 * (
             1 / np.sqrt(2 * np.pi * 9)
         ) * np.exp(-0.5 * (((t - 12) ** 2) / 9))
         return rf
 
-    dt = tr / oversampling
-    time_stamps = np.linspace(
-        0, time_length, np.rint(float(time_length) / dt).astype(np.int)
-    )
+    time_stamps = np.arange(0, time_length, np.round(1 / samplerate))
     time_stamps -= onset
     crf_arr = _crf(time_stamps)
     crf_arr = crf_arr / max(abs(crf_arr))
-    return crf_arr
+
+    if inverse:
+        return -crf_arr
+    else:
+        return crf_arr
 
 
-@due.dcite(references.CHANG_GLOVER_2009)
-def rrf(samplerate, oversampling=50, time_length=50, onset=0.0, tr=2.0):
-    """Calculate the respiratory response function using Chang and Glover's definition.
+def icrf(samplerate, time_length=32, onset=0.0):
+    """
+    Calculate the inverse of the cardiac response function.
 
     Parameters
     ----------
     samplerate : :obj:`float`
         Sampling rate of data, in seconds.
-    oversampling : :obj:`int`, optional
-        Temporal oversampling factor. Default is 50.
+    time_length : :obj:`int`, optional
+        RRF kernel length, in seconds. Default is 32.
+    onset : :obj:`float`, optional
+        Onset of the response, in seconds. Default is 0.
+    inverse: `bool`, optional
+        If True, return the additive inverse of the CRF, i.e. the iCRF.
+
+    Returns
+    -------
+    icrf : array-like
+        Inverse of cardiac or "heart" response function
+
+    References
+    ----------
+    .. [1] .
+    """
+    return crf(samplerate, time_length=32, onset=0.0, inverse=True)
+
+
+@due.dcite(references.CHANG_GLOVER_2009)
+def rrf(samplerate, time_length=50, onset=0.0):
+    """Calculate the respiratory response function using Chang and Glover's definition.
+
+    Parameters
+    ----------
+    samplerate : :obj:`float`
+        Sampling rate of data, in seconds..
     time_length : :obj:`int`, optional
         RRF kernel length, in seconds. Default is 50.
     onset : :obj:`float`, optional
@@ -87,7 +114,7 @@ def rrf(samplerate, oversampling=50, time_length=50, onset=0.0, tr=2.0):
     This respiratory response function was defined in [1]_, Appendix A.
 
     The core code for this function comes from metco2, while several of the
-    parameters, including oversampling, time_length, and onset, are modeled on
+    parameters, including time_length, and onset, are modeled on
     nistats' HRF functions.
 
     References
@@ -98,13 +125,10 @@ def rrf(samplerate, oversampling=50, time_length=50, onset=0.0, tr=2.0):
     """
 
     def _rrf(t):
-        rf = 0.6 * t ** 2.1 * np.exp(-t / 1.6) - 0.0023 * t ** 3.54 * np.exp(-t / 4.25)
+        rf = 0.6 * t**2.1 * np.exp(-t / 1.6) - 0.0023 * t**3.54 * np.exp(-t / 4.25)
         return rf
 
-    dt = tr / oversampling
-    time_stamps = np.linspace(
-        0, time_length, np.rint(float(time_length) / dt).astype(np.int)
-    )
+    time_stamps = np.arange(0, time_length, np.round(1 / samplerate))
     time_stamps -= onset
     rrf_arr = _rrf(time_stamps)
     rrf_arr = rrf_arr / max(abs(rrf_arr))
