@@ -2,6 +2,7 @@
 import logging
 
 import numpy as np
+from numpy.lib.stride_tricks import sliding_window_view as slw
 
 LGR = logging.getLogger(__name__)
 LGR.setLevel(logging.INFO)
@@ -182,3 +183,72 @@ def apply_lags(arr1d, lags):
             arr_delayed = arr1d.copy()
         arr_with_lags[:, i_lag] = arr_delayed
     return arr_with_lags
+
+
+def apply_function_in_sliding_window(array, func, halfwindow, incomplete=True):
+    """
+    Apply function f in a sliding window view of an array.
+
+    Windows are always considered as centered.
+    This function can consider incomplete windows, i.e. those windows
+    at the beginning and at the end of an array, so that the length
+    of the output is the same as the length of the input. For the same reason,
+    it will skip the very last window.
+
+    This is somewhat equivalent to pandas' rolling function set with center=True,
+    except for the incomplete windows.
+
+    Parameters
+    ----------
+    array : list or numpy.ndarray
+        Array to apply function in sliding windows to
+    func : function
+        The bare function to be applied, e.g. np.mean
+    halfwindow : int
+        Half of the window size to be applied
+    incomplete : bool, optional
+        If True, return those windows that are smaller, i.e. at the beginning and
+        at the end of `array`. If `False`, returns only complete windows.
+
+    Returns
+    -------
+    numpy.ndarray
+        The result of the function on the given array.
+    """
+    array_out = func(slw(array, halfwindow * 2), axis=1)
+
+    if incomplete:
+        for i in reversed(range(halfwindow)):
+            array_out = np.append(func(array_out[: i + halfwindow]), array_out)
+
+        # We're skipping the very last sample to have the same size
+        for i in range(len(array_out) - halfwindow + 1, len(array_out)):
+            array_out = np.append(array_out, func(array_out[i - halfwindow :]))
+
+    array_out[np.isnan(array_out)] = 0.0
+
+    return array_out
+
+
+def convolve_and_resize(array, func):
+    """
+    Convolve array by func.
+
+    Parameters
+    ----------
+    array : list or numpy.ndarray
+        Array to be convolved
+    func : list or numpy.ndarray
+        The function to convolve `array` with
+
+    Returns
+    -------
+    numpy.ndarray
+        The convolved `array` with `func`, same length as `array`.
+    """
+    array_conv = np.convolve(array, func)[: len(array)]
+    array_conv = np.interp(
+        array_conv, (array_conv.min(), array_conv.max()), (array.min(), array.max())
+    )
+
+    return array_conv
