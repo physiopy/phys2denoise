@@ -7,6 +7,50 @@ LGR = logging.getLogger(__name__)
 LGR.setLevel(logging.INFO)
 
 
+def zscore(timeseries, axis=1, globally=False):
+    """
+    Normalise given timeseries (i.e. mean=0, std=1).
+
+    It is assumed that time is encoded in the second dimension (axis 1),
+    e.g. for 90 voxels and 300 timepoints, shape is [90, 300].
+
+    Any timeseries with std == 0 is returned as a series of 0s.
+
+    Parameters
+    ----------
+    timeseries : numpy.ndarray
+        The input timeseries. It is assumed that the second dimension is time.
+    axis : int
+        The axis to apply the zscoring. Default 1.
+    globally : bool, optional
+        If True, normalise timeseries across the first two axes. Overwrite `axis`.
+
+    Returns
+    -------
+    numpy.ndarray
+        The normalised timeseries (mean=0 std=1) if timeseries is not a 1D array.
+        If timeseries is a 1D array, it is returned as is.
+    """
+    if timeseries.ndim < 2 or (timeseries.ndim == 2 and timeseries.shape[1] == 1):
+        LGR.warning(
+            "Given timeseries seems to be a single timepoint. " "Returning it as is."
+        )
+        return timeseries
+
+    if globally:
+        z = (timeseries - timeseries.mean(axis=(0, 1))) / timeseries.std(
+            axis=(0, 1), ddof=1
+        )
+    else:
+        z = (
+            timeseries - timeseries.mean(axis=axis)[:, np.newaxis, ...]
+        ) / timeseries.std(axis=axis, ddof=1)[:, np.newaxis, ...]
+
+    z[np.isnan(z)] = 0
+
+    return z
+
+
 def print_metric_call(metric, args):
     """
     Log a message to describe how a metric is being called.
@@ -23,12 +67,12 @@ def print_metric_call(metric, args):
     Outcome
         An info-level message for the logger.
     """
-    msg = f'The {metric} regressor will be computed using the following parameters:'
+    msg = f"The {metric} regressor will be computed using the following parameters:"
 
     for arg in args:
-        msg = f'{msg}\n    {arg} = {args[arg]}'
+        msg = f"{msg}\n    {arg} = {args[arg]}"
 
-    msg = f'{msg}\n'
+    msg = f"{msg}\n"
 
     LGR.info(msg)
 
@@ -45,10 +89,10 @@ def mirrorpad_1d(arr, buffer=250):
     Returns
     -------
     arr_out
-    """ 
+    """
     mirror = np.flip(arr, axis=0)
     # If buffer is too long, fix it and issue a warning
-    try: 
+    try:
         idx = range(arr.shape[0] - buffer, arr.shape[0])
         pre_mirror = np.take(mirror, idx, axis=0)
         idx = range(0, buffer)
@@ -56,8 +100,8 @@ def mirrorpad_1d(arr, buffer=250):
     except IndexError:
         len(arr)
         LGR.warning(
-            f'Requested buffer size ({buffer}) is longer than input array length '
-            f'({len(arr)}). Fixing buffer size to array length.'
+            f"Requested buffer size ({buffer}) is longer than input array length "
+            f"({len(arr)}). Fixing buffer size to array length."
         )
         idx = range(arr.shape[0] - len(arr), arr.shape[0])
         pre_mirror = np.take(mirror, idx, axis=0)
@@ -68,7 +112,8 @@ def mirrorpad_1d(arr, buffer=250):
 
 
 def rms_envelope_1d(arr, window=500):
-    """Conceptual translation of MATLAB 2017b's envelope(X, x, 'rms') function.
+    """
+    Conceptual translation of MATLAB 2017b's envelope(X, x, 'rms') function.
 
     Parameters
     ----------
@@ -104,14 +149,15 @@ def rms_envelope_1d(arr, window=500):
         # start_idx = i + buf - 1
         # stop_idx = i + buf + window
         window_arr = arr[start_idx:stop_idx]
-        rms = np.sqrt(np.mean(window_arr ** 2))
+        rms = np.sqrt(np.mean(window_arr**2))
         rms_env[i] = rms
     rms_env += mean
     return rms_env
 
 
 def apply_lags(arr1d, lags):
-    """Apply delays (lags) to an array.
+    """
+    Apply delays (lags) to an array.
 
     Parameters
     ----------
