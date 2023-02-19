@@ -10,8 +10,9 @@ import matplotlib.pyplot as plt
 
 from .. import references
 from ..due import due
-from . import utils
 from .responses import rrf
+from .utils import apply_function_in_sliding_window as afsw
+from .utils import rms_envelope_1d, zscore
 
 
 def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
@@ -77,13 +78,15 @@ def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
 
 
 @due.dcite(references.POWER_2018)
-def rpv(resp, window=6):
+def rpv(resp, window):
     """Calculate respiratory pattern variability.
 
     Parameters
     ----------
-    resp : 1D array_like
+    resp : str or 1D numpy.ndarray
+        Tiemseries representing respiration activity.
     window : int
+        Window length in samples.
 
     Returns
     -------
@@ -106,10 +109,10 @@ def rpv(resp, window=6):
        115, pp. 2105-2114, 2018.
     """
     # First, z-score respiratory traces
-    resp_z = utils.zscore(resp)
+    resp_z = zscore(resp)
 
     # Collect upper envelope
-    rpv_upper_env = utils.rms_envelope_1d(resp_z, window)
+    rpv_upper_env = rms_envelope_1d(resp_z, window)
 
     # Calculate standard deviation
     rpv_val = np.std(rpv_upper_env)
@@ -199,11 +202,10 @@ def rv(resp, samplerate, window=6, lags=(0,)):
        issue 4, vol. 47, pp. 1381-1393, 2009.
     """
     # Convert window to Hertz
-    window = int(window * samplerate)
+    halfwindow_samples = int(round(window * samplerate / 2))
 
     # Raw respiratory variance
-    rv_arr = pd.Series(resp).rolling(window=window, center=True).std()
-    rv_arr[np.isnan(rv_arr)] = 0.0
+    rv_arr = afsw(resp, np.std, halfwindow_samples)
 
     # Convolve with rrf
     rrf_arr = rrf(samplerate, oversampling=1)
@@ -214,7 +216,7 @@ def rv(resp, samplerate, window=6, lags=(0,)):
 
     # Detrend and normalize
     rv_combined = rv_combined - np.mean(rv_combined, axis=0)
-    rv_out = utils.zscore(rv_combined, axis=0)
+    rv_out = zscore(rv_combined, axis=0)
     return rv_out
 
 
