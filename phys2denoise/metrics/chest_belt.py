@@ -2,12 +2,13 @@
 import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
+from scipy.stats import zscore
 
 from .. import references
 from ..due import due
 from .responses import rrf
 from .utils import apply_function_in_sliding_window as afsw
-from .utils import convolve_and_resize, rms_envelope_1d, zscore
+from .utils import convolve_and_resize, rms_envelope_1d
 
 
 def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):

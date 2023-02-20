@@ -8,50 +8,6 @@ LGR = logging.getLogger(__name__)
 LGR.setLevel(logging.INFO)
 
 
-def zscore(timeseries, axis=1, globally=False):
-    """
-    Normalise given timeseries (i.e. mean=0, std=1).
-
-    It is assumed that time is encoded in the second dimension (axis 1),
-    e.g. for 90 voxels and 300 timepoints, shape is [90, 300].
-
-    Any timeseries with std == 0 is returned as a series of 0s.
-
-    Parameters
-    ----------
-    timeseries : numpy.ndarray
-        The input timeseries. It is assumed that the second dimension is time.
-    axis : int
-        The axis to apply the zscoring. Default 1.
-    globally : bool, optional
-        If True, normalise timeseries across the first two axes. Overwrite `axis`.
-
-    Returns
-    -------
-    numpy.ndarray
-        The normalised timeseries (mean=0 std=1) if timeseries is not a 1D array.
-        If timeseries is a 1D array, it is returned as is.
-    """
-    if timeseries.ndim < 2 or (timeseries.ndim == 2 and timeseries.shape[1] == 1):
-        LGR.warning(
-            "Given timeseries seems to be a single timepoint. " "Returning it as is."
-        )
-        return timeseries
-
-    if globally:
-        z = (timeseries - timeseries.mean(axis=(0, 1))) / timeseries.std(
-            axis=(0, 1), ddof=1
-        )
-    else:
-        z = (
-            timeseries - timeseries.mean(axis=axis)[:, np.newaxis, ...]
-        ) / timeseries.std(axis=axis, ddof=1)[:, np.newaxis, ...]
-
-    z[np.isnan(z)] = 0
-
-    return z
-
-
 def print_metric_call(metric, args):
     """
     Log a message to describe how a metric is being called.

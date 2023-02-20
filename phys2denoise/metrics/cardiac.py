@@ -1,9 +1,10 @@
 """Denoising metrics for cardio recordings."""
 import numpy as np
+from scipy.stats import zscore
 
 from .responses import icrf
 from .utils import apply_function_in_sliding_window as afsw
-from .utils import convolve_and_resize, zscore
+from .utils import convolve_and_resize
 
 
 def iht():
