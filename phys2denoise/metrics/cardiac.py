@@ -12,7 +12,7 @@ def iht():
     pass
 
 
-def heart_beat_interval(card, peaks, samplerate, window, central_measure="mean"):
+def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean"):
     """Calculate the average heart beats interval (HBI) in a sliding window.
 
     Parameters
@@ -26,7 +26,7 @@ def heart_beat_interval(card, peaks, samplerate, window, central_measure="mean")
     window : float, optional
         Size of the sliding window, in seconds.
         Default is 6.
-    central_measure : string
+    central_measure : "mean", "median", string, optional
         Measure of the center used (mean or median).
         Default is "mean".
     Returns
