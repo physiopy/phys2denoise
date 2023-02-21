@@ -202,9 +202,13 @@ def convolve_and_resize(array, func):
     numpy.ndarray
         The convolved `array` with `func`, same length as `array`.
     """
-    array_conv = np.convolve(array, func)[: len(array)]
+    # Demean what will be convolve
+    array_demeaned = array - array.mean(axis=0)
+    array_conv = np.convolve(array_demeaned, func)[: len(array)]
     array_conv = np.interp(
         array_conv, (array_conv.min(), array_conv.max()), (array.min(), array.max())
     )
+
+    # Stack array and array_conv
 
     return array_conv
