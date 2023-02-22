@@ -2,6 +2,8 @@
 import numpy as np
 from scipy.stats import zscore
 
+from .. import references
+from ..due import due
 from .responses import icrf
 from .utils import apply_function_in_sliding_window as afsw
 from .utils import convolve_and_resize
@@ -11,7 +13,7 @@ def iht():
     """Calculate instantaneous heart rate."""
     pass
 
-
+@due.dcite(references.CHEN_2020)
 def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean"):
     """Calculate the average heart beats interval (HBI) in a sliding window.
 
@@ -27,7 +29,7 @@ def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean
         Size of the sliding window, in seconds.
         Default is 6.
     central_measure : "mean", "median", string, optional
-        Measure of the center used (mean or median).
+        Measure of the center used (mean/average or median).
         Default is "mean".
     Returns
     -------
@@ -47,8 +49,8 @@ def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean
 
     References
     ----------
-    .. [1] J. E. Chen & L. D. Lewis, "Resting-state "physiological networks"", Neuroimage,
-        vol. 213, pp. 116707, 2020.
+    .. [1] J. E. Chen et al., "Resting-state "physiological networks"", NeuroImage,
+       vol. 213, 2020.
     """
     # Convert window to samples, but halves it.
     halfwindow_samples = int(round(window * samplerate / 2))
