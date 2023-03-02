@@ -6,7 +6,7 @@ import argparse
 
 from phys2denoise import __version__
 from phys2denoise.metrics.cardiac import crf
-from phys2denoise.metrics.chest_belt import rpv, rv, rvt, rrf, env
+from phys2denoise.metrics.chest_belt import respiratory_pattern_variability, respiratory_variance, respiratory_variance_time, rrf, env
 
 
 def _get_parser():
@@ -55,7 +55,7 @@ def _get_parser():
     metrics.add_argument("-rpv", "--respiratory-pattern-variability",
                          dest="metrics",
                          action="append_const",
-                         const=rpv,
+                         const=respiratory_pattern_variability,
                          help="Respiratory pattern variability. Requires the following "
                               "input: window.",
                          default=[])
@@ -69,7 +69,7 @@ def _get_parser():
     metrics.add_argument("-rv", "--respiratory-variance",
                          dest="metrics",
                          action="append_const",
-                         const=rv,
+                         const=respiratory_variance,
                          help="Respiratory variance. Requires the following inputs: "
                               "sample-rate, window and lags. If the input file "
                               "not a .phys file, it also requires peaks and troughs",
@@ -78,7 +78,7 @@ def _get_parser():
     metrics.add_argument("-rvt", "--respiratory-volume-per-time",
                          dest="metrics",
                          action="append_const",
-                         const="rvt",
+                         const="respiratory_variance_time",
                          help="Respiratory volume-per-time. Requires the following inputs: "
                               "sample-rate, window, lags, peaks and troughs.",
                          default=[])

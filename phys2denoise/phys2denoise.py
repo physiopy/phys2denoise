@@ -21,7 +21,7 @@ import pandas as pd
 
 from phys2denoise.cli.run import _get_parser
 from phys2denoise.metrics.cardiac import crf
-from phys2denoise.metrics.chest_belt import rpv, rv, rvt, rrf
+from phys2denoise.metrics.chest_belt import respiratory_pattern_variability, respiratory_variance, respiratory_variance_time, rrf
 from phys2denoise.metrics.retroicor import retroicor
 
 from . import __version__
@@ -105,7 +105,7 @@ def select_input_args(metric, metric_args):
      version=__version__,
      cite_module=True)
 def phys2denoise(filename, outdir='.',
-                 metrics=[crf, rpv, rv, rvt, rrf, 'retroicor_card', 'retroicor_resp'],
+                 metrics=[crf, respiratory_pattern_variability, respiratory_variance, respiratory_variance_time, rrf, 'retroicor_card', 'retroicor_resp'],
                  debug=False, quiet=False, **kwargs):
     """
     Run main workflow of phys2denoise.

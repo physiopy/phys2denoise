@@ -1,13 +1,12 @@
 """Denoising metrics for cardio recordings."""
 import numpy as np
-from scipy.stats import zscore
 
-from .responses import icrf
+from .responses import icrf, crf
 from .utils import apply_function_in_sliding_window as afsw
-from .utils import convolve_and_resize
+from .utils import convolve_and_rescale
 
 
-def iht():
+def instantaneous_heart_rate():
     """Calculate instantaneous heart rate."""
     pass
 
@@ -65,19 +64,13 @@ def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean
     hbi_arr = np.empty_like(card)
     for n, i in enumerate(idx_min):
         diff = np.diff(peaks[np.logical_and(peaks >= i, peaks <= idx_max[n])])
-        hbi_arr[n] = cmo(diff) if diff.size > 0 else 0
+        hbi_arr[n] = cmo(hr) if hr.size > 0 else 0
 
     hbi_arr[np.isnan(hbi_arr)] = 0.0
 
-    # Convolve with icrf
-    hbi_convolved = convolve_and_resize(hbi_arr, icrf(samplerate))
+    # Convolve with crf and rescale
+    hbi_out = convolve_and_rescale(hbi_arr, crf(samplerate), rescale='zscore' )
 
-    # Concatenate the raw and convolved versions
-    hbi_combined = np.stack((hbi_arr, hbi_convolved), axis=-1)
-
-    # Normalize to z-score
-    hbi_combined = hbi_combined - np.mean(hbi_combined, axis=0)
-    hbi_out = zscore(hbi_combined, axis=0)
     return hbi_out
 
 

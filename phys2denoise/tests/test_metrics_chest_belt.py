@@ -44,12 +44,12 @@ def test_respiratory_phase_smoke():
     assert resp_phase.shape == (n_scans, slice_timings.size)
 
 
-def test_rpv_smoke():
+def test_respiratory_pattern_variability_smoke():
     """Basic smoke test for respiratory pattern variability calculation."""
     n_samples = 2000
     resp = np.random.normal(size=n_samples)
     window = 50
-    rpv_val = chest_belt.rpv(resp, window)
+    rpv_val = chest_belt.respiratory_pattern_variability(resp, window)
     assert isinstance(rpv_val, float)
 
 
@@ -64,12 +64,12 @@ def test_env_smoke():
     assert env_arr.shape == (n_samples,)
 
 
-def test_rv_smoke():
+def test_respiratory_variance_smoke():
     """Basic smoke test for respiratory variance calculation."""
     n_samples = 2000
     resp = np.random.normal(size=n_samples)
     samplerate = 1 / 0.01
     window = 6
-    rv_arr = chest_belt.rv(resp, samplerate=samplerate, window=window)
+    rv_arr = chest_belt.respiratory_variance(resp, samplerate=samplerate, window=window)
     assert rv_arr.ndim == 2
     assert rv_arr.shape == (n_samples, 2)

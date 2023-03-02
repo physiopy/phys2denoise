@@ -8,10 +8,10 @@ from .. import references
 from ..due import due
 from .responses import rrf
 from .utils import apply_function_in_sliding_window as afsw
-from .utils import convolve_and_resize, rms_envelope_1d
+from .utils import convolve_and_rescale, rms_envelope_1d
 
 
-def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
+def respiratory_variance_time(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
     """
     Implement the Respiratory Variance over Time (Birn et al. 2006).
 
@@ -74,7 +74,7 @@ def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
 
 
 @due.dcite(references.POWER_2018)
-def rpv(resp, window):
+def respiratory_pattern_variability(resp, window):
     """Calculate respiratory pattern variability.
 
     Parameters
@@ -161,7 +161,7 @@ def env(resp, samplerate, window=10):
 
 
 @due.dcite(references.CHANG_GLOVER_2009)
-def rv(resp, samplerate, window=6, lags=(0,)):
+def respiratory_variance(resp, samplerate, window=6, lags=(0,)):
     """Calculate respiratory variance.
 
     Parameters

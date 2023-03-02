@@ -1,5 +1,5 @@
 import peakdet
-from phys2denoise.metrics.chest_belt import rvt
+from phys2denoise.metrics.chest_belt import respiratory_pattern_variability
 
 
 def test_peakdet(fake_phys):
@@ -10,10 +10,10 @@ def test_peakdet(fake_phys):
     assert phys.peaks is not None
 
 
-def test_rvt(fake_phys):
+def test_respiratory_variance_time(fake_phys):
     phys = peakdet.Physio(fake_phys, fs=62.5)
     phys = peakdet.operations.filter_physio(phys, cutoffs=3, method="lowpass")
     phys = peakdet.operations.peakfind_physio(phys)
-    r = rvt(phys.data, phys.peaks, phys.troughs, samplerate=phys.fs)
+    r = test_respiratory_variance_time(phys.data, phys.peaks, phys.troughs, samplerate=phys.fs)
     assert r is not None
     assert len(r) == 18750

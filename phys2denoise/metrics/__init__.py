@@ -1,6 +1,6 @@
 """Metrics derived from physiological signals."""
 from .cardiac import cardiac_phase, heart_beat_interval
-from .chest_belt import env, respiratory_phase, rpv, rv
+from .chest_belt import env, respiratory_phase, respiratory_pattern_variability, respiratory_variance
 from .multimodal import retroicor
 from .responses import crf, icrf, rrf
 
@@ -10,9 +10,9 @@ __all__ = [
     "rrf",
     "heart_beat_interval",
     "cardiac_phase",
-    "rpv",
+    "respiratory_pattern_variability",
     "env",
-    "rv",
+    "respiratory_variance",
     "respiratory_phase",
     "retroicor",
 ]

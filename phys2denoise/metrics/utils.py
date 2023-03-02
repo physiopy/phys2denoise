@@ -3,6 +3,7 @@ import logging
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view as slw
+from scipy.stats import zscore
 
 LGR = logging.getLogger(__name__)
 LGR.setLevel(logging.INFO)
@@ -186,7 +187,7 @@ def apply_function_in_sliding_window(array, func, halfwindow, incomplete=True):
     return array_out
 
 
-def convolve_and_resize(array, func):
+def convolve_and_rescale(array, func, rescale = ['rescale', 'zscore', 'demean', 'none']):
     """
     Convolve array by func.
 
@@ -196,19 +197,33 @@ def convolve_and_resize(array, func):
         Array to be convolved
     func : list or numpy.ndarray
         The function to convolve `array` with
-
+    rescale :
     Returns
     -------
     numpy.ndarray
         The convolved `array` with `func`, same length as `array`.
     """
-    # Demean what will be convolve
+    # Demean what will be convolve and convolve
     array_demeaned = array - array.mean(axis=0)
     array_conv = np.convolve(array_demeaned, func)[: len(array)]
-    array_conv = np.interp(
-        array_conv, (array_conv.min(), array_conv.max()), (array.min(), array.max())
-    )
 
-    # Stack array and array_conv
+    # Stack the array with the convolved array
+    array_combined = np.stack((array_demeaned, array_conv), axis=-1)
 
-    return array_conv
+    #Rescale the combined array
+    if rescale == 'rescale':
+        array_combined = array_combined - array_combined.mean(axis=0)
+        array_combined[:,1] = np.interp(
+            array_combined[:,1], (array_combined[:,1].min(), array_combined[:,1].max()),
+            (array_combined[:,0].min(), array_combined[:,0].max())
+        )
+    elif rescale == 'zscore':
+        array_combined = zscore(array_combined, axis=0)
+    elif rescale == 'demean':
+        array_combined = array_combined - array_combined.mean(axis=0)
+    elif rescale == 'none':
+        pass
+    else:
+        raise ValueError('Enter a valid value for the "rescale" parameter')
+
+    return array_combined
