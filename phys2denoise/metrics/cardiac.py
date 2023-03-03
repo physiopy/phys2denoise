@@ -5,7 +5,6 @@ from .responses import icrf, crf
 from .utils import apply_function_in_sliding_window as afsw
 from .utils import convolve_and_rescale
 
-
 def instantaneous_heart_rate():
     """Calculate instantaneous heart rate."""
     pass
@@ -49,6 +48,9 @@ def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean
     .. [1] J. E. Chen & L. D. Lewis, "Resting-state "physiological networks"", Neuroimage,
         vol. 213, pp. 116707, 2020.
     """
+
+
+
     # Convert window to samples, but halves it.
     halfwindow_samples = int(round(window * samplerate / 2))
 
