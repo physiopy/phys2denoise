@@ -64,7 +64,7 @@ def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean
     hbi_arr = np.empty_like(card)
     for n, i in enumerate(idx_min):
         diff = np.diff(peaks[np.logical_and(peaks >= i, peaks <= idx_max[n])])
-        hbi_arr[n] = cmo(hr) if hr.size > 0 else 0
+        hbi_arr[n] = cmo(diff) if diff.size > 0 else 0
 
     hbi_arr[np.isnan(hbi_arr)] = 0.0
 
