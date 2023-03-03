@@ -178,7 +178,7 @@ def apply_function_in_sliding_window(array, func, halfwindow, incomplete=True):
             array_out = np.append(func(array[: i + halfwindow]), array_out)
 
         # We're skipping the very last sample to have the same size
-        for i in range(len(array_out) - halfwindow + 1, len(array_out)):
+        for i in range(len(array) - halfwindow + 1, len(array)):
             array_out = np.append(array_out, func(array[i - halfwindow :]))
 
     array_out[np.isnan(array_out)] = 0.0
