@@ -187,7 +187,7 @@ def apply_function_in_sliding_window(array, func, halfwindow, incomplete=True):
     return array_out
 
 
-def convolve_and_rescale(array, func, rescale = ['rescale', 'zscore', 'demean', 'none']):
+def convolve_and_rescale(array, func, rescale = ['demean_rescale','only_rescale', 'zscore', 'demean', 'none']):
     """
     Convolve array by func.
 
@@ -197,25 +197,31 @@ def convolve_and_rescale(array, func, rescale = ['rescale', 'zscore', 'demean', 
         Array to be convolved
     func : list or numpy.ndarray
         The function to convolve `array` with
-    rescale :
+    rescale : "demean_rescale", "only_rescale", "zscore", "demean", "none"
+        The rescaling operation used on `array_combined`
     Returns
     -------
     numpy.ndarray
-        The convolved `array` with `func`, same length as `array`.
+        One combined array (`array` and `array` convolved with `func`) rescaled or not
     """
     # Demean what will be convolve and convolve
-    array_demeaned = array - array.mean(axis=0)
+    # array_demeaned = array - array.mean(axis=0)
     array_conv = np.convolve(array_demeaned, func)[: len(array)]
 
     # Stack the array with the convolved array
     array_combined = np.stack((array_demeaned, array_conv), axis=-1)
 
     #Rescale the combined array
-    if rescale == 'rescale':
+    if rescale == 'demean_rescale':
         array_combined = array_combined - array_combined.mean(axis=0)
         array_combined[:,1] = np.interp(
             array_combined[:,1], (array_combined[:,1].min(), array_combined[:,1].max()),
             (array_combined[:,0].min(), array_combined[:,0].max())
+        )
+    elif rescale == 'only_rescale':
+        array_combined[:, 1] = np.interp(
+            array_combined[:, 1], (array_combined[:, 1].min(), array_combined[:, 1].max()),
+            (array_combined[:, 0].min(), array_combined[:, 0].max())
         )
     elif rescale == 'zscore':
         array_combined = zscore(array_combined, axis=0)

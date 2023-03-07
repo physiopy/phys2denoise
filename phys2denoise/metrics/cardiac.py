@@ -10,8 +10,8 @@ def instantaneous_heart_rate():
     pass
 
 
-def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean"):
-    """Calculate the average heart beats interval (HBI) in a sliding window.
+def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean",cardiac_metrics=["hbi", "hrv", "hbi_hrv"]):
+    """Calculate the average heart beats interval (HBI) and/or the heart rate variability (HRV) in a sliding window.
 
     Parameters
     ----------
@@ -24,29 +24,39 @@ def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean
     window : float, optional
         Size of the sliding window, in seconds.
         Default is 6.
-    central_measure : "mean", "median", string, optional
+    central_measure : "mean","average", "avg", "median", "mdn",  string, optional
         Measure of the center used (mean or median).
         Default is "mean".
+    cardiac_metrics : "hbi", "hrv", "hbi_hrv",  string
+        Cardiac metric(s) to calculate, in seconds.
     Returns
     -------
-    hbi : 2D numpy.ndarray
+    hbi_out : 2D numpy.ndarray
         Heart Beats Interval values.
         The first column is raw HBI values.
-        The second column is HBI values convolved with the RRF.
+        The second column is HBI values convolved with the CRF.
+    hrv_out : 2D numpy.ndarray
+        Heart Rate Variability values.
+        The first column is raw HRV values.
+        The second column is HRV values convolved with the CRF.
 
     Notes
     -----
     Heart beats interval (HBI) was introduced in [1]_, and consists of the
     average of the time interval between two heart beats based on ppg data within
     a 6-second window.
-
     This metric is often lagged back and/or forward in time and convolved with
     an inverse of the cardiac response function before being included in a GLM.
+
+    Heart rate variability (HRV) was introduced in [2]_, and
+
+    IMPORTANT : Here both cardiac metrics have a meaning since they are computed in seconds.
 
     References
     ----------
     .. [1] J. E. Chen & L. D. Lewis, "Resting-state "physiological networks"", Neuroimage,
         vol. 213, pp. 116707, 2020.
+
     """
 
 
@@ -55,25 +65,38 @@ def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean
     halfwindow_samples = int(round(window * samplerate / 2))
 
     if central_measure in ["mean", "average", "avg"]:
-        cmo = np.mean
+        central_measure_operator = np.mean
     elif central_measure in ["median", "mdn"]:
-        cmo = np.median
+        central_measure_operator = np.median
+    else :
+        raise ValueError('Enter a valid value for the "central_measure" parameter')
 
     idx_arr = np.arange(len(card))
     idx_min = afsw(idx_arr, np.min, halfwindow_samples)
     idx_max = afsw(idx_arr, np.max, halfwindow_samples)
 
     hbi_arr = np.empty_like(card)
+    hrv_arr = np.empty_like(card)
     for n, i in enumerate(idx_min):
-        diff = np.diff(peaks[np.logical_and(peaks >= i, peaks <= idx_max[n])])
-        hbi_arr[n] = cmo(diff) if diff.size > 0 else 0
-
+        diff = np.diff(peaks[np.logical_and(peaks >= i, peaks <= idx_max[n])]) * samplerate
+        hbi_arr[n] = central_measure_operator(diff) if diff.size > 0 else 0
+        hrv_arr[n] = central_measure_operator(1 / diff) if diff.size > 0 else 0
     hbi_arr[np.isnan(hbi_arr)] = 0.0
+    hrv_arr[np.isnan(hbi_arr)] = 0.0
 
     # Convolve with crf and rescale
-    hbi_out = convolve_and_rescale(hbi_arr, crf(samplerate), rescale='zscore' )
+    hbi_out = convolve_and_rescale(hbi_arr, crf(samplerate), rescale='only_rescale')
+    hrv_out = convolve_and_rescale(hrv_arr, crf(samplerate), rescale='only_rescale')
 
-    return hbi_out
+    if cardiac_metrics == 'hbi':
+        return hbi_out
+    elif cardiac_metrics == 'hrv':
+        return hrv_out
+    elif cardiac_metrics == 'hbi_hrv':
+        return hbi_out, hrv_out
+    else :
+        raise ValueError('Enter a valid value for the "cardiac_measure" parameter')
+
 
 
 def cardiac_phase(peaks, sample_rate, slice_timings, n_scans, t_r):
