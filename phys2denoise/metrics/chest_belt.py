@@ -3,8 +3,9 @@ import matplotlib as mpl
 import numpy as np
 import pandas as pd
 from scipy.ndimage.filters import convolve1d
-from scipy.signal import detrend, resample
+from scipy.signal import detrend
 from scipy.stats import zscore
+from scipy.interpolate import interp1d
 
 mpl.use("TkAgg")
 import matplotlib.pyplot as plt
@@ -14,18 +15,81 @@ from ..due import due
 from . import utils
 
 
+def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
+    """
+    Implement the Respiratory Variance over Time (Birn et al. 2006).
+
+    Procedural choices influenced by RetroTS
+
+    Parameters
+    ----------
+    belt_ts: array_like
+        respiratory belt data - samples x 1
+    peaks: array_like
+        peaks found by peakdet algorithm
+    troughs: array_like
+        troughs found by peakdet algorithm
+    samplerate: float
+        sample rate in hz of respiratory belt
+    lags: tuple
+        lags in seconds of the RVT output. Default is 0, 4, 8, 12.
+
+    Outputs
+    -------
+    rvt: array_like
+        calculated RVT and associated lags.
+    """
+    timestep = 1 / samplerate
+    # respiration belt timing
+    time = np.arange(0, len(belt_ts) * timestep, timestep)
+    peak_vals = belt_ts[peaks]
+    trough_vals = belt_ts[troughs]
+    peak_time = time[peaks]
+    trough_time = time[troughs]
+    mid_peak_time = (peak_time[:-1] + peak_time[1:]) / 2
+    period = peak_time[1:] - peak_time[:-1]
+    # interpolate peak values over all timepoints
+    peak_interp = interp1d(
+        peak_time, peak_vals, bounds_error=False, fill_value="extrapolate"
+    )(time)
+    # interpolate trough values over all timepoints
+    trough_interp = interp1d(
+        trough_time, trough_vals, bounds_error=False, fill_value="extrapolate"
+    )(time)
+    # interpolate period over  all timepoints
+    period_interp = interp1d(
+        mid_peak_time, period, bounds_error=False, fill_value="extrapolate"
+    )(time)
+    # full_rvt is (peak-trough)/period
+    full_rvt = (peak_interp - trough_interp) / period_interp
+    # calculate lags for RVT
+    rvt_lags = np.zeros((len(full_rvt), len(lags)))
+    for ind, lag in enumerate(lags):
+        start_index = np.argmin(np.abs(time - lag))
+        temp_rvt = np.concatenate(
+            (
+                np.full((start_index), full_rvt[0]),
+                full_rvt[: len(full_rvt) - start_index],
+            )
+        )
+        rvt_lags[:, ind] = temp_rvt
+
+    return rvt_lags
+
+
 @due.dcite(references.POWER_2018)
-def rpv(belt_ts, window):
+def rpv(resp, window=6):
     """Calculate respiratory pattern variability.
 
     Parameters
     ----------
-    belt_ts
-    window
+    resp : 1D array_like
+    window : int
 
     Returns
     -------
-    rpv_arr
+    rpv_val : float
+        Respiratory pattern variability value.
 
     Notes
     -----
@@ -43,32 +107,29 @@ def rpv(belt_ts, window):
        115, pp. 2105-2114, 2018.
     """
     # First, z-score respiratory traces
-    resp_z = zscore(belt_ts)
+    resp_z = zscore(resp)
 
     # Collect upper envelope
     rpv_upper_env = utils.rms_envelope_1d(resp_z, window)
 
     # Calculate standard deviation
-    rpv_arr = np.std(rpv_upper_env)
-    return rpv_arr
+    rpv_val = np.std(rpv_upper_env)
+    return rpv_val
 
 
 @due.dcite(references.POWER_2020)
-def env(belt_ts, samplerate, out_samplerate, window=10):
+def env(resp, samplerate, window=10):
     """Calculate respiratory pattern variability across a sliding window.
 
     Parameters
     ----------
-    belt_ts : (X,) :obj:`numpy.ndarray`
+    resp : (X,) :obj:`numpy.ndarray`
         A 1D array with the respiratory belt time series.
     samplerate : :obj:`float`
-        Sampling rate for belt_ts, in Hertz.
-    out_samplerate : :obj:`float`
-        Sampling rate for the output time series in seconds.
-        Corresponds to TR in fMRI data.
+        Sampling rate for resp, in Hertz.
     window : :obj:`int`, optional
-        Size of the sliding window, in the same units as out_samplerate.
-        Default is 6.
+        Size of the sliding window, in seconds.
+        Default is 10.
 
     Returns
     -------
@@ -89,30 +150,29 @@ def env(belt_ts, samplerate, out_samplerate, window=10):
        young adults scanned at rest, including systematic changes and 'missed'
        deep breaths," Neuroimage, vol. 204, 2020.
     """
-    window = window * samplerate / out_samplerate
+    # Convert window to Hertz
+    window = int(window * samplerate)
+
     # Calculate RPV across a rolling window
     env_arr = (
-        pd.Series(belt_ts).rolling(window=window, center=True).apply(rpv, window=window)
+        pd.Series(resp).rolling(window=window, center=True).apply(rpv, args=(window,))
     )
     env_arr[np.isnan(env_arr)] = 0.0
     return env_arr
 
 
 @due.dcite(references.CHANG_GLOVER_2009)
-def rv(belt_ts, samplerate, out_samplerate, window=6, lags=(0,)):
+def rv(resp, samplerate, window=6, lags=(0,)):
     """Calculate respiratory variance.
 
     Parameters
     ----------
-    belt_ts : (X,) :obj:`numpy.ndarray`
+    resp : (X,) :obj:`numpy.ndarray`
         A 1D array with the respiratory belt time series.
     samplerate : :obj:`float`
-        Sampling rate for belt_ts, in Hertz.
-    out_samplerate : :obj:`float`
-        Sampling rate for the output time series in seconds.
-        Corresponds to TR in fMRI data.
+        Sampling rate for resp, in Hertz.
     window : :obj:`int`, optional
-        Size of the sliding window, in the same units as out_samplerate.
+        Size of the sliding window, in seconds.
         Default is 6.
     lags : (Y,) :obj:`tuple` of :obj:`int`, optional
         List of lags to apply to the rv estimate.
@@ -121,11 +181,10 @@ def rv(belt_ts, samplerate, out_samplerate, window=6, lags=(0,)):
 
     Returns
     -------
-    rv_out : (Z, 2Y) :obj:`numpy.ndarray`
-        Respiratory variance values, with lags applied, downsampled to
-        out_samplerate, convolved with an RRF, and detrended/normalized.
-        The first Y columns are not convolved with the RRF, while the second Y
-        columns are.
+    rv_out : (X, 2) :obj:`numpy.ndarray`
+        Respiratory variance values.
+        The first column is raw RV values, after detrending/normalization.
+        The second column is RV values convolved with the RRF, after detrending/normalization.
 
     Notes
     -----
@@ -143,12 +202,15 @@ def rv(belt_ts, samplerate, out_samplerate, window=6, lags=(0,)):
        end-tidal CO2, and BOLD signals in resting-state fMRI," Neuroimage,
        issue 4, vol. 47, pp. 1381-1393, 2009.
     """
+    # Convert window to Hertz
+    window = int(window * samplerate)
+
     # Raw respiratory variance
-    rv_arr = pd.Series(belt_ts).rolling(window=window, center=True).std()
+    rv_arr = pd.Series(resp).rolling(window=window, center=True).std()
     rv_arr[np.isnan(rv_arr)] = 0.0
 
     # Apply lags
-    n_out_samples = int((belt_ts.shape[0] / samplerate) / out_samplerate)
+    n_out_samples = int((resp.shape[0] / samplerate) / out_samplerate)
     # convert lags from out_samplerate to samplerate
     delays = [int(lag * samplerate) for lag in lags]
     rv_with_lags = utils.apply_lags(rv_arr, lags=delays)
@@ -157,11 +219,11 @@ def rv(belt_ts, samplerate, out_samplerate, window=6, lags=(0,)):
     rv_with_lags = resample(rv_with_lags, num=n_out_samples, axis=0)
 
     # Convolve with rrf
-    rrf_arr = rrf(out_samplerate, oversampling=1)
-    rv_convolved = convolve1d(rv_with_lags, rrf_arr, axis=0)
+    rrf_arr = rrf(samplerate, oversampling=1)
+    rv_convolved = convolve1d(rv_arr, rrf_arr, axis=0)
 
     # Concatenate the raw and convolved versions
-    rv_combined = np.hstack((rv_with_lags, rv_convolved))
+    rv_combined = np.stack((rv_arr, rv_convolved), axis=-1)
 
     # Detrend and normalize
     rv_combined = rv_combined - np.mean(rv_combined, axis=0)
@@ -238,14 +300,15 @@ def respiratory_phase(resp, sample_rate, n_scans, slice_timings, t_r):
     Returns
     -------
     phase_resp : array_like
-        Respiratory phase signal.
+        Respiratory phase signal, of shape (n_scans, n_slices).
     """
-    n_slices = np.shape(slice_timings)
+    assert slice_timings.ndim == 1, "Slice times must be a 1D array"
+    n_slices = np.size(slice_timings)
     phase_resp = np.zeros((n_scans, n_slices))
 
     # generate histogram from respiratory signal
     # TODO: Replace with numpy.histogram
-    resp_hist, resp_hist_bins = plt.hist(resp, bins=100)
+    resp_hist, resp_hist_bins, _ = plt.hist(resp, bins=100)
 
     # first compute derivative of respiration signal
     resp_diff = np.diff(resp, n=1)
