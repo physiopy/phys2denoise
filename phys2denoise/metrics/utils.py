@@ -116,9 +116,9 @@ def apply_lags(arr1d, lags):
     arr_with_lags = np.zeros((arr1d.shape[0], len(lags)))
     for i_lag, lag in enumerate(lags):
         if lag < 0:
-            arr_delayed = np.hstack((arr1d[lag:], np.zeros(lag)))
+            arr_delayed = np.hstack((arr1d[abs(lag):], np.zeros(abs(lag))))
         elif lag > 0:
-            arr_delayed = np.hstack((np.zeros(lag), arr1d[lag:]))
+            arr_delayed = np.hstack((np.zeros(lag), arr1d[:-lag]))
         else:
             arr_delayed = arr1d.copy()
         arr_with_lags[:, i_lag] = arr_delayed
