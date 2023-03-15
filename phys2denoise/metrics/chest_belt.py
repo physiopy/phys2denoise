@@ -260,7 +260,7 @@ def rrf(samplerate, oversampling=50, time_length=50, onset=0.0, tr=2.0):
 
     dt = tr / oversampling
     time_stamps = np.linspace(
-        0, time_length, np.rint(float(time_length) / dt).astype(np.int)
+        0, time_length, np.rint(float(time_length) / dt).astype(int)
     )
     time_stamps -= onset
     rrf_arr = _rrf(time_stamps)
