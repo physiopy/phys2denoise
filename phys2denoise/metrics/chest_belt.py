@@ -162,7 +162,7 @@ def env(resp, samplerate, window=10):
 
 
 @due.dcite(references.CHANG_GLOVER_2009)
-def rv(resp, samplerate, window=6, lags=(0,)):
+def rv(resp, samplerate, window=6):
     """Calculate respiratory variance.
 
     Parameters
@@ -174,10 +174,6 @@ def rv(resp, samplerate, window=6, lags=(0,)):
     window : :obj:`int`, optional
         Size of the sliding window, in seconds.
         Default is 6.
-    lags : (Y,) :obj:`tuple` of :obj:`int`, optional
-        List of lags to apply to the rv estimate.
-        Lags can be negative, zero, and/or positive.
-        In seconds (like out_samplerate).
 
     Returns
     -------
@@ -208,15 +204,6 @@ def rv(resp, samplerate, window=6, lags=(0,)):
     # Raw respiratory variance
     rv_arr = pd.Series(resp).rolling(window=window, center=True).std()
     rv_arr[np.isnan(rv_arr)] = 0.0
-
-    # Apply lags
-    n_out_samples = int((resp.shape[0] / samplerate) / out_samplerate)
-    # convert lags from out_samplerate to samplerate
-    delays = [int(lag * samplerate) for lag in lags]
-    rv_with_lags = utils.apply_lags(rv_arr, lags=delays)
-
-    # Downsample to out_samplerate
-    rv_with_lags = resample(rv_with_lags, num=n_out_samples, axis=0)
 
     # Convolve with rrf
     rrf_arr = rrf(samplerate, oversampling=1)
