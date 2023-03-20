@@ -3,6 +3,8 @@ from .due import Doi
 
 CHANG_GLOVER_2009 = Doi("10.1016/j.neuroimage.2009.04.048")
 
+CHEN_2020 = Doi("10.1016/j.neuroimage.2020.116707")
+
 GLOVER_2000 = Doi("10.1002/1522-2594(200007)44:1<162::AID-MRM23>3.0.CO;2-E")
 
 POWER_2018 = Doi("10.1073/pnas.1720985115")

@@ -2,7 +2,7 @@
 import logging
 
 import numpy as np
-from numpy.lib.stride_tricks import sliding_window_view as slw
+from numpy.lib.stride_tricks import sliding_window_view as swv
 from scipy.stats import zscore
 
 LGR = logging.getLogger(__name__)
@@ -172,22 +172,22 @@ def apply_function_in_sliding_window(array, func, halfwindow, incomplete=True):
     numpy.ndarray
         The result of the function on the given array.
     """
-    array_out = func(slw(array, halfwindow * 2), axis=1)
+    array_out = func(swv(array, halfwindow * 2), axis=1)
 
     if incomplete:
         for i in reversed(range(halfwindow)):
-            array_out = np.append(func(array_out[: i + halfwindow]), array_out)
+            array_out = np.append(func(array[: i + halfwindow]), array_out)
 
         # We're skipping the very last sample to have the same size
-        for i in range(len(array_out) - halfwindow + 1, len(array_out)):
-            array_out = np.append(array_out, func(array_out[i - halfwindow :]))
+        for i in range(-halfwindow + 1, 0):
+            array_out = np.append(array_out, func(array[i - halfwindow:]))
 
     array_out[np.isnan(array_out)] = 0.0
 
     return array_out
 
 
-def convolve_and_rescale(array, func, rescale = ['demean_rescale','only_rescale', 'zscore', 'demean', 'none']):
+def convolve_and_rescale(array, func, zscore = True, rescale = ['demean_rescale','only_rescale', 'zscore', 'demean', 'none']):
     """
     Convolve array by func.
 
@@ -197,19 +197,33 @@ def convolve_and_rescale(array, func, rescale = ['demean_rescale','only_rescale'
         Array to be convolved
     func : list or numpy.ndarray
         The function to convolve `array` with
+    zscore :
     rescale : "demean_rescale", "only_rescale", "zscore", "demean", "none"
         The rescaling operation used on `array_combined`
+
     Returns
     -------
     numpy.ndarray
-        One combined array (`array` and `array` convolved with `func`) rescaled or not
+        One combined array (`array` and `array` convolved with `func`) rescaled or not / paddded or not
     """
-    # Demean what will be convolve and convolve
-    # array_demeaned = array - array.mean(axis=0)
-    array_conv = np.convolve(array_demeaned, func)[: len(array)]
+    # Zscore before the convolution
+    if zscore == True:
+        array = zscore(array)
+        array_conv = zscore(np.convolve(array, func))[:len(array)]
+        array_conv_padd = zscore(np.convolve(array, func))
+        arr_padd = np.zeros(array_conv.shape)
+        arr_padd[:array.shape[0]] = array
+
+    elif zscore == False:
+        array_conv = np.convolve(array, func)
+        arr_padd = np.zeros(array_conv.shape)
+        arr_padd[:array.shape[0]] = array
+    else:
+        raise ValueError('Enter a valid value for the "zscore" parameter')
+
 
     # Stack the array with the convolved array
-    array_combined = np.stack((array_demeaned, array_conv), axis=-1)
+    array_combined = np.stack((array, array_conv), axis=-1)
 
     #Rescale the combined array
     if rescale == 'demean_rescale':

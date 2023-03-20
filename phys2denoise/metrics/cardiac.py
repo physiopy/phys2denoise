@@ -1,6 +1,8 @@
 """Denoising metrics for cardio recordings."""
 import numpy as np
 
+from .. import references
+from ..due import due
 from .responses import icrf, crf
 from .utils import apply_function_in_sliding_window as afsw
 from .utils import convolve_and_rescale
@@ -9,9 +11,9 @@ def instantaneous_heart_rate():
     """Calculate instantaneous heart rate."""
     pass
 
-
-def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean",cardiac_metrics=["hbi", "hrv", "hbi_hrv"]):
-    """Calculate the average heart beats interval (HBI) and/or the heart rate variability (HRV) in a sliding window.
+@due.dcite(references.CHEN_2020)
+def cardiac_metrics(card, peaks, samplerate, window=6, central_measure="mean",cardiac_metrics=["hbi", "hrv", "hbi_hrv"]):
+    """Calculate the average heart beats interval (HBI) and/or the average heart rate variability (HRV) in a sliding window.
 
     Parameters
     ----------
@@ -28,17 +30,17 @@ def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean
         Measure of the center used (mean or median).
         Default is "mean".
     cardiac_metrics : "hbi", "hrv", "hbi_hrv",  string
-        Cardiac metric(s) to calculate, in seconds.
+        Cardiac metric(s) to calculate.
     Returns
     -------
     hbi_out : 2D numpy.ndarray
         Heart Beats Interval values.
-        The first column is raw HBI values.
-        The second column is HBI values convolved with the CRF.
+        The first column is raw HBI values, in seconds.
+        The second column is HBI values convolved with the CRF, in seconds.
     hrv_out : 2D numpy.ndarray
         Heart Rate Variability values.
-        The first column is raw HRV values.
-        The second column is HRV values convolved with the CRF.
+        The first column is raw HRV values, in seconds.
+        The second column is HRV values convolved with the CRF, in seconds.
 
     Notes
     -----
@@ -60,8 +62,6 @@ def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean
         vol. 213, pp. 116707, 2020.
 
     """
-
-
 
     # Convert window to samples, but halves it.
     halfwindow_samples = int(round(window * samplerate / 2))
@@ -86,9 +86,10 @@ def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean
     hbi_arr[np.isnan(hbi_arr)] = 0.0
     hrv_arr[np.isnan(hbi_arr)] = 0.0
 
+
     # Convolve with crf and rescale
-    hbi_out = convolve_and_rescale(hbi_arr, crf(samplerate), rescale='only_rescale')
-    hrv_out = convolve_and_rescale(hrv_arr, crf(samplerate), rescale='only_rescale')
+    hbi_out = convolve_and_rescale(hbi_arr, crf(samplerate), rescale='demean_rescale')
+    hrv_out = convolve_and_rescale(hrv_arr, crf(samplerate), rescale='demean_rescale')
 
     if cardiac_metrics == 'hbi':
         return hbi_out
