@@ -10,7 +10,7 @@ from .responses import rrf
 from .utils import apply_function_in_sliding_window as afsw
 from .utils import convolve_and_resize, rms_envelope_1d
 
-
+@due.dcite(references.BIRN_2006)
 def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
     """
     Implement the Respiratory Variance over Time (Birn et al. 2006).
@@ -34,6 +34,12 @@ def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
     -------
     rvt: array_like
         calculated RVT and associated lags.
+
+    References
+    ----------
+    .. [1] R. M. Birn, J. B. Diamond, M. A. Smith, P. A. Bandettini,“Separating
+       respiratory-variation-related fluctuations from neuronal-activity-related
+       fluctuations in fMRI”, NeuroImage, vol.31, pp. 1536-1548, 2006.
     """
     timestep = 1 / samplerate
     # respiration belt timing
