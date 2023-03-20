@@ -2,7 +2,7 @@
 import logging
 
 import numpy as np
-from numpy.lib.stride_tricks import sliding_window_view as slw
+from numpy.lib.stride_tricks import sliding_window_view as swv
 
 LGR = logging.getLogger(__name__)
 LGR.setLevel(logging.INFO)
@@ -171,14 +171,14 @@ def apply_function_in_sliding_window(array, func, halfwindow, incomplete=True):
     numpy.ndarray
         The result of the function on the given array.
     """
-    array_out = func(slw(array, halfwindow * 2), axis=1)
+    array_out = func(swv(array, halfwindow * 2), axis=1)
 
     if incomplete:
         for i in reversed(range(halfwindow)):
             array_out = np.append(func(array[: i + halfwindow]), array_out)
 
         # We're skipping the very last sample to have the same size
-        for i in range(len(array) - halfwindow + 1, len(array)):
+        for i in range(-halfwindow + 1, 0):
             array_out = np.append(array_out, func(array[i - halfwindow :]))
 
     array_out[np.isnan(array_out)] = 0.0
