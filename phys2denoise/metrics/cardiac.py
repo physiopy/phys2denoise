@@ -44,11 +44,13 @@ def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean
     -----
     Heart beats interval (HBI) was introduced in [1]_, and consists of the
     average of the time interval between two heart beats based on ppg data within
-    a 6-second window.
+    a 6-seconds window.
     This metric is often lagged back and/or forward in time and convolved with
     an inverse of the cardiac response function before being included in a GLM.
 
-    Heart rate variability (HRV) was introduced in [2]_, and
+    Heart rate variability (HRV) was introduced in [1]_, and consists of the average
+    variation of the time interval between to heart beats based on ppg data within
+    a 6-seconds window.
 
     IMPORTANT : Here both cardiac metrics have a meaning since they are computed in seconds.
 
