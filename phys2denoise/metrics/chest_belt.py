@@ -42,7 +42,7 @@ def respiratory_variance_time(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8
     trough_vals = belt_ts[troughs]
     peak_time = time[peaks]
     trough_time = time[troughs]
-    mid_peak_time = afsw(peak_time, np.mean, incomplete=False)
+    mid_peak_time = (peak_time[:-1] + peak_time[1:]) / 2
     period = np.diff(peak_time)
     # interpolate peak values over all timepoints
     peak_interp = interp1d(
@@ -161,7 +161,7 @@ def env(resp, samplerate, window=10):
 
 
 @due.dcite(references.CHANG_GLOVER_2009)
-def respiratory_variance(resp, samplerate, window=6, lags=(0,)):
+def respiratory_variance(resp, samplerate, window=6):
     """Calculate respiratory variance.
 
     Parameters
@@ -204,14 +204,8 @@ def respiratory_variance(resp, samplerate, window=6, lags=(0,)):
     rv_arr = afsw(resp, np.std, halfwindow_samples)
 
     # Convolve with rrf
-    rv_convolved = convolve_and_resize(rv_arr, rrf(samplerate))
+    rv_out = convolve_and_rescale(rv_arr, rrf(samplerate), rescale='zscore')
 
-    # Concatenate the raw and convolved versions
-    rv_combined = np.stack((rv_arr, rv_convolved), axis=-1)
-
-    # Detrend and normalize
-    rv_combined = rv_combined - np.mean(rv_combined, axis=0)
-    rv_out = zscore(rv_combined, axis=0)
     return rv_out
 
 

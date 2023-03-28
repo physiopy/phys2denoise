@@ -36,11 +36,26 @@ def cardiac_metrics(card, peaks, samplerate, window=6, central_measure="mean",ca
     hbi_out : 2D numpy.ndarray
         Heart Beats Interval values.
         The first column is raw HBI values, in seconds.
-        The second column is HBI values convolved with the CRF, in seconds.
+        The second column is HBI values convolved with the CRF, cut to the length
+        of the raw HBI values, in seconds.
+
+    hbi_out_padd : 2D numpy.ndarray
+        Heart Beats Interval values.
+        The first column is raw HBI values, in seconds, padded to the length of the
+        initial convolved HBI values, in seconds.
+        The second column is HBI values convolved with the CRF, in seconds
+
     hrv_out : 2D numpy.ndarray
         Heart Rate Variability values.
         The first column is raw HRV values, in seconds.
-        The second column is HRV values convolved with the CRF, in seconds.
+        The second column is HRV values convolved with the CRF, cut to the length
+        of the raw HBI values in seconds.
+
+    hrv_out_padd : 2D numpy.ndarray
+        Heart Beats Interval values.
+        The first column is raw HRV values, in seconds, padded to the length of the
+        initial convolved HRV values, in seconds.
+        The second column is HRV values convolved with the CRF, in seconds
 
     Notes
     -----
@@ -53,7 +68,6 @@ def cardiac_metrics(card, peaks, samplerate, window=6, central_measure="mean",ca
     Heart rate variability (HRV) was introduced in [1]_, and consists of the average
     variation of the time interval between to heart beats based on ppg data within
     a 6-seconds window.
-
     IMPORTANT : Here both cardiac metrics have a meaning since they are computed in seconds.
 
     References
@@ -86,17 +100,16 @@ def cardiac_metrics(card, peaks, samplerate, window=6, central_measure="mean",ca
     hbi_arr[np.isnan(hbi_arr)] = 0.0
     hrv_arr[np.isnan(hbi_arr)] = 0.0
 
-
     # Convolve with crf and rescale
-    hbi_out = convolve_and_rescale(hbi_arr, crf(samplerate), rescale='demean_rescale')
-    hrv_out = convolve_and_rescale(hrv_arr, crf(samplerate), rescale='demean_rescale')
+    hbi_out, hbi_out_padd = convolve_and_rescale(hbi_arr, crf(samplerate), rescale='rescale')
+    hrv_out, hrv_out_padd = convolve_and_rescale(hrv_arr, crf(samplerate), rescale='rescale')
 
     if cardiac_metrics == 'hbi':
-        return hbi_out
+        return hbi_out, hbi_out_padd
     elif cardiac_metrics == 'hrv':
-        return hrv_out
+        return hrv_out, hrv_out_padd
     elif cardiac_metrics == 'hbi_hrv':
-        return hbi_out, hrv_out
+        return hbi_out, hbi_out_padd, hrv_out, hbi_out_padd
     else :
         raise ValueError('Enter a valid value for the "cardiac_measure" parameter')
 
