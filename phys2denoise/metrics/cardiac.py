@@ -12,7 +12,7 @@ def instantaneous_heart_rate():
     pass
 
 @due.dcite(references.CHEN_2020)
-def cardiac_metrics(card, peaks, samplerate, window=6, central_measure="mean",cardiac_metrics=["hbi", "hrv", "hbi_hrv"]):
+def cardiac_metrics(card, peaks, samplerate, window=6, central_measure="mean", metrics=["hbi", "hrv", "hbi_hrv"]):
     """Calculate the average heart beats interval (HBI) and/or the average heart rate variability (HRV) in a sliding window.
 
     Parameters
@@ -29,7 +29,7 @@ def cardiac_metrics(card, peaks, samplerate, window=6, central_measure="mean",ca
     central_measure : "mean","average", "avg", "median", "mdn",  string, optional
         Measure of the center used (mean or median).
         Default is "mean".
-    cardiac_metrics : "hbi", "hrv", "hbi_hrv",  string
+    metrics : "hbi", "hrv", "hbi_hrv",  string
         Cardiac metric(s) to calculate.
     Returns
     -------
@@ -68,7 +68,7 @@ def cardiac_metrics(card, peaks, samplerate, window=6, central_measure="mean",ca
     Heart rate variability (HRV) was introduced in [1]_, and consists of the average
     variation of the time interval between to heart beats based on ppg data within
     a 6-seconds window.
-    IMPORTANT : Here both cardiac metrics have a meaning since they are computed in seconds.
+    IMPORTANT : Here both metrics' unit of measure have meaning, since they are based on seconds. Hence, zscoring might remove important quantifiable information
 
     References
     ----------

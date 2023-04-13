@@ -1,5 +1,5 @@
 import peakdet
-from phys2denoise.metrics.chest_belt import respiratory_pattern_variability
+from phys2denoise.metrics.chest_belt import respiratory_variance_time
 
 
 def test_peakdet(fake_phys):
