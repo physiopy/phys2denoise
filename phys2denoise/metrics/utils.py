@@ -180,7 +180,7 @@ def apply_function_in_sliding_window(array, func, halfwindow, incomplete=True):
 
         # We're skipping the very last sample to have the same size
         for i in range(-halfwindow + 1, 0):
-            array_out = np.append(array_out, func(array[i - halfwindow:]))
+            array_out = np.append(array_out, func(array[i - halfwindow :]))
 
     array_out[np.isnan(array_out)] = 0.0
 

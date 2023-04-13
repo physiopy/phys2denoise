@@ -55,12 +55,9 @@ def retroicor(
 
     References
     ----------
-    *   Glover, G. H., Li, T. Q., & Ress, D. (2000).
-        Image‐based method for retrospective correction of physiological
-        motion effects in fMRI: RETROICOR.
-        Magnetic Resonance in Medicine:
-        An Official Journal of the International Society for Magnetic Resonance in Medicine,
-        44(1), 162-167.
+    .. [1] G. H. Glover & T. Q. L. Ress, “Image_based method for retrospective
+       correction of physiological motion effects in fMRI: RETROICOR“, Magn. Reson. Med.,
+       issue 1, vol. 44, pp. 162-167, 2000.
     """
     n_slices = np.shape(slice_timings)  # number of slices
 

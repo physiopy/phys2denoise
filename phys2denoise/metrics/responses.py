@@ -10,11 +10,11 @@ LGR = logging.getLogger(__name__)
 LGR.setLevel(logging.INFO)
 
 
-@due.dcite(references.CHANG_GLOVER_2009)
 @due.dcite(references.SHMUELI_2007)
+@due.dcite(references.CHANG_CUNNINGHAM_GLOVER_2009)
 def crf(samplerate, time_length=32, onset=0.0, inverse=False):
     """
-    Calculate the cardiac response function using Chang and Glover's definition.
+    Calculate the cardiac response function using Chang, Cunningham and Glover's definition.
 
     Parameters
     ----------
@@ -42,9 +42,12 @@ def crf(samplerate, time_length=32, onset=0.0, inverse=False):
 
     References
     ----------
-    .. [1] C. Chang & G. H. Glover, "Relationship between respiration,
-       end-tidal CO2, and BOLD signals in resting-state fMRI," Neuroimage,
-       issue 47, vol. 4, pp. 1381-1393, 2009.
+    .. [1] C. Chang, J. P. Cunnningham & G. H. Glover, "Influence of heartrate
+       on the BOLD signal: The cardiac response function", NeuroImage,
+       issue 47, vol. 4, pp. 857-869, 2009.
+    .. [2] K.Shmueli and al., “Low-frequency fluctuations in the cardiac rate
+       as a source of variance in the resting-state fMRI BOLD signal“,
+       NeuroImage, issue 2, vol. 38, pp.306-320, 2007.
     """
 
     def _crf(t):
@@ -63,7 +66,7 @@ def crf(samplerate, time_length=32, onset=0.0, inverse=False):
     else:
         return crf_arr
 
-
+@due.dcite(references.CHANG_CUNNINGHAM_GLOVER_2009)
 def icrf(samplerate, time_length=32, onset=0.0):
     """
     Calculate the inverse of the cardiac response function.
@@ -86,7 +89,9 @@ def icrf(samplerate, time_length=32, onset=0.0):
 
     References
     ----------
-    .. [1] .
+    .. [1] C. Chang, J. P. Cunnningham & G. H. Glover, "Influence of heartrate
+       on the BOLD signal: The cardiac response function", NeuroImage,
+       issue 47, vol. 4, pp. 857-869, 2009.
     """
     return crf(samplerate, time_length=32, onset=0.0, inverse=True)
 
@@ -120,7 +125,7 @@ def rrf(samplerate, time_length=50, onset=0.0):
     References
     ----------
     .. [1] C. Chang & G. H. Glover, "Relationship between respiration,
-       end-tidal CO2, and BOLD signals in resting-state fMRI," Neuroimage,
+       end-tidal CO2, and BOLD signals in resting-state fMRI," NeuroImage,
        issue 47, vol. 4, pp. 1381-1393, 2009.
     """
 

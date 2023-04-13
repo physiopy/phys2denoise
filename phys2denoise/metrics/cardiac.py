@@ -74,9 +74,7 @@ def cardiac_metrics(card, peaks, samplerate, window=6, central_measure="mean", m
     ----------
     .. [1] J. E. Chen & L. D. Lewis, "Resting-state "physiological networks"", Neuroimage,
         vol. 213, pp. 116707, 2020.
-
     """
-
     # Convert window to samples, but halves it.
     halfwindow_samples = int(round(window * samplerate / 2))
 

@@ -47,8 +47,9 @@ def save_bash_call(outdir):
     call_str = f'phys2denoise {arg_str}'
     outdir = os.path.abspath(outdir)
     log_path = os.path.join(outdir, 'code', 'logs')
-    os.makedirs(log_path)
-    f = open(os.path.join(log_path, 'p2d_call.sh'), "a")
+    os.makedirs(log_path, exist_ok=True)
+    isotime = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')
+    f = open(os.path.join(log_path, f'p2d_call_{isotime}.sh'), "a")
     f.write(f'#!bin/bash \n{call_str}')
     f.close()
 
