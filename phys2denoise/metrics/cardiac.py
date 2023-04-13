@@ -1,21 +1,19 @@
 """Denoising metrics for cardio recordings."""
 import numpy as np
-from scipy.stats import zscore
 
 from .. import references
 from ..due import due
-from .responses import icrf
+from .responses import icrf, crf
 from .utils import apply_function_in_sliding_window as afsw
-from .utils import convolve_and_resize
+from .utils import convolve_and_rescale
 
-
-def iht():
+def instantaneous_heart_rate():
     """Calculate instantaneous heart rate."""
     pass
 
 @due.dcite(references.CHEN_2020)
-def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean"):
-    """Calculate the average heart beats interval (HBI) in a sliding window.
+def cardiac_metrics(card, peaks, samplerate, window=6, central_measure="mean", metrics=["hbi", "hrv", "hbi_hrv"]):
+    """Calculate the average heart beats interval (HBI) and/or the average heart rate variability (HRV) in a sliding window.
 
     Parameters
     ----------
@@ -28,59 +26,91 @@ def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean
     window : float, optional
         Size of the sliding window, in seconds.
         Default is 6.
-    central_measure : "mean", "median", string, optional
-        Measure of the center used (mean/average or median).
+    central_measure : "mean","average", "avg", "median", "mdn",  string, optional
+        Measure of the center used (mean or median).
         Default is "mean".
+    metrics : "hbi", "hrv", "hbi_hrv",  string
+        Cardiac metric(s) to calculate.
     Returns
     -------
-    hbi : 2D numpy.ndarray
+    hbi_out : 2D numpy.ndarray
         Heart Beats Interval values.
-        The first column is raw HBI values.
-        The second column is HBI values convolved with the RRF.
+        The first column is raw HBI values, in seconds.
+        The second column is HBI values convolved with the CRF, cut to the length
+        of the raw HBI values, in seconds.
+
+    hbi_out_padd : 2D numpy.ndarray
+        Heart Beats Interval values.
+        The first column is raw HBI values, in seconds, padded to the length of the
+        initial convolved HBI values, in seconds.
+        The second column is HBI values convolved with the CRF, in seconds
+
+    hrv_out : 2D numpy.ndarray
+        Heart Rate Variability values.
+        The first column is raw HRV values, in seconds.
+        The second column is HRV values convolved with the CRF, cut to the length
+        of the raw HBI values in seconds.
+
+    hrv_out_padd : 2D numpy.ndarray
+        Heart Beats Interval values.
+        The first column is raw HRV values, in seconds, padded to the length of the
+        initial convolved HRV values, in seconds.
+        The second column is HRV values convolved with the CRF, in seconds
 
     Notes
     -----
     Heart beats interval (HBI) was introduced in [1]_, and consists of the
     average of the time interval between two heart beats based on ppg data within
-    a 6-second window.
-
+    a 6-seconds window.
     This metric is often lagged back and/or forward in time and convolved with
     an inverse of the cardiac response function before being included in a GLM.
 
+    Heart rate variability (HRV) was introduced in [1]_, and consists of the average
+    variation of the time interval between to heart beats based on ppg data within
+    a 6-seconds window.
+    IMPORTANT : Here both metrics' unit of measure have meaning, since they are based on seconds. Hence, zscoring might remove important quantifiable information
+
     References
     ----------
-    .. [1] J. E. Chen et al., "Resting-state "physiological networks"", NeuroImage,
-       vol. 213, 2020.
+    .. [1] J. E. Chen & L. D. Lewis, "Resting-state "physiological networks"", Neuroimage,
+        vol. 213, pp. 116707, 2020.
     """
     # Convert window to samples, but halves it.
     halfwindow_samples = int(round(window * samplerate / 2))
 
     if central_measure in ["mean", "average", "avg"]:
-        cmo = np.mean
+        central_measure_operator = np.mean
     elif central_measure in ["median", "mdn"]:
-        cmo = np.median
+        central_measure_operator = np.median
+    else :
+        raise ValueError('Enter a valid value for the "central_measure" parameter')
 
     idx_arr = np.arange(len(card))
     idx_min = afsw(idx_arr, np.min, halfwindow_samples)
     idx_max = afsw(idx_arr, np.max, halfwindow_samples)
 
     hbi_arr = np.empty_like(card)
+    hrv_arr = np.empty_like(card)
     for n, i in enumerate(idx_min):
-        diff = np.diff(peaks[np.logical_and(peaks >= i, peaks <= idx_max[n])])
-        hbi_arr[n] = cmo(diff) if diff.size > 0 else 0
-
+        diff = np.diff(peaks[np.logical_and(peaks >= i, peaks <= idx_max[n])]) * samplerate
+        hbi_arr[n] = central_measure_operator(diff) if diff.size > 0 else 0
+        hrv_arr[n] = central_measure_operator(1 / diff) if diff.size > 0 else 0
     hbi_arr[np.isnan(hbi_arr)] = 0.0
+    hrv_arr[np.isnan(hbi_arr)] = 0.0
 
-    # Convolve with icrf
-    hbi_convolved = convolve_and_resize(hbi_arr, icrf(samplerate))
+    # Convolve with crf and rescale
+    hbi_out, hbi_out_padd = convolve_and_rescale(hbi_arr, crf(samplerate), rescale='rescale')
+    hrv_out, hrv_out_padd = convolve_and_rescale(hrv_arr, crf(samplerate), rescale='rescale')
 
-    # Concatenate the raw and convolved versions
-    hbi_combined = np.stack((hbi_arr, hbi_convolved), axis=-1)
+    if cardiac_metrics == 'hbi':
+        return hbi_out, hbi_out_padd
+    elif cardiac_metrics == 'hrv':
+        return hrv_out, hrv_out_padd
+    elif cardiac_metrics == 'hbi_hrv':
+        return hbi_out, hbi_out_padd, hrv_out, hbi_out_padd
+    else :
+        raise ValueError('Enter a valid value for the "cardiac_measure" parameter')
 
-    # Normalize to z-score
-    hbi_combined = hbi_combined - np.mean(hbi_combined, axis=0)
-    hbi_out = zscore(hbi_combined, axis=0)
-    return hbi_out
 
 
 def cardiac_phase(peaks, sample_rate, slice_timings, n_scans, t_r):

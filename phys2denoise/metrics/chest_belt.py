@@ -8,10 +8,10 @@ from .. import references
 from ..due import due
 from .responses import rrf
 from .utils import apply_function_in_sliding_window as afsw
-from .utils import convolve_and_resize, rms_envelope_1d
+from .utils import convolve_and_rescale, rms_envelope_1d
 
-@due.dcite(references.BIRN_2006)
-def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
+
+def respiratory_variance_time(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
     """
     Implement the Respiratory Variance over Time (Birn et al. 2006).
 
@@ -80,7 +80,7 @@ def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
 
 
 @due.dcite(references.POWER_2018)
-def rpv(resp, window):
+def respiratory_pattern_variability(resp, window):
     """Calculate respiratory pattern variability.
 
     Parameters
@@ -167,7 +167,7 @@ def env(resp, samplerate, window=10):
 
 
 @due.dcite(references.CHANG_GLOVER_2009)
-def rv(resp, samplerate, window=6, lags=(0,)):
+def respiratory_variance(resp, samplerate, window=6):
     """Calculate respiratory variance.
 
     Parameters
@@ -210,14 +210,8 @@ def rv(resp, samplerate, window=6, lags=(0,)):
     rv_arr = afsw(resp, np.std, halfwindow_samples)
 
     # Convolve with rrf
-    rv_convolved = convolve_and_resize(rv_arr, rrf(samplerate))
+    rv_out = convolve_and_rescale(rv_arr, rrf(samplerate), rescale='zscore')
 
-    # Concatenate the raw and convolved versions
-    rv_combined = np.stack((rv_arr, rv_convolved), axis=-1)
-
-    # Detrend and normalize
-    rv_combined = rv_combined - np.mean(rv_combined, axis=0)
-    rv_out = zscore(rv_combined, axis=0)
     return rv_out
 
 

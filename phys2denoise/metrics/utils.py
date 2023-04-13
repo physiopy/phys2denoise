@@ -3,6 +3,7 @@ import logging
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view as swv
+from scipy.stats import zscore
 
 LGR = logging.getLogger(__name__)
 LGR.setLevel(logging.INFO)
@@ -186,9 +187,9 @@ def apply_function_in_sliding_window(array, func, halfwindow, incomplete=True):
     return array_out
 
 
-def convolve_and_resize(array, func):
+def convolve_and_rescale(array, func, rescale='rescale'):
     """
-    Convolve array by func.
+    Convolve array by func and rescale the data.
 
     Parameters
     ----------
@@ -196,19 +197,59 @@ def convolve_and_resize(array, func):
         Array to be convolved
     func : list or numpy.ndarray
         The function to convolve `array` with
+    zscore : bool, optional.
+        If True, `array` will be transformed to Zscores before the convolution.
+        If False, raw `array` data will be taken to be convolved with the function.
+    rescale : "demean_rescale", "rescale", "zscore", "demean", or None, optional
+        The rescaling operation used on `array_combined` and `array_combined_padd`
 
     Returns
     -------
-    numpy.ndarray
-        The convolved `array` with `func`, same length as `array`.
+    array_combined : numpy.ndarray
+        One combined array (`array` and `array` convolved with `func`) rescaled or not
+    array_combined_padd : numpy.ndarray
+        One combined array (`array` and `array` convolved with `func`), padded to the
+        convolved data length, rescaled or not.
     """
-    # Demean what will be convolve
-    array_demeaned = array - array.mean(axis=0)
-    array_conv = np.convolve(array_demeaned, func)[: len(array)]
-    array_conv = np.interp(
-        array_conv, (array_conv.min(), array_conv.max()), (array.min(), array.max())
-    )
+    # Demeaning before the convolution
+    array = array - array.mean(axis=0)
+    array_conv = np.convolve(array, func)[: len(array)]
+    array_conv_padd = np.convolve(array, func)
+    arr_padd = np.zeros(array_conv_padd.shape)
+    arr_padd[:array.shape[0]] = array
 
-    # Stack array and array_conv
+    # Stack the array with the convolved array
+    array_combined = np.stack((array, array_conv), axis=-1)
+    array_combined_padd = np.stack((arr_padd, array_conv_padd), axis=-1)
 
-    return array_conv
+    #Rescale the combined array
+    if rescale == 'demean_rescale':
+        array_combined = array_combined - array_combined.mean(axis=0)
+        array_combined[:,1] = np.interp(
+            array_combined[:,1], (array_combined[:,1].min(), array_combined[:,1].max()),
+            (array.min(), array.max())
+        )
+        array_combined_padd = array_combined_padd - array_combined_padd.mean(axis=0)
+        array_combined_padd[:, 1] = np.interp(
+            array_combined_padd[:, 1], (array_combined_padd[:, 1].min(), array_combined_padd[:, 1].max()),
+            (array.min(), array.max())
+        )
+    elif rescale == 'rescale':
+        array_combined[:, 1] = np.interp(
+            array_combined[:, 1], (array_combined[:, 1].min(), array_combined[:, 1].max()),
+            (array.min(), array.max())
+        )
+        array_combined_padd[:, 1] = np.interp(
+            array_combined_padd[:, 1], (array_combined_padd[:, 1].min(), array_combined_padd[:, 1].max()),
+            (array.min(), array.max())
+        )
+    elif rescale == 'zscore':
+        array_combined = zscore(array_combined, axis=0)
+        array_combined_padd = zscore(array_combined_padd, axis=0)
+    elif rescale == 'demean':
+        array_combined = array_combined - array_combined.mean(axis=0)
+        array_combined_padd = array_combined_padd - array_combined_padd.mean(axis=0)
+    else:
+        pass
+
+    return array_combined, array_combined_padd
