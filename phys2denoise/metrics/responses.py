@@ -68,7 +68,7 @@ def crf(samplerate, time_length=32, onset=0.0, inverse=False):
 
 
 @due.dcite(references.CHANG_CUNNINGHAM_GLOVER_2009)
-@due.dcite(references.CHEN_2009)
+@due.dcite(references.CHEN_2020)
 def icrf(samplerate, time_length=32, onset=0.0):
     """
     Calculate the inverse of the cardiac response function.
