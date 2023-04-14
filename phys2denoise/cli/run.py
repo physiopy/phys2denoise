@@ -158,8 +158,7 @@ def _get_parser():
         action="append_const",
         const=crf,
         help="Cardiac response function. Requires the following "
-        "inputs:sample-rate, oversampling, time-length, "
-        "onset and tr.",
+        "inputs: sample-rate, time-length, and onset.",
         default=[],
     )
     rfs.add_argument(
@@ -169,8 +168,7 @@ def _get_parser():
         action="append_const",
         const=icrf,
         help="Inverse of the cardiac response function. Requires the following "
-        "inputs:sample-rate, oversampling, time-length, "
-        "onset and tr.",
+        "inputs: sample-rate, time-length, and onset.",
         default=[],
     )
     rfs.add_argument(
@@ -180,7 +178,7 @@ def _get_parser():
         action="append_const",
         const=rrf,
         help="Respiratory response function. Requires the following inputs: "
-        "sample-rate, oversampling, time-length, onset and tr.",
+        "sample-rate, time-length, and onset.",
         default=[],
     )
 
@@ -211,14 +209,6 @@ def _get_parser():
         help="Full path and filename of the list with the indexed troughs' "
         "positions of the physiological data.",
         default=None,
-    )
-    metric_arg.add_argument(
-        "-os",
-        "--oversampling",
-        dest="oversampling",
-        type=int,
-        help="Temporal oversampling factor. Default is 50.",
-        default=50,
     )
     metric_arg.add_argument(
         "-cmo",
