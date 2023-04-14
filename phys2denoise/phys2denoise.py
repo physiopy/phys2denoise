@@ -14,18 +14,23 @@ import datetime
 import logging
 import os
 import sys
-from inspect import signature, _empty
+from inspect import _empty, signature
 
 import numpy as np
 import pandas as pd
 
 from phys2denoise.cli.run import _get_parser
 from phys2denoise.metrics.cardiac import crf
-from phys2denoise.metrics.chest_belt import respiratory_pattern_variability, respiratory_variance, respiratory_variance_time, rrf
+from phys2denoise.metrics.chest_belt import (
+    respiratory_pattern_variability,
+    respiratory_variance,
+    respiratory_variance_time,
+    rrf,
+)
 from phys2denoise.metrics.retroicor import retroicor
 
 from . import __version__
-from .due import due, Doi
+from .due import Doi, due
 
 LGR = logging.getLogger(__name__)
 LGR.setLevel(logging.INFO)
@@ -43,14 +48,14 @@ def save_bash_call(outdir):
         Dictionary containing all arguments for all functions requested by the
         user
     """
-    arg_str = ' '.join(sys.argv[1:])
-    call_str = f'phys2denoise {arg_str}'
+    arg_str = " ".join(sys.argv[1:])
+    call_str = f"phys2denoise {arg_str}"
     outdir = os.path.abspath(outdir)
-    log_path = os.path.join(outdir, 'code', 'logs')
+    log_path = os.path.join(outdir, "code", "logs")
     os.makedirs(log_path, exist_ok=True)
-    isotime = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')
-    f = open(os.path.join(log_path, f'p2d_call_{isotime}.sh'), "a")
-    f.write(f'#!bin/bash \n{call_str}')
+    isotime = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
+    f = open(os.path.join(log_path, f"p2d_call_{isotime}.sh"), "a")
+    f.write(f"#!bin/bash \n{call_str}")
     f.close()
 
 
@@ -88,9 +93,10 @@ def select_input_args(metric, metric_args):
     # Check the parameters required by the metric and given by the user (see docstring)
     for param in signature(metric).parameters.values():
         if param.name not in metric_args:
-            if param.default == _empty and param.name != 'physio':
-                raise ValueError(f'Missing parameter {param} required '
-                                 f'to run {metric}')
+            if param.default == _empty and param.name != "physio":
+                raise ValueError(
+                    f"Missing parameter {param} required " f"to run {metric}"
+                )
             else:
                 args[param.name] = param.default
         else:
@@ -100,14 +106,28 @@ def select_input_args(metric, metric_args):
 
 
 @due.dcite(
-     Doi(''),
-     path='phys2denoise',
-     description='Creation of regressors for physiological denoising',
-     version=__version__,
-     cite_module=True)
-def phys2denoise(filename, outdir='.',
-                 metrics=[crf, respiratory_pattern_variability, respiratory_variance, respiratory_variance_time, rrf, 'retroicor_card', 'retroicor_resp'],
-                 debug=False, quiet=False, **kwargs):
+    Doi(""),
+    path="phys2denoise",
+    description="Creation of regressors for physiological denoising",
+    version=__version__,
+    cite_module=True,
+)
+def phys2denoise(
+    filename,
+    outdir=".",
+    metrics=[
+        crf,
+        respiratory_pattern_variability,
+        respiratory_variance,
+        respiratory_variance_time,
+        rrf,
+        "retroicor_card",
+        "retroicor_resp",
+    ],
+    debug=False,
+    quiet=False,
+    **kwargs,
+):
     """
     Run main workflow of phys2denoise.
 
@@ -122,19 +142,20 @@ def phys2denoise(filename, outdir='.',
     # Check options to make them internally coherent pt. I
     # #!# This can probably be done while parsing?
     outdir = os.path.abspath(outdir)
-    log_path = os.path.join(outdir, 'code', 'logs')
+    log_path = os.path.join(outdir, "code", "logs")
     os.makedirs(log_path)
 
     # Create logfile name
-    basename = 'phys2denoise_'
-    extension = 'tsv'
-    isotime = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')
-    logname = os.path.join(log_path, (basename + isotime + '.' + extension))
+    basename = "phys2denoise_"
+    extension = "tsv"
+    isotime = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
+    logname = os.path.join(log_path, (basename + isotime + "." + extension))
 
     # Set logging format
     log_formatter = logging.Formatter(
-        '%(asctime)s\t%(name)-12s\t%(levelname)-8s\t%(message)s',
-        datefmt='%Y-%m-%dT%H:%M:%S')
+        "%(asctime)s\t%(name)-12s\t%(levelname)-8s\t%(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S",
+    )
 
     # Set up logging file and open it for writing
     log_handler = logging.FileHandler(logname)
@@ -142,28 +163,34 @@ def phys2denoise(filename, outdir='.',
     sh = logging.StreamHandler()
 
     if quiet:
-        logging.basicConfig(level=logging.WARNING,
-                            handlers=[log_handler, sh],
-                            format='%(levelname)-10s %(message)s')
+        logging.basicConfig(
+            level=logging.WARNING,
+            handlers=[log_handler, sh],
+            format="%(levelname)-10s %(message)s",
+        )
     elif debug:
-        logging.basicConfig(level=logging.DEBUG,
-                            handlers=[log_handler, sh],
-                            format='%(levelname)-10s %(message)s')
+        logging.basicConfig(
+            level=logging.DEBUG,
+            handlers=[log_handler, sh],
+            format="%(levelname)-10s %(message)s",
+        )
     else:
-        logging.basicConfig(level=logging.INFO,
-                            handlers=[log_handler, sh],
-                            format='%(levelname)-10s %(message)s')
+        logging.basicConfig(
+            level=logging.INFO,
+            handlers=[log_handler, sh],
+            format="%(levelname)-10s %(message)s",
+        )
 
     version_number = __version__
-    LGR.info(f'Currently running phys2denoise version {version_number}')
-    LGR.info(f'Input file is {filename}')
+    LGR.info(f"Currently running phys2denoise version {version_number}")
+    LGR.info(f"Input file is {filename}")
 
     # Check options to make them internally coherent pt. II
     # #!# This can probably be done while parsing?
     # filename, ftype = utils.check_input_type(filename)
 
     if not os.path.isfile(filename) and filename is not None:
-        raise FileNotFoundError(f'The file {filename} does not exist!')
+        raise FileNotFoundError(f"The file {filename} does not exist!")
 
     # Read input file
     physio = np.genfromtxt(filename)
@@ -173,34 +200,34 @@ def phys2denoise(filename, outdir='.',
 
     # Goes through the list of metrics and calls them
     for metric in metrics:
-        if metric == 'retroicor_card':
+        if metric == "retroicor_card":
             args = select_input_args(retroicor, kwargs)
-            args['card'] = True
+            args["card"] = True
             retroicor_regrs = retroicor(physio, **args)
-            for vslice in range(len(args['slice_timings'])):
-                for harm in range(args['n_harm']):
-                    key = f'rcor-card_s-{vslice}_hrm-{harm}'
-                    regr[f'{key}_cos'] = retroicor_regrs[vslice][:, harm*2]
-                    regr[f'{key}_sin'] = retroicor_regrs[vslice][:, harm*2+1]
-        elif metric == 'retroicor_resp':
+            for vslice in range(len(args["slice_timings"])):
+                for harm in range(args["n_harm"]):
+                    key = f"rcor-card_s-{vslice}_hrm-{harm}"
+                    regr[f"{key}_cos"] = retroicor_regrs[vslice][:, harm * 2]
+                    regr[f"{key}_sin"] = retroicor_regrs[vslice][:, harm * 2 + 1]
+        elif metric == "retroicor_resp":
             args = select_input_args(retroicor, kwargs)
-            args['resp'] = True
+            args["resp"] = True
             retroicor_regrs = retroicor(physio, **args)
-            for vslice in range(len(args['slice_timings'])):
-                for harm in range(args['n_harm']):
-                    key = f'rcor-resp_s-{vslice}_hrm-{harm}'
-                    regr[f'{key}_cos'] = retroicor_regrs[vslice][:, harm*2]
-                    regr[f'{key}_sin'] = retroicor_regrs[vslice][:, harm*2+1]
+            for vslice in range(len(args["slice_timings"])):
+                for harm in range(args["n_harm"]):
+                    key = f"rcor-resp_s-{vslice}_hrm-{harm}"
+                    regr[f"{key}_cos"] = retroicor_regrs[vslice][:, harm * 2]
+                    regr[f"{key}_sin"] = retroicor_regrs[vslice][:, harm * 2 + 1]
         else:
             args = select_input_args(metric, kwargs)
             regr[metric.__name__] = metric(physio, **args)
 
-    #!# Add regressors visualisation
+    # #!# Add regressors visualisation
 
     # Export regressors and sidecar
-    out_filename = os.join(outdir, 'derivatives', filename)
-    regr.to_csv(out_filename, sep='\t', index=False, float_format='%.6e')
-    #!# Add sidecar export
+    out_filename = os.join(outdir, "derivatives", filename)
+    regr.to_csv(out_filename, sep="\t", index=False, float_format="%.6e")
+    # #!# Add sidecar export
 
 
 def _main(argv=None):
@@ -211,7 +238,7 @@ def _main(argv=None):
     phys2denoise(**vars(options))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     _main(sys.argv[1:])
 
 """

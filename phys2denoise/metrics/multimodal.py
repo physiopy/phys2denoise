@@ -2,10 +2,10 @@
 
 import numpy as np
 
-from .cardiac import cardiac_phase
-from .chest_belt import respiratory_phase
 from .. import references
 from ..due import due
+from .cardiac import cardiac_phase
+from .chest_belt import respiratory_phase
 
 
 @due.dcite(references.GLOVER_2000)
