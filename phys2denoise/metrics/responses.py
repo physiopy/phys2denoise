@@ -58,7 +58,7 @@ def crf(samplerate, time_length=32, onset=0.0, inverse=False):
 
     time_stamps = np.arange(0, time_length, 1 / samplerate)
     time_stamps -= onset
-    crf_arr  = _crf(time_stamps)
+    crf_arr = _crf(time_stamps)
     crf_arr = crf_arr / max(abs(crf_arr))
 
     if inverse:
@@ -66,7 +66,9 @@ def crf(samplerate, time_length=32, onset=0.0, inverse=False):
     else:
         return crf_arr
 
+
 @due.dcite(references.CHANG_CUNNINGHAM_GLOVER_2009)
+@due.dcite(references.CHEN_2009)
 def icrf(samplerate, time_length=32, onset=0.0):
     """
     Calculate the inverse of the cardiac response function.

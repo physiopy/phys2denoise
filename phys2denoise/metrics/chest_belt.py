@@ -11,7 +11,8 @@ from .utils import apply_function_in_sliding_window as afsw
 from .utils import convolve_and_rescale, rms_envelope_1d
 
 
-def respiratory_variance_time(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
+@due.dcite(references.BIRN_2006)
+def respiratory_variance_time(resp, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
     """
     Implement the Respiratory Variance over Time (Birn et al. 2006).
 
@@ -19,7 +20,7 @@ def respiratory_variance_time(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8
 
     Parameters
     ----------
-    belt_ts: array_like
+    resp: array_like
         respiratory belt data - samples x 1
     peaks: array_like
         peaks found by peakdet algorithm
@@ -43,9 +44,9 @@ def respiratory_variance_time(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8
     """
     timestep = 1 / samplerate
     # respiration belt timing
-    time = np.arange(0, len(belt_ts) * timestep, timestep)
-    peak_vals = belt_ts[peaks]
-    trough_vals = belt_ts[troughs]
+    time = np.arange(0, len(resp) * timestep, timestep)
+    peak_vals = resp[peaks]
+    trough_vals = resp[troughs]
     peak_time = time[peaks]
     trough_time = time[troughs]
     mid_peak_time = (peak_time[:-1] + peak_time[1:]) / 2
@@ -160,7 +161,9 @@ def env(resp, samplerate, window=10):
     # Calculate RPV across a rolling window
 
     env_arr = (
-        pd.Series(resp).rolling(window=window, center=True).apply(rpv, args=(window,))
+        pd.Series(resp)
+        .rolling(window=window, center=True)
+        .apply(respiratory_pattern_variability, args=(window,))
     )
     env_arr[np.isnan(env_arr)] = 0.0
     return env_arr
@@ -210,7 +213,7 @@ def respiratory_variance(resp, samplerate, window=6):
     rv_arr = afsw(resp, np.std, halfwindow_samples)
 
     # Convolve with rrf
-    rv_out = convolve_and_rescale(rv_arr, rrf(samplerate), rescale='zscore')
+    rv_out = convolve_and_rescale(rv_arr, rrf(samplerate), rescale="zscore")
 
     return rv_out
 
