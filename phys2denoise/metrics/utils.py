@@ -187,7 +187,7 @@ def apply_function_in_sliding_window(array, func, halfwindow, incomplete=True):
     return array_out
 
 
-def convolve_and_rescale(array, func, rescale='rescale'):
+def convolve_and_rescale(array, func, rescale="rescale", pad=False):
     """
     Convolve array by func and rescale the data.
 
@@ -201,7 +201,10 @@ def convolve_and_rescale(array, func, rescale='rescale'):
         If True, `array` will be transformed to Zscores before the convolution.
         If False, raw `array` data will be taken to be convolved with the function.
     rescale : "demean_rescale", "rescale", "zscore", "demean", or None, optional
-        The rescaling operation used on `array_combined` and `array_combined_padd`
+        The rescaling operation used on `array_combined``
+    pad : bool, optional
+        If True, return a padded non-convolved metric together with the convolved one.
+        If False, return both metrics at the lenght of input array.
 
     Returns
     -------
@@ -213,43 +216,36 @@ def convolve_and_rescale(array, func, rescale='rescale'):
     """
     # Demeaning before the convolution
     array = array - array.mean(axis=0)
-    array_conv = np.convolve(array, func)[: len(array)]
-    array_conv_padd = np.convolve(array, func)
-    arr_padd = np.zeros(array_conv_padd.shape)
-    arr_padd[:array.shape[0]] = array
+    array_conv = np.convolve(array, func)
 
     # Stack the array with the convolved array
-    array_combined = np.stack((array, array_conv), axis=-1)
-    array_combined_padd = np.stack((arr_padd, array_conv_padd), axis=-1)
+    if pad:
+        endpad = array_conv.shape[0] - array.shape[0]
+        array_combined = np.stack(
+            (np.pad(array, (0, endpad), constant_values=0), array_conv), axis=-1
+        )
+    else:
+        array_combined = np.stack(array, array_conv[: array.shape[0]], axis=-1)
 
-    #Rescale the combined array
-    if rescale == 'demean_rescale':
+    # Rescale the combined array
+    if rescale == "demean_rescale":
         array_combined = array_combined - array_combined.mean(axis=0)
-        array_combined[:,1] = np.interp(
-            array_combined[:,1], (array_combined[:,1].min(), array_combined[:,1].max()),
-            (array.min(), array.max())
-        )
-        array_combined_padd = array_combined_padd - array_combined_padd.mean(axis=0)
-        array_combined_padd[:, 1] = np.interp(
-            array_combined_padd[:, 1], (array_combined_padd[:, 1].min(), array_combined_padd[:, 1].max()),
-            (array.min(), array.max())
-        )
-    elif rescale == 'rescale':
         array_combined[:, 1] = np.interp(
-            array_combined[:, 1], (array_combined[:, 1].min(), array_combined[:, 1].max()),
-            (array.min(), array.max())
+            array_combined[:, 1],
+            (array_combined[:, 1].min(), array_combined[:, 1].max()),
+            (array.min(), array.max()),
         )
-        array_combined_padd[:, 1] = np.interp(
-            array_combined_padd[:, 1], (array_combined_padd[:, 1].min(), array_combined_padd[:, 1].max()),
-            (array.min(), array.max())
+    elif rescale == "rescale":
+        array_combined[:, 1] = np.interp(
+            array_combined[:, 1],
+            (array_combined[:, 1].min(), array_combined[:, 1].max()),
+            (array.min(), array.max()),
         )
-    elif rescale == 'zscore':
+    elif rescale == "zscore":
         array_combined = zscore(array_combined, axis=0)
-        array_combined_padd = zscore(array_combined_padd, axis=0)
-    elif rescale == 'demean':
+    elif rescale == "demean":
         array_combined = array_combined - array_combined.mean(axis=0)
-        array_combined_padd = array_combined_padd - array_combined_padd.mean(axis=0)
     else:
         pass
 
-    return array_combined, array_combined_padd
+    return array_combined
