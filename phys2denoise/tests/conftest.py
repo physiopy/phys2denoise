@@ -11,4 +11,3 @@ def fake_phys():
     noise = np.random.normal(0, 0.5, len(samples))
     fake_phys = 10 * np.sin(2 * np.pi * f * samples) + noise
     return fake_phys
-
