@@ -225,7 +225,7 @@ def convolve_and_rescale(array, func, rescale="rescale", pad=False):
             (np.pad(array, (0, endpad), constant_values=0), array_conv), axis=-1
         )
     else:
-        array_combined = np.stack(array, array_conv[: array.shape[0]], axis=-1)
+        array_combined = np.stack((array, array_conv[: array.shape[0]]), axis=-1)
 
     # Rescale the combined array
     if rescale == "demean_rescale":
