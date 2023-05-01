@@ -82,7 +82,7 @@ def _cardiac_metrics(card, peaks, samplerate, metric, window=6, central_measure=
     card_met = np.empty_like(card)
     for n, i in enumerate(idx_min):
         diff = (
-            np.diff(peaks[np.logical_and(peaks >= i, peaks <= idx_max[n])]) * samplerate
+            np.diff(peaks[np.logical_and(peaks >= i, peaks <= idx_max[n])]) / samplerate
         )
         if metric == "hbi":
             card_met[n] = central_measure_operator(diff) if diff.size > 0 else 0
