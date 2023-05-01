@@ -221,8 +221,9 @@ def convolve_and_rescale(array, func, rescale="rescale", pad=False):
     # Stack the array with the convolved array
     if pad:
         endpad = array_conv.shape[0] - array.shape[0]
+        endval = array.mean()
         array_combined = np.stack(
-            (np.pad(array, (0, endpad), constant_values=0), array_conv), axis=-1
+            (np.pad(array, (0, endpad), constant_values=endval), array_conv), axis=-1
         )
     else:
         array_combined = np.stack((array, array_conv[: array.shape[0]]), axis=-1)
