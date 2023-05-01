@@ -215,8 +215,8 @@ def convolve_and_rescale(array, func, rescale="rescale", pad=False):
         convolved data length, rescaled or not.
     """
     # Demeaning before the convolution
-    array = array - array.mean(axis=0)
-    array_conv = np.convolve(array, func)
+    array_dm = array - array.mean(axis=0)
+    array_conv = np.convolve(array_dm, func)
 
     # Stack the array with the convolved array
     if pad:
