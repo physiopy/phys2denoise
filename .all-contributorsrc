@@ -57,6 +57,56 @@
       "contributions": [
         "infra"
       ]
+    },
+    {
+      "login": "kristinazvolanek",
+      "name": "Kristina Zvolanek",
+      "avatar_url": "https://avatars.githubusercontent.com/u/54590158?v=4",
+      "profile": "https://github.com/kristinazvolanek",
+      "contributions": [
+        "infra",
+        "review",
+        "userTesting"
+      ]
+    },
+    {
+      "login": "rzlim08",
+      "name": "rzlim08",
+      "avatar_url": "https://avatars.githubusercontent.com/u/37033997?v=4",
+      "profile": "https://github.com/rzlim08",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "TomasLenc",
+      "name": "Tomas Lenc",
+      "avatar_url": "https://avatars.githubusercontent.com/u/10827440?v=4",
+      "profile": "https://github.com/TomasLenc",
+      "contributions": [
+        "bug",
+        "test"
+      ]
+    },
+    {
+      "login": "eril892",
+      "name": "Raphaël-F",
+      "avatar_url": "https://avatars.githubusercontent.com/u/91672536?v=4",
+      "profile": "https://github.com/eril892",
+      "contributions": [
+        "code",
+        "userTesting",
+        "doc"
+      ]
+    },
+    {
+      "login": "AlicePatin",
+      "name": "AlicePatin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/44365985?v=4",
+      "profile": "https://github.com/AlicePatin",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 8,
