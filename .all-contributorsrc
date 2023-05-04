@@ -16,12 +16,44 @@
       ]
     },
     {
+      "login": "eril892",
+      "name": "Raphaël Fournier",
+      "avatar_url": "https://avatars.githubusercontent.com/u/91672536?v=4",
+      "profile": "https://github.com/eril892",
+      "contributions": [
+        "code",
+        "userTesting",
+        "doc"
+      ]
+    },
+    {
+      "login": "TomasLenc",
+      "name": "Tomas Lenc",
+      "avatar_url": "https://avatars.githubusercontent.com/u/10827440?v=4",
+      "profile": "https://github.com/TomasLenc",
+      "contributions": [
+        "bug",
+        "test"
+      ]
+    },
+    {
+      "login": "rzlim08",
+      "name": "rzlim08",
+      "avatar_url": "https://avatars.githubusercontent.com/u/37033997?v=4",
+      "profile": "https://github.com/rzlim08",
+      "contributions": [
+        "code",
+        "test"
+      ]
+    },
+    {
       "login": "rmarkello",
       "name": "Ross Markello",
       "avatar_url": "https://avatars0.githubusercontent.com/u/14265705?v=4",
       "profile": "http://rossmarkello.com",
       "contributions": [
-        "infra"
+        "infra",
+        "mentoring"
       ]
     },
     {
@@ -35,7 +67,17 @@
         "projectManagement",
         "code",
         "ideas",
-        "doc"
+        "doc",
+        "mentoring"
+      ]
+    },
+    {
+      "login": "AlicePatin",
+      "name": "Alice Patin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/44365985?v=4",
+      "profile": "https://github.com/AlicePatin",
+      "contributions": [
+        "code"
       ]
     },
     {
@@ -67,45 +109,6 @@
         "infra",
         "review",
         "userTesting"
-      ]
-    },
-    {
-      "login": "rzlim08",
-      "name": "rzlim08",
-      "avatar_url": "https://avatars.githubusercontent.com/u/37033997?v=4",
-      "profile": "https://github.com/rzlim08",
-      "contributions": [
-        "code"
-      ]
-    },
-    {
-      "login": "TomasLenc",
-      "name": "Tomas Lenc",
-      "avatar_url": "https://avatars.githubusercontent.com/u/10827440?v=4",
-      "profile": "https://github.com/TomasLenc",
-      "contributions": [
-        "bug",
-        "test"
-      ]
-    },
-    {
-      "login": "eril892",
-      "name": "Raphaël-F",
-      "avatar_url": "https://avatars.githubusercontent.com/u/91672536?v=4",
-      "profile": "https://github.com/eril892",
-      "contributions": [
-        "code",
-        "userTesting",
-        "doc"
-      ]
-    },
-    {
-      "login": "AlicePatin",
-      "name": "AlicePatin",
-      "avatar_url": "https://avatars.githubusercontent.com/u/44365985?v=4",
-      "profile": "https://github.com/AlicePatin",
-      "contributions": [
-        "code"
       ]
     }
   ],
