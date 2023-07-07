@@ -106,7 +106,46 @@ def heart_rate_variability(card, peaks, samplerate, window=6, central_measure="m
     """
     Compute average heart rate variability (HRV) in a sliding window.
 
+    Parameters
+    ----------
+    card : list or 1D numpy.ndarray
+        Timeseries of recorded cardiac signal
+    peaks : list or 1D numpy.ndarray
+        array of peak indexes for card.
+    samplerate : float
+        Sampling rate for card, in Hertz.
+    window : float, optional
+        Size of the sliding window, in seconds.
+        Default is 6.
+    central_measure : "mean","average", "avg", "median", "mdn",  string, optional
+        Measure of the center used (mean or median).
+        Default is "mean".
+    Returns
+    -------
+    card_met : 2D numpy.ndarray
+        Heart Beats Interval or Heart Rate Variability timeseries.
+        The first column is the raw metric, in Hertz.
+        The second column is the metric convolved with the CRF, cut to the length
+        of the raw metric.
+
+    Notes
+    -----
+    Heart rate variability (HRV) is taken from [1]_, and computed as the amounts of
+    beats per minute.
+    However, operationally, it is the average of the inverse of the time interval
+    between two heart beats.
+    This metric should be convolved with the cardiac response function
+    before being included in a GLM.
+
+    IMPORTANT : The unit of measure has a meaning, since they it's based on Hertz.
+    Hence, zscoring might remove important quantifiable information.
+
     See `_cardiac_metrics` for full implementation.
+
+    References
+    ----------
+    .. [1] C. Chang, J. P. Cunningham, & G. H. Glover, "Influence of heart rate on the
+        BOLD signal: The cardiac response function", NeuroImage, vol. 44, 2009
     """
     return _cardiac_metrics(
         card, peaks, samplerate, metric="hrv", window=6, central_measure="mean"
@@ -118,7 +157,44 @@ def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean
     """
     Compute average heart beat interval (HBI) in a sliding window.
 
+    Parameters
+    ----------
+    card : list or 1D numpy.ndarray
+        Timeseries of recorded cardiac signal
+    peaks : list or 1D numpy.ndarray
+        array of peak indexes for card.
+    samplerate : float
+        Sampling rate for card, in Hertz.
+    window : float, optional
+        Size of the sliding window, in seconds.
+        Default is 6.
+    central_measure : "mean","average", "avg", "median", "mdn",  string, optional
+        Measure of the center used (mean or median).
+        Default is "mean".
+    Returns
+    -------
+    card_met : 2D numpy.ndarray
+        Heart Beats Interval or Heart Rate Variability timeseries.
+        The first column is the raw metric, in seconds.
+        The second column is the metric convolved with the CRF, cut to the length
+        of the raw metric.
+
+    Notes
+    -----
+    Heart beats interval (HBI) definition is taken from [1]_, and consists of the
+    average of the time interval between two heart beats within a 6-seconds window.
+    This metric should be convolved with an inverse of the cardiac response function
+    before being included in a GLM.
+
+    IMPORTANT : The unit of measure has meaning, since it is based on seconds.
+    Hence, zscoring might remove important quantifiable information.
+
     See `_cardiac_metrics` for full implementation.
+
+    References
+    ----------
+    .. [1] J. E. Chen et al., "Resting-state "physiological networks"", Neuroimage,
+        vol. 213, pp. 116707, 2020.
     """
     return _cardiac_metrics(
         card, peaks, samplerate, metric="hbi", window=6, central_measure="mean"
