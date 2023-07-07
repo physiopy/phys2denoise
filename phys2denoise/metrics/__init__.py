@@ -5,20 +5,22 @@ from .chest_belt import (
     respiratory_pattern_variability,
     respiratory_phase,
     respiratory_variance,
+    respiratory_variance_time,
 )
 from .multimodal import retroicor
 from .responses import crf, icrf, rrf
 
 __all__ = [
-    "icrf",
-    "crf",
-    "rrf",
-    "heart_rate_variability",
-    "heart_beat_interval",
-    "cardiac_phase",
-    "respiratory_pattern_variability",
-    "env",
-    "respiratory_variance",
-    "respiratory_phase",
     "retroicor",
+    "cardiac_phase",
+    "respiratory_phase",
+    "heart_beat_interval",
+    "heart_rate_variability",
+    "env",
+    "respiratory_pattern_variability",
+    "respiratory_variance",
+    "respiratory_variance_time",
+    "crf",
+    "icrf",
+    "rrf",
 ]
