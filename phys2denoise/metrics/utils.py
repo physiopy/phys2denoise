@@ -3,6 +3,7 @@ import logging
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view as swv
+from scipy.interpolate import interp1d
 from scipy.stats import zscore
 
 LGR = logging.getLogger(__name__)
@@ -250,3 +251,68 @@ def convolve_and_rescale(array, func, rescale="rescale", pad=False):
         pass
 
     return array_combined
+
+
+def export_metric(
+    metric, sample_rate, tr, fileprefix, ext=".1D", is_convolved=True, has_lags=False
+):
+    """
+    Export the metric content, both in original sampling rate and resampled at the TR.
+
+    Parameters
+    ----------
+    metric : list or numpy.ndarray
+        Metric to be exported
+    sample_rate : int or float
+        Original sampling rate of the metric
+    tr : int or float
+        TR of functional data. Output will be also resampled to this value
+    fileprefix : str
+        Filename prefix, including path where files should be stored
+    ext : str, optional
+        Extension of file, default "1D"
+    is_convolved : bool, optional.
+        If True, `metric` contains convolved version already - default is True
+    has_lags : bool, optional.
+        If True, `metric` contains lagged versions of itself - default is False
+    """
+    # Start resampling
+    len_tp = metric.shape[0]
+    len_newtp = int(np.around(metric.shape[0] * (1 / (sample_rate * tr))))
+    len_s = len_tp / sample_rate
+    orig_t = np.linspace(0, len_s, len_tp)
+    interp_t = np.linspace(0, len_s, len_newtp)
+    f = interp1d(orig_t, metric, fill_value="extrapolate", axis=0)
+
+    resampled_metric = f(interp_t)
+
+    # Export metrics
+    if metric.ndim == 1:
+        np.savetxt(f"{fileprefix}_orig{ext}", metric, fmt="%.6f")
+        np.savetxt(f"{fileprefix}_resampled{ext}", resampled_metric, fmt="%.6f")
+    elif metric.ndim == 2:
+        cols = metric.shape[1]
+        if cols == 1:
+            np.savetxt(f"{fileprefix}_orig{ext}", metric, fmt="%.6f")
+            np.savetxt(f"{fileprefix}_resampled{ext}", resampled_metric, fmt="%.6f")
+        elif is_convolved:
+            np.savetxt(f"{fileprefix}_orig_raw{ext}", metric[:, 0], fmt="%.6f")
+            np.savetxt(
+                f"{fileprefix}_resampled_raw{ext}", resampled_metric[:, 0], fmt="%.6f"
+            )
+            np.savetxt(f"{fileprefix}_orig_convolved{ext}", metric[:, 1], fmt="%.6f")
+            np.savetxt(
+                f"{fileprefix}_resampled_convolved{ext}",
+                resampled_metric[:, 1],
+                fmt="%.6f",
+            )
+        elif has_lags:
+            for c in range(cols):
+                np.savetxt(f"{fileprefix}_orig_lag-{c}{ext}", metric[:, c], fmt="%.6f")
+                np.savetxt(
+                    f"{fileprefix}_resampled_lag-{c}{ext}",
+                    resampled_metric[:, c],
+                    fmt="%.6f",
+                )
+
+    return fileprefix
