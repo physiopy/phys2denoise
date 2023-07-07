@@ -254,7 +254,14 @@ def convolve_and_rescale(array, func, rescale="rescale", pad=False):
 
 
 def export_metric(
-    metric, sample_rate, tr, fileprefix, ext=".1D", is_convolved=True, has_lags=False
+    metric,
+    sample_rate,
+    tr,
+    fileprefix,
+    ntp=None,
+    ext=".1D",
+    is_convolved=True,
+    has_lags=False,
 ):
     """
     Export the metric content, both in original sampling rate and resampled at the TR.
@@ -269,6 +276,8 @@ def export_metric(
         TR of functional data. Output will be also resampled to this value
     fileprefix : str
         Filename prefix, including path where files should be stored
+    ntp : int or None, optional
+        Number of timepoints to consider, if None, all will be automatically considered
     ext : str, optional
         Extension of file, default "1D"
     is_convolved : bool, optional.
@@ -285,6 +294,13 @@ def export_metric(
     f = interp1d(orig_t, metric, fill_value="extrapolate", axis=0)
 
     resampled_metric = f(interp_t)
+    if ntp is not None:
+        if resampled_metric.shape[-1] > ntp:
+            resampled_metric = resampled_metric[:ntp]
+        elif resampled_metric.shape[-1] < ntp:
+            resampled_metric = np.pad(
+                resampled_metric.T, (0, ntp - resampled_metric.shape[-1]), mode="edge"
+            ).T
 
     # Export metrics
     if metric.ndim == 1:
