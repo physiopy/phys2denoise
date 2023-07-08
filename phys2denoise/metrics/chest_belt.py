@@ -1,21 +1,18 @@
 """Denoising metrics for chest belt recordings."""
-import matplotlib as mpl
 import numpy as np
 import pandas as pd
-from scipy.ndimage.filters import convolve1d
-from scipy.signal import detrend
-from scipy.stats import zscore
 from scipy.interpolate import interp1d
-
-mpl.use("TkAgg")
-import matplotlib.pyplot as plt
+from scipy.stats import zscore
 
 from .. import references
 from ..due import due
-from . import utils
+from .responses import rrf
+from .utils import apply_function_in_sliding_window as afsw
+from .utils import convolve_and_rescale, rms_envelope_1d
 
 
-def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
+@due.dcite(references.BIRN_2006)
+def respiratory_variance_time(resp, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
     """
     Implement the Respiratory Variance over Time (Birn et al. 2006).
 
@@ -23,7 +20,7 @@ def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
 
     Parameters
     ----------
-    belt_ts: array_like
+    resp: array_like
         respiratory belt data - samples x 1
     peaks: array_like
         peaks found by peakdet algorithm
@@ -38,16 +35,22 @@ def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
     -------
     rvt: array_like
         calculated RVT and associated lags.
+
+    References
+    ----------
+    .. [1] R. M. Birn, J. B. Diamond, M. A. Smith, P. A. Bandettini,“Separating
+       respiratory-variation-related fluctuations from neuronal-activity-related
+       fluctuations in fMRI”, NeuroImage, vol.31, pp. 1536-1548, 2006.
     """
     timestep = 1 / samplerate
     # respiration belt timing
-    time = np.arange(0, len(belt_ts) * timestep, timestep)
-    peak_vals = belt_ts[peaks]
-    trough_vals = belt_ts[troughs]
+    time = np.arange(0, len(resp) * timestep, timestep)
+    peak_vals = resp[peaks]
+    trough_vals = resp[troughs]
     peak_time = time[peaks]
     trough_time = time[troughs]
     mid_peak_time = (peak_time[:-1] + peak_time[1:]) / 2
-    period = peak_time[1:] - peak_time[:-1]
+    period = np.diff(peak_time)
     # interpolate peak values over all timepoints
     peak_interp = interp1d(
         peak_time, peak_vals, bounds_error=False, fill_value="extrapolate"
@@ -78,13 +81,15 @@ def rvt(belt_ts, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
 
 
 @due.dcite(references.POWER_2018)
-def rpv(resp, window=6):
+def respiratory_pattern_variability(resp, window):
     """Calculate respiratory pattern variability.
 
     Parameters
     ----------
-    resp : 1D array_like
+    resp : str or 1D numpy.ndarray
+        Tiemseries representing respiration activity.
     window : int
+        Window length in samples.
 
     Returns
     -------
@@ -110,7 +115,7 @@ def rpv(resp, window=6):
     resp_z = zscore(resp)
 
     # Collect upper envelope
-    rpv_upper_env = utils.rms_envelope_1d(resp_z, window)
+    rpv_upper_env = rms_envelope_1d(resp_z, window)
 
     # Calculate standard deviation
     rpv_val = np.std(rpv_upper_env)
@@ -154,15 +159,18 @@ def env(resp, samplerate, window=10):
     window = int(window * samplerate)
 
     # Calculate RPV across a rolling window
+
     env_arr = (
-        pd.Series(resp).rolling(window=window, center=True).apply(rpv, args=(window,))
+        pd.Series(resp)
+        .rolling(window=window, center=True)
+        .apply(respiratory_pattern_variability, args=(window,))
     )
     env_arr[np.isnan(env_arr)] = 0.0
     return env_arr
 
 
 @due.dcite(references.CHANG_GLOVER_2009)
-def rv(resp, samplerate, window=6, lags=(0,)):
+def respiratory_variance(resp, samplerate, window=6):
     """Calculate respiratory variance.
 
     Parameters
@@ -179,8 +187,8 @@ def rv(resp, samplerate, window=6, lags=(0,)):
     -------
     rv_out : (X, 2) :obj:`numpy.ndarray`
         Respiratory variance values.
-        The first column is raw RV values, after detrending/normalization.
-        The second column is RV values convolved with the RRF, after detrending/normalization.
+        The first column is raw RV values, after normalization.
+        The second column is RV values convolved with the RRF, after normalization.
 
     Notes
     -----
@@ -199,73 +207,15 @@ def rv(resp, samplerate, window=6, lags=(0,)):
        issue 4, vol. 47, pp. 1381-1393, 2009.
     """
     # Convert window to Hertz
-    window = int(window * samplerate)
+    halfwindow_samples = int(round(window * samplerate / 2))
 
     # Raw respiratory variance
-    rv_arr = pd.Series(resp).rolling(window=window, center=True).std()
-    rv_arr[np.isnan(rv_arr)] = 0.0
+    rv_arr = afsw(resp, np.std, halfwindow_samples)
 
     # Convolve with rrf
-    rrf_arr = rrf(samplerate, oversampling=1)
-    rv_convolved = convolve1d(rv_arr, rrf_arr, axis=0)
+    rv_out = convolve_and_rescale(rv_arr, rrf(samplerate), rescale="zscore")
 
-    # Concatenate the raw and convolved versions
-    rv_combined = np.stack((rv_arr, rv_convolved), axis=-1)
-
-    # Detrend and normalize
-    rv_combined = rv_combined - np.mean(rv_combined, axis=0)
-    rv_combined = detrend(rv_combined, axis=0)
-    rv_out = zscore(rv_combined, axis=0)
     return rv_out
-
-
-@due.dcite(references.CHANG_GLOVER_2009)
-def rrf(samplerate, oversampling=50, time_length=50, onset=0.0, tr=2.0):
-    """Calculate the respiratory response function using Chang and Glover's definition.
-
-    Parameters
-    ----------
-    samplerate : :obj:`float`
-        Sampling rate of data, in seconds.
-    oversampling : :obj:`int`, optional
-        Temporal oversampling factor. Default is 50.
-    time_length : :obj:`int`, optional
-        RRF kernel length, in seconds. Default is 50.
-    onset : :obj:`float`, optional
-        Onset of the response, in seconds. Default is 0.
-
-    Returns
-    -------
-    rrf : array-like
-        respiratory response function
-
-    Notes
-    -----
-    This respiratory response function was defined in [1]_, Appendix A.
-
-    The core code for this function comes from metco2, while several of the
-    parameters, including oversampling, time_length, and onset, are modeled on
-    nistats' HRF functions.
-
-    References
-    ----------
-    .. [1] C. Chang & G. H. Glover, "Relationship between respiration,
-       end-tidal CO2, and BOLD signals in resting-state fMRI," Neuroimage,
-       issue 47, vol. 4, pp. 1381-1393, 2009.
-    """
-
-    def _rrf(t):
-        rf = 0.6 * t ** 2.1 * np.exp(-t / 1.6) - 0.0023 * t ** 3.54 * np.exp(-t / 4.25)
-        return rf
-
-    dt = tr / oversampling
-    time_stamps = np.linspace(
-        0, time_length, np.rint(float(time_length) / dt).astype(np.int)
-    )
-    time_stamps -= onset
-    rrf_arr = _rrf(time_stamps)
-    rrf_arr = rrf_arr / max(abs(rrf_arr))
-    return rrf_arr
 
 
 def respiratory_phase(resp, sample_rate, n_scans, slice_timings, t_r):
@@ -295,7 +245,7 @@ def respiratory_phase(resp, sample_rate, n_scans, slice_timings, t_r):
 
     # generate histogram from respiratory signal
     # TODO: Replace with numpy.histogram
-    resp_hist, resp_hist_bins, _ = plt.hist(resp, bins=100)
+    resp_hist, resp_hist_bins = np.histogram(resp, bins=100)
 
     # first compute derivative of respiration signal
     resp_diff = np.diff(resp, n=1)
