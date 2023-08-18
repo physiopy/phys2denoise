@@ -23,7 +23,7 @@ ignore:
   - "docs"
   - "**/__init__.py"
   - "**/**/__init__.py"
-    - "docs"
+  - "docs"
   - "tests"
   - "_version.py"
   - "__init__.py"
