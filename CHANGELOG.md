@@ -1,4 +1,4 @@
-# (Mon Aug 28 2023)
+# 0.3.0 (Mon Aug 28 2023)
 
 #### 🚀 Enhancement
 
