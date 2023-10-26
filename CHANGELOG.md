@@ -1,3 +1,24 @@
+# 0.3.1 (Mon Aug 28 2023)
+
+#### 🚀 Enhancement
+
+- Fix naming of metrics, clarify PULSE RATE vs HEART RATE [#44](https://github.com/physiopy/phys2denoise/pull/44) (s.moia@bcbl.eu)
+
+#### ⚠️ Pushed to `master`
+
+- int: Update actions versions (s.moia@bcbl.eu)
+
+#### 🏠 Internal
+
+- [pre-commit.ci] pre-commit autoupdate [#43](https://github.com/physiopy/phys2denoise/pull/43) ([@pre-commit-ci[bot]](https://github.com/pre-commit-ci[bot]) s.moia@bcbl.eu)
+
+#### Authors: 2
+
+- [@pre-commit-ci[bot]](https://github.com/pre-commit-ci[bot])
+- Stefano Moia ([@smoia](https://github.com/smoia))
+
+---
+
 # 0.2.0 (Thu Feb 25 2021)
 
 #### 💥 Breaking Change during development
