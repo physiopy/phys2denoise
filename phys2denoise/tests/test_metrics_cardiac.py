@@ -1,4 +1,5 @@
 """Tests for phys2denoise.metrics.cardiac."""
+
 import numpy as np
 
 from phys2denoise.metrics import cardiac
