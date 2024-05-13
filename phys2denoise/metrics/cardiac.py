@@ -1,5 +1,6 @@
 """Denoising metrics for cardio recordings."""
 import numpy as np
+from loguru import logger
 
 from .. import references
 from ..due import due
@@ -8,6 +9,7 @@ from .utils import apply_function_in_sliding_window as afsw
 from .utils import convolve_and_rescale
 
 
+@logger.catch
 def _cardiac_metrics(card, peaks, samplerate, metric, window=6, central_measure="mean"):
     """
     Compute cardiac metrics.
