@@ -6,8 +6,10 @@ from ..due import due
 from .responses import crf
 from .utils import apply_function_in_sliding_window as afsw
 from .utils import convolve_and_rescale
+from loguru import logger
 
 
+@logger.catch
 def _cardiac_metrics(card, peaks, samplerate, metric, window=6, central_measure="mean"):
     """
     Compute cardiac metrics.

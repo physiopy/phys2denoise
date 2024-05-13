@@ -29,11 +29,13 @@ from phys2denoise.metrics.chest_belt import (
 )
 from phys2denoise.metrics.retroicor import retroicor
 
+from loguru import logger
+
 from . import __version__
 from .due import Doi, due
 
-LGR = logging.getLogger(__name__)
-LGR.setLevel(logging.INFO)
+# LGR = logging.getLogger(__name__)
+# LGR.setLevel(logging.INFO)
 
 
 def save_bash_call(outdir):
@@ -59,6 +61,7 @@ def save_bash_call(outdir):
     f.close()
 
 
+@logger.catch
 def select_input_args(metric, metric_args):
     """
     Retrieve required args for metric from a dictionary of possible arguments.
@@ -112,6 +115,7 @@ def select_input_args(metric, metric_args):
     version=__version__,
     cite_module=True,
 )
+@logger.catch
 def phys2denoise(
     filename,
     outdir=".",
@@ -182,8 +186,10 @@ def phys2denoise(
         )
 
     version_number = __version__
-    LGR.info(f"Currently running phys2denoise version {version_number}")
-    LGR.info(f"Input file is {filename}")
+    # LGR.info(f"Currently running phys2denoise version {version_number}")
+    # LGR.info(f"Input file is {filename}")
+    logger.info(f"Currently running phys2denoise version {version_number}")
+    logger.info(f"Input file is {filename}")
 
     # Check options to make them internally coherent pt. II
     # #!# This can probably be done while parsing?
