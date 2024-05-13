@@ -2,10 +2,10 @@
 import logging
 
 import numpy as np
+from loguru import logger
 from numpy.lib.stride_tricks import sliding_window_view as swv
 from scipy.interpolate import interp1d
 from scipy.stats import zscore
-from loguru import logger
 
 
 def print_metric_call(metric, args):
@@ -58,7 +58,8 @@ def mirrorpad_1d(arr, buffer=250):
         len(arr)
         logger.warning(
             f"Requested buffer size ({buffer}) is longer than input array length "
-            f"({len(arr)}). Fixing buffer size to array length.")
+            f"({len(arr)}). Fixing buffer size to array length."
+        )
         idx = range(arr.shape[0] - len(arr), arr.shape[0])
         pre_mirror = np.take(mirror, idx, axis=0)
         idx = range(len(arr))

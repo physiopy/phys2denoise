@@ -18,6 +18,7 @@ from inspect import _empty, signature
 
 import numpy as np
 import pandas as pd
+from loguru import logger
 
 from phys2denoise.cli.run import _get_parser
 from phys2denoise.metrics.cardiac import crf
@@ -28,8 +29,6 @@ from phys2denoise.metrics.chest_belt import (
     rrf,
 )
 from phys2denoise.metrics.retroicor import retroicor
-
-from loguru import logger
 
 from . import __version__
 from .due import Doi, due
