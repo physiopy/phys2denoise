@@ -6,9 +6,10 @@ from ..due import due
 from .responses import crf
 from .utils import apply_function_in_sliding_window as afsw
 from .utils import convolve_and_rescale
+from physutils import physio
 
 
-def _cardiac_metrics(card, peaks, samplerate, metric, window=6, central_measure="mean"):
+def _cardiac_metrics(data, metric, window=6, central_measure="mean"):
     """
     Compute cardiac metrics.
 
@@ -71,8 +72,11 @@ def _cardiac_metrics(card, peaks, samplerate, metric, window=6, central_measure=
     Annual International Conference of the IEEE Engineering in Medicine and
     Biology Society (EMBC), doi: 10.1109/EMBC.2016.7591347.
     """
+    # Initialize physio object
+    data = physio.check_physio(data, ensure_fs=True)
+
     # Convert window to samples, but halves it.
-    halfwindow_samples = int(round(window * samplerate / 2))
+    halfwindow_samples = int(round(window * data.fs / 2))
 
     if central_measure in ["mean", "average", "avg"]:
         central_measure_operator = np.mean
@@ -85,14 +89,14 @@ def _cardiac_metrics(card, peaks, samplerate, metric, window=6, central_measure=
             f" {central_measure} is not a supported metric of centrality."
         )
 
-    idx_arr = np.arange(len(card))
+    idx_arr = np.arange(len(data))
     idx_min = afsw(idx_arr, np.min, halfwindow_samples)
     idx_max = afsw(idx_arr, np.max, halfwindow_samples)
 
-    card_met = np.empty_like(card)
+    card_met = np.empty_like(data)
     for n, i in enumerate(idx_min):
         diff = (
-            np.diff(peaks[np.logical_and(peaks >= i, peaks <= idx_max[n])]) / samplerate
+            np.diff(data.peaks[np.logical_and(data.peaks >= i, data.peaks <= idx_max[n])]) / data.fs
         )
         if metric == "hbi":
             card_met[n] = central_measure_operator(diff) if diff.size > 0 else 0
@@ -109,13 +113,13 @@ def _cardiac_metrics(card, peaks, samplerate, metric, window=6, central_measure=
     card_met[np.isnan(card_met)] = 0.0
 
     # Convolve with crf and rescale
-    card_met = convolve_and_rescale(card_met, crf(samplerate), rescale="rescale")
+    card_met = convolve_and_rescale(card_met, crf(data.fs), rescale="rescale")
 
     return card_met
 
 
 @due.dcite(references.CHANG_CUNNINGHAM_GLOVER_2009)
-def heart_rate(card, peaks, samplerate, window=6, central_measure="mean"):
+def heart_rate(data, window=6, central_measure="mean"):
     """
     Compute average heart rate (HR) in a sliding window.
 
@@ -168,12 +172,12 @@ def heart_rate(card, peaks, samplerate, window=6, central_measure="mean"):
     Biology Society (EMBC), doi: 10.1109/EMBC.2016.7591347.
     """
     return _cardiac_metrics(
-        card, peaks, samplerate, metric="hrv", window=6, central_measure="mean"
+        data, metric="hrv", window=6, central_measure="mean"
     )
 
 
 @due.dcite(references.PINHERO_ET_AL_2016)
-def heart_rate_variability(card, peaks, samplerate, window=6, central_measure="mean"):
+def heart_rate_variability(data, window=6, central_measure="mean"):
     """
     Compute average heart rate variability (HRV) in a sliding window.
 
@@ -224,12 +228,12 @@ def heart_rate_variability(card, peaks, samplerate, window=6, central_measure="m
     Biology Society (EMBC), doi: 10.1109/EMBC.2016.7591347.
     """
     return _cardiac_metrics(
-        card, peaks, samplerate, metric="hrv", window=6, central_measure="std"
+        data, metric="hrv", window=6, central_measure="std"
     )
 
 
 @due.dcite(references.CHEN_2020)
-def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean"):
+def heart_beat_interval(data, window=6, central_measure="mean"):
     """
     Compute average heart beat interval (HBI) in a sliding window.
 
@@ -273,11 +277,11 @@ def heart_beat_interval(card, peaks, samplerate, window=6, central_measure="mean
         vol. 213, pp. 116707, 2020.
     """
     return _cardiac_metrics(
-        card, peaks, samplerate, metric="hbi", window=6, central_measure="mean"
+        data, metric="hbi", window=6, central_measure="mean"
     )
 
 
-def cardiac_phase(peaks, sample_rate, slice_timings, n_scans, t_r):
+def cardiac_phase(data, slice_timings, n_scans, t_r):
     """Calculate cardiac phase from cardiac peaks.
 
     Assumes that timing of cardiac events are given in same units
@@ -301,11 +305,13 @@ def cardiac_phase(peaks, sample_rate, slice_timings, n_scans, t_r):
     phase_card : array_like
         Cardiac phase signal, of shape (n_scans,)
     """
+    # Initialize physio object
+    data = physio.check_physio(data, ensure_fs=True)
     assert slice_timings.ndim == 1, "Slice times must be a 1D array"
     n_slices = np.size(slice_timings)
     phase_card = np.zeros((n_scans, n_slices))
 
-    card_peaks_sec = peaks / sample_rate
+    card_peaks_sec = data.peaks / data.fs
     for i_slice in range(n_slices):
         # generate slice acquisition timings across all scans
         times_crSlice = t_r * np.arange(n_scans) + slice_timings[i_slice]
