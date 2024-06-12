@@ -1,6 +1,6 @@
 """Denoising metrics for cardio recordings."""
 import numpy as np
-from physutils import physio
+from physutils import io, physio
 
 from .. import references
 from ..due import due
@@ -262,7 +262,7 @@ def heart_beat_interval(data, window=6, central_measure="mean"):
     return _cardiac_metrics(data, metric="hbi", window=6, central_measure="mean")
 
 
-def cardiac_phase(data, slice_timings, n_scans, t_r):
+def cardiac_phase(data, slice_timings, n_scans, t_r, fs=None, peaks=None):
     """Calculate cardiac phase from cardiac peaks.
 
     Assumes that timing of cardiac events are given in same units
@@ -284,8 +284,30 @@ def cardiac_phase(data, slice_timings, n_scans, t_r):
     phase_card : array_like
         Cardiac phase signal, of shape (n_scans,)
     """
-    # Initialize physio object
-    data = physio.check_physio(data, ensure_fs=True, copy=True)
+    if isinstance(data, physio.Physio):
+        # Initialize physio object
+        data = physio.check_physio(data, ensure_fs=True, copy=True)
+    elif fs is not None and peaks is not None:
+        data = io.load_physio(data, fs=fs)
+        data._metadata["peaks"] = peaks
+    else:
+        raise ValueError(
+            """
+            To use this function you should either provide a Physio object
+            with existing peaks metadata (e.g. using the peakdet module), or
+            by providing the physiological data timeseries, the sampling frequency,
+            and the peak indices separately.
+            """
+        )
+    if not data.peaks:
+        raise ValueError(
+            """
+            Peaks must be a non-empty list.
+            Make sure to run peak detection on your physiological data first,
+            using the peakdet module, or other software of your choice.
+            """
+        )
+
     assert slice_timings.ndim == 1, "Slice times must be a 1D array"
     n_slices = np.size(slice_timings)
     phase_card = np.zeros((n_scans, n_slices))
