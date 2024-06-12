@@ -22,12 +22,8 @@ def _cardiac_metrics(data, metric, window=6, central_measure="mean"):
 
     Parameters
     ----------
-    card : list or 1D numpy.ndarray
-        Timeseries of recorded cardiac signal
-    peaks : list or 1D numpy.ndarray
-        array of peak indexes for card.
-    samplerate : float
-        Sampling rate for card, in Hertz.
+    data : Physio_like
+        Object containing the timeseries of the recorded cardiac signal
     metrics : "hbi", "hr", "hrv", string
         Cardiac metric(s) to calculate.
     window : float, optional
@@ -73,7 +69,7 @@ def _cardiac_metrics(data, metric, window=6, central_measure="mean"):
     Biology Society (EMBC), doi: 10.1109/EMBC.2016.7591347.
     """
     # Initialize physio object
-    data = physio.check_physio(data, ensure_fs=True)
+    data = physio.check_physio(data, ensure_fs=True, copy=True)
 
     # Convert window to samples, but halves it.
     halfwindow_samples = int(round(window * data.fs / 2))
@@ -132,12 +128,8 @@ def heart_rate(data, window=6, central_measure="mean"):
 
     Parameters
     ----------
-    card : list or 1D numpy.ndarray
-        Timeseries of recorded cardiac signal
-    peaks : list or 1D numpy.ndarray
-        array of peak indexes for card.
-    samplerate : float
-        Sampling rate for card, in Hertz.
+    data : Physio_like
+        Object containing the timeseries of the recorded cardiac signal
     window : float, optional
         Size of the sliding window, in seconds.
         Default is 6.
@@ -188,12 +180,8 @@ def heart_rate_variability(data, window=6, central_measure="mean"):
 
     Parameters
     ----------
-    card : list or 1D numpy.ndarray
-        Timeseries of recorded cardiac signal
-    peaks : list or 1D numpy.ndarray
-        array of peak indexes for card.
-    samplerate : float
-        Sampling rate for card, in Hertz.
+    data : Physio_like
+        Object containing the timeseries of the recorded cardiac signal
     window : float, optional
         Size of the sliding window, in seconds.
         Default is 6.
@@ -238,12 +226,8 @@ def heart_beat_interval(data, window=6, central_measure="mean"):
 
     Parameters
     ----------
-    card : list or 1D numpy.ndarray
-        Timeseries of recorded cardiac signal
-    peaks : list or 1D numpy.ndarray
-        array of peak indexes for card.
-    samplerate : float
-        Sampling rate for card, in Hertz.
+    data : Physio_like
+        Object containing the timeseries of the recorded cardiac signal
     window : float, optional
         Size of the sliding window, in seconds.
         Default is 6.
@@ -286,10 +270,8 @@ def cardiac_phase(data, slice_timings, n_scans, t_r):
 
     Parameters
     ----------
-    peaks : 1D array_like
-        Cardiac peak times, in seconds.
-    sample_rate : float
-        Sample rate of physio, in Hertz.
+    data : Physio_like
+        Object containing the timeseries of the recorded cardiac signal
     slice_timings : 1D array_like
         Slice times, in seconds.
     n_scans : int
@@ -303,7 +285,7 @@ def cardiac_phase(data, slice_timings, n_scans, t_r):
         Cardiac phase signal, of shape (n_scans,)
     """
     # Initialize physio object
-    data = physio.check_physio(data, ensure_fs=True)
+    data = physio.check_physio(data, ensure_fs=True, copy=True)
     assert slice_timings.ndim == 1, "Slice times must be a 1D array"
     n_slices = np.size(slice_timings)
     phase_card = np.zeros((n_scans, n_slices))
