@@ -1,6 +1,7 @@
 """These functions compute RETROICOR regressors (Glover et al. 2000)."""
 
 import numpy as np
+from physutils import physio
 
 from .. import references
 from ..due import due
@@ -10,8 +11,7 @@ from .chest_belt import respiratory_phase
 
 @due.dcite(references.GLOVER_2000)
 def retroicor(
-    physio,
-    sample_rate,
+    data,
     t_r,
     n_scans,
     slice_timings,
@@ -23,12 +23,8 @@ def retroicor(
 
     Parameters
     ----------
-    physio : array_like
-        1D array, whether cardiac or respiratory signal.
-        If cardiac, the array is a set of peaks in seconds.
-        If respiratory, the array is the actual respiratory signal.
-    sample_rate : float
-        Physio sample rate, in Hertz.
+    data : Physio_like
+        Object containing the timeseries of the recorded respiratory or cardiac signal
     t_r : float
         Imaging sample rate, in seconds.
     n_scans : int
@@ -59,6 +55,9 @@ def retroicor(
        correction of physiological motion effects in fMRI: RETROICOR“, Magn. Reson. Med.,
        issue 1, vol. 44, pp. 162-167, 2000.
     """
+    # Initialize physio object
+    data = physio.check_physio(data, ensure_fs=True, copy=True)
+
     n_slices = np.shape(slice_timings)  # number of slices
 
     # initialize output variables
@@ -75,7 +74,7 @@ def retroicor(
         # slice sampling times
         if card:
             phase[:, i_slice] = cardiac_phase(
-                physio,
+                data,
                 crslice_timings,
                 n_scans,
                 t_r,
@@ -83,8 +82,7 @@ def retroicor(
 
         if resp:
             phase[:, i_slice] = respiratory_phase(
-                physio,
-                sample_rate,
+                data,
                 n_scans,
                 slice_timings,
                 t_r,

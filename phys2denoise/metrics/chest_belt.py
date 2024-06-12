@@ -1,6 +1,7 @@
 """Denoising metrics for chest belt recordings."""
 import numpy as np
 import pandas as pd
+from physutils import physio
 from scipy.interpolate import interp1d
 from scipy.stats import zscore
 
@@ -12,7 +13,7 @@ from .utils import convolve_and_rescale, rms_envelope_1d
 
 
 @due.dcite(references.BIRN_2006)
-def respiratory_variance_time(resp, peaks, troughs, samplerate, lags=(0, 4, 8, 12)):
+def respiratory_variance_time(data, lags=(0, 4, 8, 12)):
     """
     Implement the Respiratory Variance over Time (Birn et al. 2006).
 
@@ -20,14 +21,8 @@ def respiratory_variance_time(resp, peaks, troughs, samplerate, lags=(0, 4, 8, 1
 
     Parameters
     ----------
-    resp: array_like
-        respiratory belt data - samples x 1
-    peaks: array_like
-        peaks found by peakdet algorithm
-    troughs: array_like
-        troughs found by peakdet algorithm
-    samplerate: float
-        sample rate in hz of respiratory belt
+    data : Physio_like
+        Object containing the timeseries of the recorded respiratory signal
     lags: tuple
         lags in seconds of the RVT output. Default is 0, 4, 8, 12.
 
@@ -42,13 +37,15 @@ def respiratory_variance_time(resp, peaks, troughs, samplerate, lags=(0, 4, 8, 1
        respiratory-variation-related fluctuations from neuronal-activity-related
        fluctuations in fMRI”, NeuroImage, vol.31, pp. 1536-1548, 2006.
     """
-    timestep = 1 / samplerate
+    # Initialize physio object
+    data = physio.check_physio(data, ensure_fs=True)
+    timestep = 1 / data.fs
     # respiration belt timing
-    time = np.arange(0, len(resp) * timestep, timestep)
-    peak_vals = resp[peaks]
-    trough_vals = resp[troughs]
-    peak_time = time[peaks]
-    trough_time = time[troughs]
+    time = np.arange(0, len(data) * timestep, timestep)
+    peak_vals = data[data.peaks]
+    trough_vals = data[data.troughs]
+    peak_time = time[data.peaks]
+    trough_time = time[data.troughs]
     mid_peak_time = (peak_time[:-1] + peak_time[1:]) / 2
     period = np.diff(peak_time)
     # interpolate peak values over all timepoints
@@ -123,15 +120,13 @@ def respiratory_pattern_variability(resp, window):
 
 
 @due.dcite(references.POWER_2020)
-def env(resp, samplerate, window=10):
+def env(data, window=10):
     """Calculate respiratory pattern variability across a sliding window.
 
     Parameters
     ----------
-    resp : (X,) :obj:`numpy.ndarray`
-        A 1D array with the respiratory belt time series.
-    samplerate : :obj:`float`
-        Sampling rate for resp, in Hertz.
+    data : Physio_like
+        Object containing the timeseries of the recorded respiratory signal
     window : :obj:`int`, optional
         Size of the sliding window, in seconds.
         Default is 10.
@@ -155,13 +150,16 @@ def env(resp, samplerate, window=10):
        young adults scanned at rest, including systematic changes and 'missed'
        deep breaths," Neuroimage, vol. 204, 2020.
     """
+    # Initialize physio object
+    data = physio.check_physio(data, ensure_fs=True, copy=True)
+
     # Convert window to Hertz
-    window = int(window * samplerate)
+    window = int(window * data.fs)
 
     # Calculate RPV across a rolling window
 
     env_arr = (
-        pd.Series(resp)
+        pd.Series(data)
         .rolling(window=window, center=True)
         .apply(respiratory_pattern_variability, args=(window,))
     )
@@ -170,15 +168,13 @@ def env(resp, samplerate, window=10):
 
 
 @due.dcite(references.CHANG_GLOVER_2009)
-def respiratory_variance(resp, samplerate, window=6):
+def respiratory_variance(data, window=6):
     """Calculate respiratory variance.
 
     Parameters
     ----------
-    resp : (X,) :obj:`numpy.ndarray`
-        A 1D array with the respiratory belt time series.
-    samplerate : :obj:`float`
-        Sampling rate for resp, in Hertz.
+    data : Physio_like
+        Object containing the timeseries of the recorded respiratory signal
     window : :obj:`int`, optional
         Size of the sliding window, in seconds.
         Default is 6.
@@ -206,27 +202,28 @@ def respiratory_variance(resp, samplerate, window=6):
        end-tidal CO2, and BOLD signals in resting-state fMRI," Neuroimage,
        issue 4, vol. 47, pp. 1381-1393, 2009.
     """
+    # Initialize physio object
+    data = physio.check_physio(data, ensure_fs=True, copy=True)
+
     # Convert window to Hertz
-    halfwindow_samples = int(round(window * samplerate / 2))
+    halfwindow_samples = int(round(window * data.fs / 2))
 
     # Raw respiratory variance
-    rv_arr = afsw(resp, np.std, halfwindow_samples)
+    rv_arr = afsw(data, np.std, halfwindow_samples)
 
     # Convolve with rrf
-    rv_out = convolve_and_rescale(rv_arr, rrf(samplerate), rescale="zscore")
+    rv_out = convolve_and_rescale(rv_arr, rrf(data.fs), rescale="zscore")
 
     return rv_out
 
 
-def respiratory_phase(resp, sample_rate, n_scans, slice_timings, t_r):
+def respiratory_phase(data, n_scans, slice_timings, t_r):
     """Calculate respiratory phase from respiratory signal.
 
     Parameters
     ----------
-    resp : 1D array_like
-        Respiratory signal.
-    sample_rate : float
-        Sample rate of physio, in Hertz.
+    data : Physio_like
+        Object containing the timeseries of the recorded respiratory signal
     n_scans
         Number of volumes in the imaging run.
     slice_timings
@@ -239,16 +236,19 @@ def respiratory_phase(resp, sample_rate, n_scans, slice_timings, t_r):
     phase_resp : array_like
         Respiratory phase signal, of shape (n_scans, n_slices).
     """
+    # Initialize physio object
+    data = physio.check_physio(data, ensure_fs=True, copy=True)
+
     assert slice_timings.ndim == 1, "Slice times must be a 1D array"
     n_slices = np.size(slice_timings)
     phase_resp = np.zeros((n_scans, n_slices))
 
     # generate histogram from respiratory signal
     # TODO: Replace with numpy.histogram
-    resp_hist, resp_hist_bins = np.histogram(resp, bins=100)
+    resp_hist, resp_hist_bins = np.histogram(data, bins=100)
 
     # first compute derivative of respiration signal
-    resp_diff = np.diff(resp, n=1)
+    resp_diff = np.diff(data, n=1)
 
     for i_slice in range(n_slices):
         # generate slice acquisition timings across all scans
@@ -256,13 +256,13 @@ def respiratory_phase(resp, sample_rate, n_scans, slice_timings, t_r):
         phase_resp_crSlice = np.zeros(n_scans)
         for j_scan in range(n_scans):
             iphys = int(
-                max([1, round(times_crSlice[j_scan] * sample_rate)])
+                max([1, round(times_crSlice[j_scan] * data.fs)])
             )  # closest idx in resp waveform
             iphys = min([iphys, len(resp_diff)])  # cannot be longer than resp_diff
-            thisBin = np.argmin(abs(resp[iphys] - resp_hist_bins))
+            thisBin = np.argmin(abs(data[iphys] - resp_hist_bins))
             numerator = np.sum(resp_hist[0:thisBin])
             phase_resp_crSlice[j_scan] = (
-                np.math.pi * np.sign(resp_diff[iphys]) * (numerator / len(resp))
+                np.math.pi * np.sign(resp_diff[iphys]) * (numerator / len(data))
             )
 
         phase_resp[:, i_slice] = phase_resp_crSlice
