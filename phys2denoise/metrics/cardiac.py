@@ -1,12 +1,12 @@
 """Denoising metrics for cardio recordings."""
 import numpy as np
+from physutils import physio
 
 from .. import references
 from ..due import due
 from .responses import crf
 from .utils import apply_function_in_sliding_window as afsw
 from .utils import convolve_and_rescale
-from physutils import physio
 
 
 def _cardiac_metrics(data, metric, window=6, central_measure="mean"):
@@ -96,7 +96,10 @@ def _cardiac_metrics(data, metric, window=6, central_measure="mean"):
     card_met = np.empty_like(data)
     for n, i in enumerate(idx_min):
         diff = (
-            np.diff(data.peaks[np.logical_and(data.peaks >= i, data.peaks <= idx_max[n])]) / data.fs
+            np.diff(
+                data.peaks[np.logical_and(data.peaks >= i, data.peaks <= idx_max[n])]
+            )
+            / data.fs
         )
         if metric == "hbi":
             card_met[n] = central_measure_operator(diff) if diff.size > 0 else 0
@@ -171,9 +174,7 @@ def heart_rate(data, window=6, central_measure="mean"):
     Annual International Conference of the IEEE Engineering in Medicine and
     Biology Society (EMBC), doi: 10.1109/EMBC.2016.7591347.
     """
-    return _cardiac_metrics(
-        data, metric="hrv", window=6, central_measure="mean"
-    )
+    return _cardiac_metrics(data, metric="hrv", window=6, central_measure="mean")
 
 
 @due.dcite(references.PINHERO_ET_AL_2016)
@@ -227,9 +228,7 @@ def heart_rate_variability(data, window=6, central_measure="mean"):
     Annual International Conference of the IEEE Engineering in Medicine and
     Biology Society (EMBC), doi: 10.1109/EMBC.2016.7591347.
     """
-    return _cardiac_metrics(
-        data, metric="hrv", window=6, central_measure="std"
-    )
+    return _cardiac_metrics(data, metric="hrv", window=6, central_measure="std")
 
 
 @due.dcite(references.CHEN_2020)
@@ -276,9 +275,7 @@ def heart_beat_interval(data, window=6, central_measure="mean"):
     .. [1] J. E. Chen et al., "Resting-state "physiological networks"", Neuroimage,
         vol. 213, pp. 116707, 2020.
     """
-    return _cardiac_metrics(
-        data, metric="hbi", window=6, central_measure="mean"
-    )
+    return _cardiac_metrics(data, metric="hbi", window=6, central_measure="mean")
 
 
 def cardiac_phase(data, slice_timings, n_scans, t_r):
