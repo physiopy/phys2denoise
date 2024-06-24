@@ -7,20 +7,15 @@ from phys2denoise.metrics import cardiac
 def test_crf_smoke():
     """Basic smoke test for CRF calculation."""
     samplerate = 0.01  # in seconds
-    oversampling = 20
     time_length = 20
     onset = 0
     tr = 0.72
     crf_arr = cardiac.crf(
-        samplerate,
-        oversampling=oversampling,
-        time_length=time_length,
-        onset=onset,
-        tr=tr,
+        samplerate, time_length=time_length, onset=onset, inverse=False
     )
-    pred_len = np.rint(time_length / (tr / oversampling))
+    pred_len = np.rint(time_length * 1 / samplerate)
     assert crf_arr.ndim == 1
-    assert crf_arr.shape == pred_len
+    assert len(crf_arr) == pred_len
 
 
 def test_cardiac_phase_smoke():
