@@ -134,4 +134,4 @@ def retroicor(
                 (j_harm + 1) * phase[i_slice]
             )
 
-    return retroicor_regressors, phase
+    return data, retroicor_regressors, phase
