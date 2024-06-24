@@ -1,5 +1,6 @@
 """Denoising metrics for cardio recordings."""
 import numpy as np
+from loguru import logger
 from physutils import io, physio
 
 from .. import references
@@ -89,7 +90,7 @@ def _cardiac_metrics(
             and the peak indices separately.
             """
         )
-    if not data.peaks:
+    if data.peaks.size == 0:
         raise ValueError(
             """
             Peaks must be a non-empty list.
@@ -141,7 +142,7 @@ def _cardiac_metrics(
     # Convolve with crf and rescale
     card_met = convolve_and_rescale(card_met, crf(data.fs), rescale="rescale")
 
-    return card_met
+    return data, card_met
 
 
 @due.dcite(references.CHANG_CUNNINGHAM_GLOVER_2009)
@@ -352,7 +353,7 @@ def cardiac_phase(data, slice_timings, n_scans, t_r, fs=None, peaks=None):
             and the peak indices separately.
             """
         )
-    if not data.peaks:
+    if data.peaks.size == 0:
         raise ValueError(
             """
             Peaks must be a non-empty list.
@@ -392,4 +393,4 @@ def cardiac_phase(data, slice_timings, n_scans, t_r, fs=None, peaks=None):
             ) / (t2 - t1)
         phase_card[:, i_slice] = phase_card_crSlice
 
-    return phase_card
+    return data, phase_card
