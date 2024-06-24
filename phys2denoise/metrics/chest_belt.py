@@ -367,4 +367,4 @@ def respiratory_phase(data, n_scans, slice_timings, t_r, fs=None):
 
         phase_resp[:, i_slice] = phase_resp_crSlice
 
-    return phase_resp
+    return data, phase_resp

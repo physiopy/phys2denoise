@@ -15,8 +15,11 @@ def test_respiratory_variance_time(fake_phys):
     phys = peakdet.Physio(fake_phys, fs=62.5)
     phys = peakdet.operations.filter_physio(phys, cutoffs=3, method="lowpass")
     phys = peakdet.operations.peakfind_physio(phys)
-    r = test_respiratory_variance_time(
-        phys.data, phys.peaks, phys.troughs, samplerate=phys.fs
+
+    # TODO: Change to a simpler call once physutils are
+    # integrated to peakdet
+    phys, r = respiratory_variance_time(
+        phys.data, fs=phys.fs, peaks=phys.peaks, troughs=phys.troughs
     )
     assert r is not None
     assert len(r) == 18750
