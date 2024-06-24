@@ -9,7 +9,9 @@ from .utils import apply_function_in_sliding_window as afsw
 from .utils import convolve_and_rescale
 
 
-def _cardiac_metrics(data, metric, window=6, central_measure="mean"):
+def _cardiac_metrics(
+    data, metric, fs=None, peaks=None, window=6, central_measure="mean"
+):
     """
     Compute cardiac metrics.
 
@@ -26,6 +28,10 @@ def _cardiac_metrics(data, metric, window=6, central_measure="mean"):
         Object containing the timeseries of the recorded cardiac signal
     metrics : "hbi", "hr", "hrv", string
         Cardiac metric(s) to calculate.
+    fs : float, optional if data is a physutils.Physio
+        Sampling rate of `data` in Hz
+    peaks : :obj:`numpy.ndarray`, optional if data is a physutils.Physio
+        Indices of peaks in `data`
     window : float, optional
         Size of the sliding window, in seconds.
         Default is 6.
@@ -68,8 +74,29 @@ def _cardiac_metrics(data, metric, window=6, central_measure="mean"):
     Annual International Conference of the IEEE Engineering in Medicine and
     Biology Society (EMBC), doi: 10.1109/EMBC.2016.7591347.
     """
-    # Initialize physio object
-    data = physio.check_physio(data, ensure_fs=True, copy=True)
+    if isinstance(data, physio.Physio):
+        # Initialize physio object
+        data = physio.check_physio(data, ensure_fs=True, copy=True)
+    elif fs is not None and peaks is not None:
+        data = io.load_physio(data, fs=fs)
+        data._metadata["peaks"] = peaks
+    else:
+        raise ValueError(
+            """
+            To use this function you should either provide a Physio object
+            with existing peaks metadata (e.g. using the peakdet module), or
+            by providing the physiological data timeseries, the sampling frequency,
+            and the peak indices separately.
+            """
+        )
+    if not data.peaks:
+        raise ValueError(
+            """
+            Peaks must be a non-empty list.
+            Make sure to run peak detection on your physiological data first,
+            using the peakdet module, or other software of your choice.
+            """
+        )
 
     # Convert window to samples, but halves it.
     halfwindow_samples = int(round(window * data.fs / 2))
@@ -119,7 +146,7 @@ def _cardiac_metrics(data, metric, window=6, central_measure="mean"):
 
 @due.dcite(references.CHANG_CUNNINGHAM_GLOVER_2009)
 @physio.make_operation()
-def heart_rate(data, window=6, central_measure="mean"):
+def heart_rate(data, fs=None, peaks=None, window=6, central_measure="mean"):
     """
     Compute average heart rate (HR) in a sliding window.
 
@@ -131,6 +158,10 @@ def heart_rate(data, window=6, central_measure="mean"):
     ----------
     data : Physio_like
         Object containing the timeseries of the recorded cardiac signal
+    fs : float, optional if data is a physutils.Physio
+        Sampling rate of `data` in Hz
+    peaks : :obj:`numpy.ndarray`, optional if data is a physutils.Physio
+        Indices of peaks in `data`
     window : float, optional
         Size of the sliding window, in seconds.
         Default is 6.
@@ -167,12 +198,14 @@ def heart_rate(data, window=6, central_measure="mean"):
     Annual International Conference of the IEEE Engineering in Medicine and
     Biology Society (EMBC), doi: 10.1109/EMBC.2016.7591347.
     """
-    return _cardiac_metrics(data, metric="hrv", window=6, central_measure="mean")
+    return _cardiac_metrics(
+        data, metric="hrv", fs=fs, peaks=peaks, window=6, central_measure="mean"
+    )
 
 
 @due.dcite(references.PINHERO_ET_AL_2016)
 @physio.make_operation()
-def heart_rate_variability(data, window=6, central_measure="mean"):
+def heart_rate_variability(data, fs=None, peaks=None, window=6, central_measure="mean"):
     """
     Compute average heart rate variability (HRV) in a sliding window.
 
@@ -184,6 +217,10 @@ def heart_rate_variability(data, window=6, central_measure="mean"):
     ----------
     data : Physio_like
         Object containing the timeseries of the recorded cardiac signal
+    fs : float, optional if data is a physutils.Physio
+        Sampling rate of `data` in Hz
+    peaks : :obj:`numpy.ndarray`, optional if data is a physutils.Physio
+        Indices of peaks in `data`
     window : float, optional
         Size of the sliding window, in seconds.
         Default is 6.
@@ -218,12 +255,14 @@ def heart_rate_variability(data, window=6, central_measure="mean"):
     Annual International Conference of the IEEE Engineering in Medicine and
     Biology Society (EMBC), doi: 10.1109/EMBC.2016.7591347.
     """
-    return _cardiac_metrics(data, metric="hrv", window=6, central_measure="std")
+    return _cardiac_metrics(
+        data, metric="hrv", fs=None, peaks=None, window=6, central_measure="std"
+    )
 
 
 @due.dcite(references.CHEN_2020)
 @physio.make_operation()
-def heart_beat_interval(data, window=6, central_measure="mean"):
+def heart_beat_interval(data, fs=None, peaks=None, window=6, central_measure="mean"):
     """
     Compute average heart beat interval (HBI) in a sliding window.
 
@@ -231,6 +270,10 @@ def heart_beat_interval(data, window=6, central_measure="mean"):
     ----------
     data : Physio_like
         Object containing the timeseries of the recorded cardiac signal
+    fs : float, optional if data is a physutils.Physio
+        Sampling rate of `data` in Hz
+    peaks : :obj:`numpy.ndarray`, optional if data is a physutils.Physio
+        Indices of peaks in `data`
     window : float, optional
         Size of the sliding window, in seconds.
         Default is 6.
@@ -262,7 +305,9 @@ def heart_beat_interval(data, window=6, central_measure="mean"):
     .. [1] J. E. Chen et al., "Resting-state "physiological networks"", Neuroimage,
         vol. 213, pp. 116707, 2020.
     """
-    return _cardiac_metrics(data, metric="hbi", window=6, central_measure="mean")
+    return _cardiac_metrics(
+        data, metric="hbi", fs=None, peaks=None, window=6, central_measure="mean"
+    )
 
 
 @physio.make_operation()
@@ -282,6 +327,10 @@ def cardiac_phase(data, slice_timings, n_scans, t_r, fs=None, peaks=None):
         Number of volumes in the imaging run.
     t_r : float
         Sampling rate of the imaging run, in seconds.
+    fs : float, optional if data is a physutils.Physio
+        Sampling rate of `data` in Hz
+    peaks : :obj:`numpy.ndarray`, optional if data is a physutils.Physio
+        Indices of peaks in `data`
 
     Returns
     -------
