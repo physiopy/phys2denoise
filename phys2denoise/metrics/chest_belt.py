@@ -13,6 +13,7 @@ from .utils import convolve_and_rescale, rms_envelope_1d
 
 
 @due.dcite(references.BIRN_2006)
+@physio.make_operation()
 def respiratory_variance_time(data, lags=(0, 4, 8, 12)):
     """
     Implement the Respiratory Variance over Time (Birn et al. 2006).
@@ -78,6 +79,7 @@ def respiratory_variance_time(data, lags=(0, 4, 8, 12)):
 
 
 @due.dcite(references.POWER_2018)
+@physio.make_operation()
 def respiratory_pattern_variability(resp, window):
     """Calculate respiratory pattern variability.
 
@@ -120,6 +122,7 @@ def respiratory_pattern_variability(resp, window):
 
 
 @due.dcite(references.POWER_2020)
+@physio.make_operation()
 def env(data, window=10):
     """Calculate respiratory pattern variability across a sliding window.
 
@@ -168,6 +171,7 @@ def env(data, window=10):
 
 
 @due.dcite(references.CHANG_GLOVER_2009)
+@physio.make_operation()
 def respiratory_variance(data, window=6):
     """Calculate respiratory variance.
 
@@ -217,6 +221,7 @@ def respiratory_variance(data, window=6):
     return rv_out
 
 
+@physio.make_operation()
 def respiratory_phase(data, n_scans, slice_timings, t_r):
     """Calculate respiratory phase from respiratory signal.
 

@@ -10,6 +10,7 @@ from .chest_belt import respiratory_phase
 
 
 @due.dcite(references.GLOVER_2000)
+@physio.make_operation()
 def retroicor(
     data,
     t_r,

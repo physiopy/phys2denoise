@@ -118,6 +118,7 @@ def _cardiac_metrics(data, metric, window=6, central_measure="mean"):
 
 
 @due.dcite(references.CHANG_CUNNINGHAM_GLOVER_2009)
+@physio.make_operation()
 def heart_rate(data, window=6, central_measure="mean"):
     """
     Compute average heart rate (HR) in a sliding window.
@@ -170,6 +171,7 @@ def heart_rate(data, window=6, central_measure="mean"):
 
 
 @due.dcite(references.PINHERO_ET_AL_2016)
+@physio.make_operation()
 def heart_rate_variability(data, window=6, central_measure="mean"):
     """
     Compute average heart rate variability (HRV) in a sliding window.
@@ -220,6 +222,7 @@ def heart_rate_variability(data, window=6, central_measure="mean"):
 
 
 @due.dcite(references.CHEN_2020)
+@physio.make_operation()
 def heart_beat_interval(data, window=6, central_measure="mean"):
     """
     Compute average heart beat interval (HBI) in a sliding window.
@@ -262,6 +265,7 @@ def heart_beat_interval(data, window=6, central_measure="mean"):
     return _cardiac_metrics(data, metric="hbi", window=6, central_measure="mean")
 
 
+@physio.make_operation()
 def cardiac_phase(data, slice_timings, n_scans, t_r, fs=None, peaks=None):
     """Calculate cardiac phase from cardiac peaks.
 
