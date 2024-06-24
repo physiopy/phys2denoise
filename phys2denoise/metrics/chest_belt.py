@@ -1,7 +1,7 @@
 """Denoising metrics for chest belt recordings."""
 import numpy as np
 import pandas as pd
-from physutils import physio
+from physutils import io, physio
 from scipy.interpolate import interp1d
 from scipy.stats import zscore
 
@@ -14,7 +14,9 @@ from .utils import convolve_and_rescale, rms_envelope_1d
 
 @due.dcite(references.BIRN_2006)
 @physio.make_operation()
-def respiratory_variance_time(data, lags=(0, 4, 8, 12)):
+def respiratory_variance_time(
+    data, fs=None, peaks=None, troughs=None, lags=(0, 4, 8, 12)
+):
     """
     Implement the Respiratory Variance over Time (Birn et al. 2006).
 
@@ -24,6 +26,12 @@ def respiratory_variance_time(data, lags=(0, 4, 8, 12)):
     ----------
     data : Physio_like
         Object containing the timeseries of the recorded respiratory signal
+    fs : float, optional if data is a physutils.Physio
+        Sampling rate of `data` in Hz
+    peaks : :obj:`numpy.ndarray`, optional if data is a physutils.Physio
+        Indices of peaks in `data`
+    troughs : :obj:`numpy.ndarray`, optional if data is a physutils.Physio
+        Indices of troughs in `data`
     lags: tuple
         lags in seconds of the RVT output. Default is 0, 4, 8, 12.
 
@@ -38,8 +46,31 @@ def respiratory_variance_time(data, lags=(0, 4, 8, 12)):
        respiratory-variation-related fluctuations from neuronal-activity-related
        fluctuations in fMRI”, NeuroImage, vol.31, pp. 1536-1548, 2006.
     """
-    # Initialize physio object
-    data = physio.check_physio(data, ensure_fs=True)
+    if isinstance(data, physio.Physio):
+        # Initialize physio object
+        data = physio.check_physio(data, ensure_fs=True, copy=True)
+    elif fs is not None and peaks is not None and troughs is not None:
+        data = io.load_physio(data, fs=fs)
+        data._metadata["peaks"] = peaks
+        data._metadata["troughs"] = troughs
+    else:
+        raise ValueError(
+            """
+            To use this function you should either provide a Physio object
+            with existing peaks and troughs metadata (e.g. using the peakdet module), or
+            by providing the physiological data timeseries, the sampling frequency,
+            and the peak and trough indices separately.
+            """
+        )
+    if not data.peaks or not data.troughs:
+        raise ValueError(
+            """
+            Peaks and troughs must be non-empty lists.
+            Make sure to run peak/trough detection on your physiological data first,
+            using the peakdet module, or other software of your choice.
+            """
+        )
+
     timestep = 1 / data.fs
     # respiration belt timing
     time = np.arange(0, len(data) * timestep, timestep)
@@ -80,13 +111,13 @@ def respiratory_variance_time(data, lags=(0, 4, 8, 12)):
 
 @due.dcite(references.POWER_2018)
 @physio.make_operation()
-def respiratory_pattern_variability(resp, window):
+def respiratory_pattern_variability(data, window):
     """Calculate respiratory pattern variability.
 
     Parameters
     ----------
-    resp : str or 1D numpy.ndarray
-        Tiemseries representing respiration activity.
+    data : Physio_like
+        Object containing the timeseries of the recorded respiratory signal
     window : int
         Window length in samples.
 
@@ -110,8 +141,11 @@ def respiratory_pattern_variability(resp, window):
        data," Proceedings of the National Academy of Sciences, issue 9, vol.
        115, pp. 2105-2114, 2018.
     """
+    # Initialize physio object
+    data = physio.check_physio(data, ensure_fs=True, copy=True)
+
     # First, z-score respiratory traces
-    resp_z = zscore(resp)
+    resp_z = zscore(data.data)
 
     # Collect upper envelope
     rpv_upper_env = rms_envelope_1d(resp_z, window)
@@ -123,13 +157,15 @@ def respiratory_pattern_variability(resp, window):
 
 @due.dcite(references.POWER_2020)
 @physio.make_operation()
-def env(data, window=10):
+def env(data, fs=None, window=10):
     """Calculate respiratory pattern variability across a sliding window.
 
     Parameters
     ----------
     data : Physio_like
         Object containing the timeseries of the recorded respiratory signal
+    fs : float, optional if data is a physutils.Physio
+        Sampling rate of `data` in Hz
     window : :obj:`int`, optional
         Size of the sliding window, in seconds.
         Default is 10.
@@ -153,8 +189,20 @@ def env(data, window=10):
        young adults scanned at rest, including systematic changes and 'missed'
        deep breaths," Neuroimage, vol. 204, 2020.
     """
-    # Initialize physio object
-    data = physio.check_physio(data, ensure_fs=True, copy=True)
+    if isinstance(data, physio.Physio):
+        # Initialize physio object
+        data = physio.check_physio(data, ensure_fs=True, copy=True)
+    elif fs is not None:
+        data = io.load_physio(data, fs=fs)
+    else:
+        raise ValueError(
+            """
+            To use this function you should either provide a Physio object
+            with the sampling frequency encapsulated, or
+            by providing the physiological data timeseries and the sampling
+            frequency separately.
+            """
+        )
 
     # Convert window to Hertz
     window = int(window * data.fs)
@@ -172,13 +220,15 @@ def env(data, window=10):
 
 @due.dcite(references.CHANG_GLOVER_2009)
 @physio.make_operation()
-def respiratory_variance(data, window=6):
+def respiratory_variance(data, fs=None, window=6):
     """Calculate respiratory variance.
 
     Parameters
     ----------
     data : Physio_like
         Object containing the timeseries of the recorded respiratory signal
+    fs : float, optional if data is a physutils.Physio
+        Sampling rate of `data` in Hz
     window : :obj:`int`, optional
         Size of the sliding window, in seconds.
         Default is 6.
@@ -206,8 +256,20 @@ def respiratory_variance(data, window=6):
        end-tidal CO2, and BOLD signals in resting-state fMRI," Neuroimage,
        issue 4, vol. 47, pp. 1381-1393, 2009.
     """
-    # Initialize physio object
-    data = physio.check_physio(data, ensure_fs=True, copy=True)
+    if isinstance(data, physio.Physio):
+        # Initialize physio object
+        data = physio.check_physio(data, ensure_fs=True, copy=True)
+    elif fs is not None:
+        data = io.load_physio(data, fs=fs)
+    else:
+        raise ValueError(
+            """
+            To use this function you should either provide a Physio object
+            with the sampling frequency encapsulated, or
+            by providing the physiological data timeseries and the sampling
+            frequency separately.
+            """
+        )
 
     # Convert window to Hertz
     halfwindow_samples = int(round(window * data.fs / 2))
@@ -222,7 +284,7 @@ def respiratory_variance(data, window=6):
 
 
 @physio.make_operation()
-def respiratory_phase(data, n_scans, slice_timings, t_r):
+def respiratory_phase(data, n_scans, slice_timings, t_r, fs=None):
     """Calculate respiratory phase from respiratory signal.
 
     Parameters
@@ -235,14 +297,28 @@ def respiratory_phase(data, n_scans, slice_timings, t_r):
         Slice times, in seconds.
     t_r
         Sample rate of the imaging run, in seconds.
+    fs : float, optional if data is a physutils.Physio
+        Sampling rate of `data` in Hz
 
     Returns
     -------
     phase_resp : array_like
         Respiratory phase signal, of shape (n_scans, n_slices).
     """
-    # Initialize physio object
-    data = physio.check_physio(data, ensure_fs=True, copy=True)
+    if isinstance(data, physio.Physio):
+        # Initialize physio object
+        data = physio.check_physio(data, ensure_fs=True, copy=True)
+    elif fs is not None:
+        data = io.load_physio(data, fs=fs)
+    else:
+        raise ValueError(
+            """
+            To use this function you should either provide a Physio object
+            with the sampling frequency encapsulated, or
+            by providing the physiological data timeseries and the sampling
+            frequency separately.
+            """
+        )
 
     assert slice_timings.ndim == 1, "Slice times must be a 1D array"
     n_slices = np.size(slice_timings)
