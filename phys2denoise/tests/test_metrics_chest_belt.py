@@ -22,7 +22,6 @@ def test_rrf_smoke():
     assert rrf_arr.size == pred_len
 
 
-@mark.xfail
 def test_respiratory_phase_smoke():
     """Basic smoke test for respiratory phase calculation."""
     t_r = 1.0
@@ -33,7 +32,7 @@ def test_respiratory_phase_smoke():
     resp = np.random.normal(size=n_samples)
     _, resp_phase = chest_belt.respiratory_phase(
         resp,
-        sample_rate=sample_rate,
+        fs=sample_rate,
         slice_timings=slice_timings,
         n_scans=n_scans,
         t_r=t_r,
