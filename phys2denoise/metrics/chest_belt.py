@@ -62,7 +62,7 @@ def respiratory_variance_time(
             and the peak and trough indices separately.
             """
         )
-    if not data.peaks or not data.troughs:
+    if data.peaks.size == 0 or data.troughs.size == 0:
         raise ValueError(
             """
             Peaks and troughs must be non-empty lists.
@@ -106,7 +106,7 @@ def respiratory_variance_time(
         )
         rvt_lags[:, ind] = temp_rvt
 
-    return rvt_lags
+    return data, rvt_lags
 
 
 @due.dcite(references.POWER_2018)
@@ -142,7 +142,7 @@ def respiratory_pattern_variability(data, window):
        115, pp. 2105-2114, 2018.
     """
     # Initialize physio object
-    data = physio.check_physio(data, ensure_fs=True, copy=True)
+    data = physio.check_physio(data, ensure_fs=False, copy=True)
 
     # First, z-score respiratory traces
     resp_z = zscore(data.data)
@@ -152,7 +152,7 @@ def respiratory_pattern_variability(data, window):
 
     # Calculate standard deviation
     rpv_val = np.std(rpv_upper_env)
-    return rpv_val
+    return data, rpv_val
 
 
 @due.dcite(references.POWER_2020)
@@ -189,6 +189,25 @@ def env(data, fs=None, window=10):
        young adults scanned at rest, including systematic changes and 'missed'
        deep breaths," Neuroimage, vol. 204, 2020.
     """
+
+    def _respiratory_pattern_variability(data, window):
+        """
+        Respiratory pattern variability function without utilizing
+        the physutils.Physio object history, only to be used within
+        the context of this function. This is done to only store the
+        chest_belt.env operation call to the history and not all the
+        subsequent sub-operations
+        """
+        # First, z-score respiratory traces
+        resp_z = zscore(data)
+
+        # Collect upper envelope
+        rpv_upper_env = rms_envelope_1d(resp_z, window)
+
+        # Calculate standard deviation
+        rpv_val = np.std(rpv_upper_env)
+        return rpv_val
+
     if isinstance(data, physio.Physio):
         # Initialize physio object
         data = physio.check_physio(data, ensure_fs=True, copy=True)
@@ -210,12 +229,12 @@ def env(data, fs=None, window=10):
     # Calculate RPV across a rolling window
 
     env_arr = (
-        pd.Series(data)
+        pd.Series(data.data)
         .rolling(window=window, center=True)
-        .apply(respiratory_pattern_variability, args=(window,))
+        .apply(_respiratory_pattern_variability, args=(window,))
     )
     env_arr[np.isnan(env_arr)] = 0.0
-    return env_arr
+    return data, env_arr
 
 
 @due.dcite(references.CHANG_GLOVER_2009)
@@ -280,7 +299,7 @@ def respiratory_variance(data, fs=None, window=6):
     # Convolve with rrf
     rv_out = convolve_and_rescale(rv_arr, rrf(data.fs), rescale="zscore")
 
-    return rv_out
+    return data, rv_out
 
 
 @physio.make_operation()
