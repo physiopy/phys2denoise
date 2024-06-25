@@ -56,7 +56,6 @@ def test_cardiac_phase_smoke_physio_obj():
         n_scans=n_scans,
         t_r=t_r,
     )
-    logger.debug(f"History: {phys.history}")
     assert phys.history[0][0] == "phys2denoise.metrics.cardiac.cardiac_phase"
     assert card_phase.ndim == 2
     assert card_phase.shape == (n_scans, slice_timings.size)
