@@ -1,3 +1,31 @@
+# 0.4.0 (Mon Jul 15 2024)
+
+:tada: This release contains work from a new contributor! :tada:
+
+Thank you, Nirjal Bhurtel ([@erwinschrodinger1](https://github.com/erwinschrodinger1)), for all your work!
+
+#### 🚀 Enhancement
+
+- feat: Update workflows and setup ([@smoia](https://github.com/smoia))
+
+#### ⚠️ Pushed to `master`
+
+- int:Update more action versions ([@smoia](https://github.com/smoia))
+- doc: fix changelog ([@smoia](https://github.com/smoia))
+
+#### 🏠 Internal
+
+- Fix matplotlib typo in requirement.txt [#50](https://github.com/physiopy/phys2denoise/pull/50) ([@erwinschrodinger1](https://github.com/erwinschrodinger1))
+- Update configuration [#46](https://github.com/physiopy/phys2denoise/pull/46) ([@pre-commit-ci[bot]](https://github.com/pre-commit-ci[bot]) [@smoia](https://github.com/smoia))
+
+#### Authors: 3
+
+- [@pre-commit-ci[bot]](https://github.com/pre-commit-ci[bot])
+- Nirjal Bhurtel ([@erwinschrodinger1](https://github.com/erwinschrodinger1))
+- Stefano Moia ([@smoia](https://github.com/smoia))
+
+---
+
 # 0.3.1 (Mon Aug 28 2023)
 
 #### 🚀 Enhancement
