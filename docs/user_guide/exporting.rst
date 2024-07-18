@@ -13,6 +13,7 @@ This can be done using the :py:func:`export_metric` function, which provides the
 The following example shows how to export the computed respiratory variance time using a Physio object.
 
 .. code-block:: python
+
     from phys2denoise.metrics.chest_belt import respiratory_variance_time
     from phys2denoise.metrics.utils import export_metric
 
