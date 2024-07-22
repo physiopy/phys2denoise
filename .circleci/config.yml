@@ -58,9 +58,9 @@ jobs:
           paths:
             - src/coverage/.coverage.py39
 
-  test312:
+  test311:
     docker:
-      - image: cimg/python:3.12
+      - image: cimg/python:3.11
     working_directory: /tmp/src/phys2denoise
     resource_class: medium
     steps:
@@ -75,13 +75,13 @@ jobs:
           command: |
             pytest --cov=./phys2denoise
             mkdir /tmp/src/coverage
-            mv ./.coverage /tmp/src/coverage/.coverage.py312
+            mv ./.coverage /tmp/src/coverage/.coverage.py311
       - store_artifacts:
           path: /tmp/src/coverage
       - persist_to_workspace:
           root: /tmp
           paths:
-            - src/coverage/.coverage.py312
+            - src/coverage/.coverage.py311
 
   style_check:
     docker:
@@ -105,7 +105,7 @@ jobs:
   merge_coverage:
     working_directory: /tmp/src/phys2denoise
     docker:
-      - image: cimg/python:3.12
+      - image: cimg/python:3.11
     resource_class: small
     steps:
       - attach_workspace:
@@ -136,10 +136,10 @@ workflows:
       - test39:
           requires:
             - style_check
-      - test312:
+      - test311:
           requires:
             - style_check
       - merge_coverage:
           requires:
             - test39
-            - test312
+            - test311
