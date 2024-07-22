@@ -15,14 +15,14 @@ orbs:
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  test38: # This is the name of the job, feel free to change it to better match what you're trying to do!
+  test39: # This is the name of the job, feel free to change it to better match what you're trying to do!
     # These next lines defines a Docker executors: https://circleci.com/docs/2.0/executor-types/
     # You can specify an image from Dockerhub or use one of the convenience images from CircleCI's Developer Hub
     # A list of available CircleCI Docker convenience images are available here: https://circleci.com/developer/images/image/cimg/python
     # The executor is the environment in which the steps below will be executed - below will use a python 3.6.14 container
     # Change the version below to your required version of python
     docker:
-      - image: cimg/python:3.8
+      - image: cimg/python:3.9
     working_directory: /tmp/src/phys2denoise
     resource_class: medium
     # Checkout the code as the first step. This is a dedicated CircleCI step.
@@ -46,7 +46,7 @@ jobs:
           command: |
             pytest --cov=./phys2denoise
             mkdir /tmp/src/coverage
-            mv ./.coverage /tmp/src/coverage/.coverage.py38
+            mv ./.coverage /tmp/src/coverage/.coverage.py39
       - store_artifacts:
           path: /tmp/src/coverage
       # Persist the specified paths (workspace/echo-output) into the workspace for use in downstream job.
@@ -56,7 +56,7 @@ jobs:
           root: /tmp
           # Must be relative path from root
           paths:
-            - src/coverage/.coverage.py38
+            - src/coverage/.coverage.py39
 
   test312:
     docker:
@@ -85,7 +85,7 @@ jobs:
 
   style_check:
     docker:
-      - image: cimg/python:3.8
+      - image: cimg/python:3.9
     working_directory: /tmp/src/phys2denoise
     resource_class: small
     steps:
@@ -133,7 +133,7 @@ workflows:
     # Inside the workflow, you define the jobs you want to run.
     jobs:
       - style_check
-      - test38:
+      - test39:
           requires:
             - style_check
       - test312:
@@ -141,5 +141,5 @@ workflows:
             - style_check
       - merge_coverage:
           requires:
-            - test38
+            - test39
             - test312
