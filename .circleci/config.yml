@@ -85,7 +85,7 @@ jobs:
 
   style_check:
     docker:
-      - image: cimg/python:3.7
+      - image: cimg/python:3.10
     working_directory: /tmp/src/phys2denoise
     resource_class: small
     steps:
