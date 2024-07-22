@@ -134,4 +134,7 @@ def retroicor(
                 (j_harm + 1) * phase[i_slice]
             )
 
+    data._computed_metrics["retroicor_regressors"] = dict(
+        metrics=retroicor_regressors, phase=phase
+    )
     return data, retroicor_regressors, phase

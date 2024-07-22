@@ -106,6 +106,7 @@ def respiratory_variance_time(
         )
         rvt_lags[:, ind] = temp_rvt
 
+    data._computed_metrics["rvt"] = dict(metric=rvt_lags, has_lags=True)
     return data, rvt_lags
 
 
@@ -152,6 +153,8 @@ def respiratory_pattern_variability(data, window):
 
     # Calculate standard deviation
     rpv_val = np.std(rpv_upper_env)
+
+    data._computed_metrics["rpv"] = dict(metric=rpv_val)
     return data, rpv_val
 
 
@@ -234,6 +237,8 @@ def env(data, fs=None, window=10):
         .apply(_respiratory_pattern_variability, args=(window,))
     )
     env_arr[np.isnan(env_arr)] = 0.0
+
+    data._computed_metrics["env"] = dict(metric=env_arr)
     return data, env_arr
 
 
@@ -298,6 +303,8 @@ def respiratory_variance(data, fs=None, window=6):
 
     # Convolve with rrf
     rv_out = convolve_and_rescale(rv_arr, rrf(data.fs), rescale="zscore")
+
+    data._computed_metrics["respiratory_variance"] = dict(metric=rv_out)
 
     return data, rv_out
 
@@ -366,5 +373,7 @@ def respiratory_phase(data, n_scans, slice_timings, t_r, fs=None):
             )
 
         phase_resp[:, i_slice] = phase_resp_crSlice
+
+    data._computed_metrics["respiratory_phase"] = dict(metric=phase_resp)
 
     return data, phase_resp
