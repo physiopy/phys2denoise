@@ -20,7 +20,7 @@ def test_mirrorpad_exception(short_arr):
     """When passing array that is too short to perform mirrorpadding, the
     function should give an error."""
     arr = np.array(short_arr)
-    with pytest.raises(Exception) as e_info:
+    with pytest.raises(IndexError):
         arr_mirror = mirrorpad_1d(short_arr)
 
 

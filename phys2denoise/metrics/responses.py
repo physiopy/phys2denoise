@@ -2,6 +2,7 @@
 import logging
 
 import numpy as np
+from loguru import logger
 
 from .. import references
 from ..due import due
@@ -56,10 +57,12 @@ def crf(samplerate, time_length=32, onset=0.0, inverse=False):
         ) * np.exp(-0.5 * (((t - 12) ** 2) / 9))
         return rf
 
-    time_stamps = np.arange(0, time_length, 1 / samplerate)
+    time_stamps = np.arange(0, time_length, samplerate)
     time_stamps -= onset
+    logger.debug(f"Time stamps: {time_stamps}")
     crf_arr = _crf(time_stamps)
     crf_arr = crf_arr / max(abs(crf_arr))
+    logger.debug(f"CRF: {crf_arr}")
 
     if inverse:
         return -crf_arr
@@ -135,7 +138,7 @@ def rrf(samplerate, time_length=50, onset=0.0):
         rf = 0.6 * t**2.1 * np.exp(-t / 1.6) - 0.0023 * t**3.54 * np.exp(-t / 4.25)
         return rf
 
-    time_stamps = np.arange(0, time_length, 1 / samplerate)
+    time_stamps = np.arange(0, time_length, samplerate)
     time_stamps -= onset
     rrf_arr = _rrf(time_stamps)
     rrf_arr = rrf_arr / max(abs(rrf_arr))

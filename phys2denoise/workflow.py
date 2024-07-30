@@ -78,7 +78,6 @@ def select_input_args(metric, metric_args):
         user
 
     Returns
-    -------
     args : dict
         Arguments to provide as input to metric
 
