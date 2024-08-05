@@ -1,4 +1,5 @@
 """Denoising metrics for chest belt recordings."""
+
 import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
