@@ -5,6 +5,17 @@ Installation and setup
 
 .. _basic_installation:
 
+Basic installation
+------------------
+
+The easiest way to install ``phys2denoise`` is to use ``pip``. Assuming you have
+Python >= 3.6 installed, you can install ``phys2denoise`` by opening a terminal
+and running the following:
+
+.. code-block:: bash
+
+   pip install phys2denoise
+
 Developer installation
 --------------------
 

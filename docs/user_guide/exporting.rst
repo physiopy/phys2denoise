@@ -10,7 +10,8 @@ This can be done using the :py:func:`export_metric` function, which provides the
 - Defining the output file extension and file prefix.
 - Defining the number of timepoints to be considered.
 
-The following example shows how to export the computed respiratory variance time using a Physio object.
+The following example shows how to export the computed respiratory variance time using a Physio object. In the following example,
+we consider that the Physio object is ``resp``, containing the respiratory data, peaks and troughs.
 
 .. code-block:: python
 

@@ -64,7 +64,7 @@ For further information refer to the :py:mod:`physutils` documentation.
 Without using a Physio object
 #############################
 
-However, if the use of :py:mod:`physutils` is not preferred, the metrics can be also computed without it. The following
+However, if the use of the ``Physio`` object of the :py:mod:`physutils` module is not preferred, the metrics can be also computed without it. The following
 example shows how to compute the heart rate and the heart rate variability using the :py:mod:`phys2denoise` package.
 
 .. code-block:: python
@@ -73,4 +73,4 @@ example shows how to compute the heart rate and the heart rate variability using
 
     # Given that the respiratory signal is stored in `data`, the peaks in `peaks`, the troughs in `troughs`
     # and the sample rate in `sample_rate`
-    _, rvt = respiratory_variance_time(physio, peaks, troughs, sample_rate)
+    _, rvt = respiratory_variance_time(data, peaks, troughs, sample_rate)
