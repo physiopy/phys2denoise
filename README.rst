@@ -1,7 +1,7 @@
 phys2denoise: A toolbox for physiological metrics calculation
 =============================================================
 
-This package is designed for use in the metrics calculation of physiological data, more specifically of cardiac and respiratory signals, to be used in fMRI denoising.
+This package is designed for calculating physiological metrics, derived specifically cardiac and respiratory signals, to use in fMRI denoising.
 
 
 .. image:: https://readthedocs.org/projects/phys2denoise/badge/?version=latest

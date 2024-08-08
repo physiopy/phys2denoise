@@ -16,8 +16,13 @@ and running the following:
 
    pip install phys2denoise
 
+.. warning::
+
+   If you encounter an ImportError related to numpy.core.multiarray, please try to update 
+   your matplotlib version to 3.9.
+
 Developer installation
---------------------
+----------------------
 
 This package requires Python >= 3.6. Assuming you have the correct version of
 Python installed, you can install ``phys2denoise`` by opening a terminal and running
