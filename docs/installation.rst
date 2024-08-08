@@ -18,7 +18,7 @@ and running the following:
 
 .. warning::
 
-   If you encounter an ImportError related to numpy.core.multiarray, please try to update 
+   If you encounter an ImportError related to numpy.core.multiarray, please try to update
    your matplotlib version to 3.9.
 
 Developer installation
