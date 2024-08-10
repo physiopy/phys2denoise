@@ -1,8 +1,11 @@
 """Miscellaneous utility functions for metric calculation."""
+import functools
 import logging
 
 import numpy as np
+from loguru import logger
 from numpy.lib.stride_tricks import sliding_window_view as swv
+from physutils.physio import Physio
 from scipy.interpolate import interp1d
 from scipy.stats import zscore
 
@@ -332,3 +335,38 @@ def export_metric(
                 )
 
     return fileprefix
+
+
+def return_physio_or_metric(*, return_physio=True):
+    """
+    Decorator to check if the input is a Physio object.
+
+    Parameters
+    ----------
+    func : function
+        Function to be decorated
+
+    Returns
+    -------
+    function
+        Decorated function
+    """
+
+    def determine_return_type(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            physio, metric = func(*args, **kwargs)
+            if isinstance(args[0], Physio):
+                physio._computed_metrics[func.__name__] = dict(
+                    metric=metric, args=kwargs
+                )
+                if return_physio:
+                    return physio, metric
+                else:
+                    return metric
+            else:
+                return metric
+
+        return wrapper
+
+    return determine_return_type

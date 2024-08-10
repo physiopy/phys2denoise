@@ -9,10 +9,11 @@ from .. import references
 from ..due import due
 from .responses import rrf
 from .utils import apply_function_in_sliding_window as afsw
-from .utils import convolve_and_rescale, rms_envelope_1d
+from .utils import convolve_and_rescale, return_physio_or_metric, rms_envelope_1d
 
 
 @due.dcite(references.BIRN_2006)
+@return_physio_or_metric()
 @physio.make_operation()
 def respiratory_variance_time(
     data, fs=None, peaks=None, troughs=None, lags=(0, 4, 8, 12)
@@ -106,11 +107,11 @@ def respiratory_variance_time(
         )
         rvt_lags[:, ind] = temp_rvt
 
-    data._computed_metrics["rvt"] = dict(metric=rvt_lags, has_lags=True)
     return data, rvt_lags
 
 
 @due.dcite(references.POWER_2018)
+@return_physio_or_metric()
 @physio.make_operation()
 def respiratory_pattern_variability(data, window):
     """Calculate respiratory pattern variability.
@@ -154,11 +155,11 @@ def respiratory_pattern_variability(data, window):
     # Calculate standard deviation
     rpv_val = np.std(rpv_upper_env)
 
-    data._computed_metrics["rpv"] = dict(metric=rpv_val)
     return data, rpv_val
 
 
 @due.dcite(references.POWER_2020)
+@return_physio_or_metric()
 @physio.make_operation()
 def env(data, fs=None, window=10):
     """Calculate respiratory pattern variability across a sliding window.
@@ -238,11 +239,11 @@ def env(data, fs=None, window=10):
     )
     env_arr[np.isnan(env_arr)] = 0.0
 
-    data._computed_metrics["env"] = dict(metric=env_arr)
     return data, env_arr
 
 
 @due.dcite(references.CHANG_GLOVER_2009)
+@return_physio_or_metric()
 @physio.make_operation()
 def respiratory_variance(data, fs=None, window=6):
     """Calculate respiratory variance.
@@ -304,11 +305,10 @@ def respiratory_variance(data, fs=None, window=6):
     # Convolve with rrf
     rv_out = convolve_and_rescale(rv_arr, rrf(data.fs), rescale="zscore")
 
-    data._computed_metrics["respiratory_variance"] = dict(metric=rv_out)
-
     return data, rv_out
 
 
+@return_physio_or_metric()
 @physio.make_operation()
 def respiratory_phase(data, n_scans, slice_timings, t_r, fs=None):
     """Calculate respiratory phase from respiratory signal.
@@ -373,7 +373,5 @@ def respiratory_phase(data, n_scans, slice_timings, t_r, fs=None):
             )
 
         phase_resp[:, i_slice] = phase_resp_crSlice
-
-    data._computed_metrics["respiratory_phase"] = dict(metric=phase_resp)
 
     return data, phase_resp

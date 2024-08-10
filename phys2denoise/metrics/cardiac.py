@@ -7,11 +7,17 @@ from .. import references
 from ..due import due
 from .responses import crf
 from .utils import apply_function_in_sliding_window as afsw
-from .utils import convolve_and_rescale
+from .utils import convolve_and_rescale, return_physio_or_metric
 
 
 def _cardiac_metrics(
-    data, metric, fs=None, peaks=None, window=6, central_measure="mean"
+    data,
+    metric,
+    fs=None,
+    peaks=None,
+    window=6,
+    central_measure="mean",
+    return_physio=False,
 ):
     """
     Compute cardiac metrics.
@@ -146,6 +152,7 @@ def _cardiac_metrics(
 
 
 @due.dcite(references.CHANG_CUNNINGHAM_GLOVER_2009)
+@return_physio_or_metric()
 @physio.make_operation()
 def heart_rate(data, fs=None, peaks=None, window=6, central_measure="mean"):
     """
@@ -200,14 +207,19 @@ def heart_rate(data, fs=None, peaks=None, window=6, central_measure="mean"):
     Biology Society (EMBC), doi: 10.1109/EMBC.2016.7591347.
     """
     data, hr = _cardiac_metrics(
-        data, metric="hr", fs=fs, peaks=peaks, window=6, central_measure="mean"
+        data,
+        metric="hr",
+        fs=fs,
+        peaks=peaks,
+        window=window,
+        central_measure=central_measure,
     )
-    data._computed_metrics["heart_rate"] = dict(metric=hr, has_lags=False)
 
     return data, hr
 
 
 @due.dcite(references.PINHERO_ET_AL_2016)
+@return_physio_or_metric()
 @physio.make_operation()
 def heart_rate_variability(data, fs=None, peaks=None, window=6, central_measure="mean"):
     """
@@ -260,14 +272,19 @@ def heart_rate_variability(data, fs=None, peaks=None, window=6, central_measure=
     Biology Society (EMBC), doi: 10.1109/EMBC.2016.7591347.
     """
     data, hrv = _cardiac_metrics(
-        data, metric="hrv", fs=None, peaks=None, window=6, central_measure="std"
+        data,
+        metric="hrv",
+        fs=fs,
+        peaks=peaks,
+        window=window,
+        central_measure=central_measure,
     )
-    data._computed_metrics["heart_rate_variability"] = dict(metric=hrv)
 
     return data, hrv
 
 
 @due.dcite(references.CHEN_2020)
+@return_physio_or_metric()
 @physio.make_operation()
 def heart_beat_interval(data, fs=None, peaks=None, window=6, central_measure="mean"):
     """
@@ -313,13 +330,18 @@ def heart_beat_interval(data, fs=None, peaks=None, window=6, central_measure="me
         vol. 213, pp. 116707, 2020.
     """
     data, hbi = _cardiac_metrics(
-        data, metric="hbi", fs=None, peaks=None, window=6, central_measure="mean"
+        data,
+        metric="hbi",
+        fs=fs,
+        peaks=peaks,
+        window=window,
+        central_measure=central_measure,
     )
-    data._computed_metrics["heart_beat_interval"] = dict(metric=hbi)
 
     return data, hbi
 
 
+@return_physio_or_metric()
 @physio.make_operation()
 def cardiac_phase(data, slice_timings, n_scans, t_r, fs=None, peaks=None):
     """Calculate cardiac phase from cardiac peaks.
@@ -401,7 +423,5 @@ def cardiac_phase(data, slice_timings, n_scans, t_r, fs=None, peaks=None):
                 2 * np.math.pi * (times_crSlice[j_scan] - t1)
             ) / (t2 - t1)
         phase_card[:, i_slice] = phase_card_crSlice
-
-    data._computed_metrics["cardiac_phase"] = dict(metric=phase_card)
 
     return data, phase_card

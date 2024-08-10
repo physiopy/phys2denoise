@@ -17,8 +17,8 @@ def test_respiratory_variance_time(fake_phys):
     phys = peakdet.operations.peakfind_physio(phys)
 
     # TODO: Change to a simpler call once physutils are
-    # integrated to peakdet
-    phys, r = respiratory_variance_time(
+    # integrated to peakdet/prep4phys
+    r = respiratory_variance_time(
         phys.data, fs=phys.fs, peaks=phys.peaks, troughs=phys.troughs
     )
     assert r is not None

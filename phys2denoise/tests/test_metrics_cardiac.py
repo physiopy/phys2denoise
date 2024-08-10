@@ -28,7 +28,7 @@ def test_cardiac_phase_smoke():
     slice_timings = np.linspace(0, t_r, 22)[1:-1]
     peaks = np.array([0.534, 0.577, 10.45, 20.66, 50.55, 90.22])
     data = np.zeros(peaks.shape)
-    _, card_phase = cardiac.cardiac_phase(
+    card_phase = cardiac.cardiac_phase(
         data,
         peaks=peaks,
         fs=sample_rate,
