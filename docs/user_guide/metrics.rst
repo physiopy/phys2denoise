@@ -71,6 +71,10 @@ example shows how to compute the heart rate and the heart rate variability using
 
     from phys2denoise.metrics.chest_belt import respiratory_variance_time
 
-    # Given that the respiratory signal is stored in `data`, the peaks in `peaks`, the troughs in `troughs`
+    # Given that the respiratory signal is stored in `data` (which is not a physio.Physio instance), the peaks in `peaks`, the troughs in `troughs`
     # and the sample rate in `sample_rate`
-    _, rvt = respiratory_variance_time(data, peaks, troughs, sample_rate)
+    rvt = respiratory_variance_time(data, peaks, troughs, sample_rate)
+
+The computed respiratory variance time is stored in the variable ``rvt``. An internal check is performed to verify if the input data is a Physio object or not
+determining the appropriate output format. If the input is not a ``Physio`` object, the output will be a numpy array only containing the computed metric. Otherwise,
+the output will be a tuple with the updated Physio object and the computed metric.
