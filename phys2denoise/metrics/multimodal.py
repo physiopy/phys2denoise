@@ -20,6 +20,7 @@ def retroicor(
     physio_type=None,
     fs=None,
     cardiac_peaks=None,
+    **kwargs,
 ):
     """Compute RETROICOR regressors.
 

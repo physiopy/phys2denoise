@@ -16,7 +16,7 @@ from .utils import convolve_and_rescale, return_physio_or_metric, rms_envelope_1
 @return_physio_or_metric()
 @physio.make_operation()
 def respiratory_variance_time(
-    data, fs=None, peaks=None, troughs=None, lags=(0, 4, 8, 12)
+    data, fs=None, peaks=None, troughs=None, lags=(0, 4, 8, 12), **kwargs
 ):
     """
     Implement the Respiratory Variance over Time (Birn et al. 2006).
@@ -113,7 +113,7 @@ def respiratory_variance_time(
 @due.dcite(references.POWER_2018)
 @return_physio_or_metric()
 @physio.make_operation()
-def respiratory_pattern_variability(data, window):
+def respiratory_pattern_variability(data, window, **kwargs):
     """Calculate respiratory pattern variability.
 
     Parameters
@@ -161,7 +161,7 @@ def respiratory_pattern_variability(data, window):
 @due.dcite(references.POWER_2020)
 @return_physio_or_metric()
 @physio.make_operation()
-def env(data, fs=None, window=10):
+def env(data, fs=None, window=10, **kwargs):
     """Calculate respiratory pattern variability across a sliding window.
 
     Parameters
@@ -245,7 +245,7 @@ def env(data, fs=None, window=10):
 @due.dcite(references.CHANG_GLOVER_2009)
 @return_physio_or_metric()
 @physio.make_operation()
-def respiratory_variance(data, fs=None, window=6):
+def respiratory_variance(data, fs=None, window=6, **kwargs):
     """Calculate respiratory variance.
 
     Parameters
@@ -310,7 +310,7 @@ def respiratory_variance(data, fs=None, window=6):
 
 @return_physio_or_metric()
 @physio.make_operation()
-def respiratory_phase(data, n_scans, slice_timings, t_r, fs=None):
+def respiratory_phase(data, n_scans, slice_timings, t_r, fs=None, **kwargs):
     """Calculate respiratory phase from respiratory signal.
 
     Parameters

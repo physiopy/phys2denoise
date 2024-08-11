@@ -360,8 +360,9 @@ def return_physio_or_metric(*, return_physio=True):
                 physio._computed_metrics[func.__name__] = dict(
                     metric=metric, args=kwargs
                 )
-                if return_physio:
-                    return physio, metric
+                return_physio_value = kwargs.get("return_physio", return_physio)
+                if return_physio_value:
+                    return physio
                 else:
                     return metric
             else:

@@ -50,12 +50,28 @@ def test_cardiac_phase_smoke_physio_obj():
     data = np.zeros(peaks.shape)
     phys = physio.Physio(data, sample_rate, physio_type="cardiac")
     phys._metadata["peaks"] = peaks
-    phys, card_phase = cardiac.cardiac_phase(
+
+    # Test where the physio object is returned
+    phys = cardiac.cardiac_phase(
         phys,
         slice_timings=slice_timings,
         n_scans=n_scans,
         t_r=t_r,
     )
     assert phys.history[0][0] == "phys2denoise.metrics.cardiac.cardiac_phase"
+    assert phys.computed_metrics["cardiac_phase"]["metric"].ndim == 2
+    assert phys.computed_metrics["cardiac_phase"]["metric"].shape == (
+        n_scans,
+        slice_timings.size,
+    )
+
+    # Test where the metric is returned
+    card_phase = cardiac.cardiac_phase(
+        phys,
+        slice_timings=slice_timings,
+        n_scans=n_scans,
+        t_r=t_r,
+        return_physio=False,
+    )
     assert card_phase.ndim == 2
     assert card_phase.shape == (n_scans, slice_timings.size)
