@@ -58,12 +58,16 @@ def test_cardiac_phase_smoke_physio_obj():
         n_scans=n_scans,
         t_r=t_r,
     )
+
     assert phys.history[0][0] == "phys2denoise.metrics.cardiac.cardiac_phase"
-    assert phys.computed_metrics["cardiac_phase"]["metric"].ndim == 2
-    assert phys.computed_metrics["cardiac_phase"]["metric"].shape == (
+    assert phys.computed_metrics["cardiac_phase"].ndim == 2
+    assert phys.computed_metrics["cardiac_phase"].shape == (
         n_scans,
         slice_timings.size,
     )
+    assert phys.computed_metrics["cardiac_phase"].args["slice_timings"] is not None
+    assert phys.computed_metrics["cardiac_phase"].args["n_scans"] is not None
+    assert phys.computed_metrics["cardiac_phase"].args["t_r"] is not None
 
     # Test where the metric is returned
     card_phase = cardiac.cardiac_phase(

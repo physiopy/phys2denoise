@@ -353,13 +353,29 @@ def return_physio_or_metric(*, return_physio=True):
     """
 
     def determine_return_type(func):
+        metrics_with_lags = ["respiratory_variance_time"]
+        convolved_metrics = [
+            "respiratory_variance",
+            "heart_rate",
+            "heart_rate_variability",
+            "heart_beat_interval",
+        ]
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             physio, metric = func(*args, **kwargs)
             if isinstance(args[0], Physio):
-                physio._computed_metrics[func.__name__] = dict(
-                    metric=metric, args=kwargs
+                has_lags = True if func.__name__ in metrics_with_lags else False
+                is_convolved = True if func.__name__ in convolved_metrics else False
+
+                physio._computed_metrics[func.__name__] = Metric(
+                    func.__name__,
+                    metric,
+                    kwargs,
+                    has_lags=has_lags,
+                    is_convolved=is_convolved,
                 )
+
                 return_physio_value = kwargs.get("return_physio", return_physio)
                 if return_physio_value:
                     return physio
@@ -371,3 +387,45 @@ def return_physio_or_metric(*, return_physio=True):
         return wrapper
 
     return determine_return_type
+
+
+class Metric:
+    def __init__(self, name, data, args, has_lags=False, is_convolved=False):
+        self.name = name
+        self._data = data
+        self._args = args
+        self._has_lags = has_lags
+        self._is_convolved = is_convolved
+
+    def __array__(self):
+        return self.data
+
+    def __getitem__(self, slicer):
+        return self.data[slicer]
+
+    def __len__(self):
+        return len(self.data)
+
+    @property
+    def ndim(self):
+        return self.data.ndim
+
+    @property
+    def shape(self):
+        return self.data.shape
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def args(self):
+        return self._args
+
+    @property
+    def has_lags(self):
+        return self._has_lags
+
+    @property
+    def is_convolved(self):
+        return self._is_convolved
