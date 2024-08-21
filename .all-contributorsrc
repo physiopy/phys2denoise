@@ -119,6 +119,8 @@
       "contributions": [
         "code",
         "ideas",
+        "infra",
+        "docs",
         "bug",
         "review"
       ]

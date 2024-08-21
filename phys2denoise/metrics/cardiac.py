@@ -31,7 +31,7 @@ def _cardiac_metrics(
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded cardiac signal
     metrics : "hbi", "hr", "hrv", string
         Cardiac metric(s) to calculate.
@@ -164,7 +164,7 @@ def heart_rate(data, fs=None, peaks=None, window=6, central_measure="mean", **kw
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded cardiac signal
     fs : float, optional if data is a physutils.Physio
         Sampling rate of `data` in Hz
@@ -234,7 +234,7 @@ def heart_rate_variability(
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded cardiac signal
     fs : float, optional if data is a physutils.Physio
         Sampling rate of `data` in Hz
@@ -298,7 +298,7 @@ def heart_beat_interval(
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded cardiac signal
     fs : float, optional if data is a physutils.Physio
         Sampling rate of `data` in Hz
@@ -358,7 +358,7 @@ def cardiac_phase(data, slice_timings, n_scans, t_r, fs=None, peaks=None, **kwar
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded cardiac signal
     slice_timings : 1D array_like
         Slice times, in seconds.

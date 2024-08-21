@@ -25,7 +25,7 @@ def respiratory_variance_time(
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded respiratory signal
     fs : float, optional if data is a physutils.Physio
         Sampling rate of `data` in Hz
@@ -118,7 +118,7 @@ def respiratory_pattern_variability(data, window, **kwargs):
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded respiratory signal
     window : int
         Window length in samples.
@@ -166,7 +166,7 @@ def env(data, fs=None, window=10, **kwargs):
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded respiratory signal
     fs : float, optional if data is a physutils.Physio
         Sampling rate of `data` in Hz
@@ -250,7 +250,7 @@ def respiratory_variance(data, fs=None, window=6, **kwargs):
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded respiratory signal
     fs : float, optional if data is a physutils.Physio
         Sampling rate of `data` in Hz
@@ -315,7 +315,7 @@ def respiratory_phase(data, n_scans, slice_timings, t_r, fs=None, **kwargs):
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded respiratory signal
     n_scans
         Number of volumes in the imaging run.

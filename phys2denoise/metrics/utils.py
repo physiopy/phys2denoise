@@ -1,5 +1,6 @@
 """Miscellaneous utility functions for metric calculation."""
 import functools
+import inspect
 import logging
 
 import numpy as np
@@ -353,7 +354,6 @@ def return_physio_or_metric(*, return_physio=True):
     """
 
     def determine_return_type(func):
-        metrics_with_lags = ["respiratory_variance_time"]
         convolved_metrics = [
             "respiratory_variance",
             "heart_rate",
@@ -364,8 +364,15 @@ def return_physio_or_metric(*, return_physio=True):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             physio, metric = func(*args, **kwargs)
+            default_args = get_default_args(func)
             if isinstance(args[0], Physio):
-                has_lags = True if func.__name__ in metrics_with_lags else False
+                if "lags" in kwargs:
+                    has_lags = True if len(kwargs["lags"]) > 1 else False
+                elif "lags" in default_args:
+                    has_lags = True if len(default_args["lags"]) > 1 else False
+                else:
+                    has_lags = False
+
                 is_convolved = True if func.__name__ in convolved_metrics else False
 
                 physio._computed_metrics[func.__name__] = Metric(
@@ -387,6 +394,20 @@ def return_physio_or_metric(*, return_physio=True):
         return wrapper
 
     return determine_return_type
+
+
+def get_default_args(func):
+    # Get the signature of the function
+    sig = inspect.signature(func)
+
+    # Extract default values for each parameter
+    defaults = {
+        k: v.default
+        for k, v in sig.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }
+
+    return defaults
 
 
 class Metric:
