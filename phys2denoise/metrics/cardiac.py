@@ -13,8 +13,8 @@ from .utils import convolve_and_rescale, return_physio_or_metric
 def _cardiac_metrics(
     data,
     metric,
-    fs=None,
     peaks=None,
+    fs=None,
     window=6,
     central_measure="mean",
     **kwargs,
@@ -154,7 +154,7 @@ def _cardiac_metrics(
 @due.dcite(references.CHANG_CUNNINGHAM_GLOVER_2009)
 @return_physio_or_metric()
 @physio.make_operation()
-def heart_rate(data, fs=None, peaks=None, window=6, central_measure="mean", **kwargs):
+def heart_rate(data, peaks=None, fs=None, window=6, central_measure="mean", **kwargs):
     """
     Compute average heart rate (HR) in a sliding window.
 
@@ -209,8 +209,8 @@ def heart_rate(data, fs=None, peaks=None, window=6, central_measure="mean", **kw
     data, hr = _cardiac_metrics(
         data,
         metric="hr",
-        fs=fs,
         peaks=peaks,
+        fs=fs,
         window=window,
         central_measure=central_measure,
         **kwargs,
@@ -223,7 +223,7 @@ def heart_rate(data, fs=None, peaks=None, window=6, central_measure="mean", **kw
 @return_physio_or_metric()
 @physio.make_operation()
 def heart_rate_variability(
-    data, fs=None, peaks=None, window=6, central_measure="mean", **kwargs
+    data, peaks=None, fs=None, window=6, central_measure="mean", **kwargs
 ):
     """
     Compute average heart rate variability (HRV) in a sliding window.
@@ -277,8 +277,8 @@ def heart_rate_variability(
     data, hrv = _cardiac_metrics(
         data,
         metric="hrv",
-        fs=fs,
         peaks=peaks,
+        fs=fs,
         window=window,
         central_measure=central_measure,
         **kwargs,
@@ -291,7 +291,7 @@ def heart_rate_variability(
 @return_physio_or_metric()
 @physio.make_operation()
 def heart_beat_interval(
-    data, fs=None, peaks=None, window=6, central_measure="mean", **kwargs
+    data, peaks=None, fs=None, window=6, central_measure="mean", **kwargs
 ):
     """
     Compute average heart beat interval (HBI) in a sliding window.
@@ -338,8 +338,8 @@ def heart_beat_interval(
     data, hbi = _cardiac_metrics(
         data,
         metric="hbi",
-        fs=fs,
         peaks=peaks,
+        fs=fs,
         window=window,
         central_measure=central_measure,
         **kwargs,
@@ -350,7 +350,7 @@ def heart_beat_interval(
 
 @return_physio_or_metric()
 @physio.make_operation()
-def cardiac_phase(data, slice_timings, n_scans, t_r, fs=None, peaks=None, **kwargs):
+def cardiac_phase(data, slice_timings, n_scans, t_r, peaks=None, fs=None, **kwargs):
     """Calculate cardiac phase from cardiac peaks.
 
     Assumes that timing of cardiac events are given in same units

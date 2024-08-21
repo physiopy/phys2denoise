@@ -16,7 +16,7 @@ from .utils import convolve_and_rescale, return_physio_or_metric, rms_envelope_1
 @return_physio_or_metric()
 @physio.make_operation()
 def respiratory_variance_time(
-    data, fs=None, peaks=None, troughs=None, lags=(0, 4, 8, 12), **kwargs
+    data, peaks=None, troughs=None, fs=None, lags=(0, 4, 8, 12), **kwargs
 ):
     """
     Implement the Respiratory Variance over Time (Birn et al. 2006).
