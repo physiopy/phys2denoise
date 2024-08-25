@@ -1,12 +1,13 @@
+import logging
 from inspect import _empty, signature
 from typing import Union
 
 import pydra
 from loguru import logger
-from physutils.io import Physio
+from physutils.physio import Physio
 
 from phys2denoise.metrics.cardiac import *  # noqa
-from phys2denoise.metrics.chest_belt import *  # noqa
+from phys2denoise.metrics.chest_belt import respiratory_variance  # noqa
 from phys2denoise.metrics.multimodal import *  # noqa
 from phys2denoise.metrics.utils import export_metric
 
@@ -22,6 +23,9 @@ _available_metrics = [
     "respiratory_variance",
     "retroicor",
 ]
+
+LGR = logging.getLogger(__name__)
+LGR.setLevel(logging.DEBUG)
 
 
 def select_input_args(metric, metric_args):
@@ -56,8 +60,10 @@ def select_input_args(metric, metric_args):
 
     # Check the parameters required by the metric and given by the user (see docstring)
     for param in signature(metric).parameters.values():
+        if param.name == "data" or param.name == "kwargs":
+            continue
         if param.name not in metric_args:
-            if param.default == _empty and param.name != "physio":
+            if param.default == _empty:
                 raise ValueError(
                     f"Missing parameter {param} required " f"to run {metric}"
                 )
@@ -70,18 +76,36 @@ def select_input_args(metric, metric_args):
 
 
 @pydra.mark.task
-def compute_metrics(phys: Physio, metrics: Union[list, str]) -> Physio:
-    if isinstance(metrics, list):
+def compute_metrics(phys: Physio, metrics: Union[list, str], args: dict) -> Physio:
+    from phys2denoise.metrics.cardiac import (  # noqa
+        cardiac_phase,
+        heart_beat_interval,
+        heart_rate,
+        heart_rate_variability,
+    )
+    from phys2denoise.metrics.chest_belt import (  # noqa
+        env,
+        respiratory_pattern_variability,
+        respiratory_phase,
+        respiratory_variance,
+        respiratory_variance_time,
+    )
+    from phys2denoise.metrics.multimodal import retroicor  # noqa
+
+    if isinstance(metrics, list) or isinstance(metrics, str):
         for metric in metrics:
             if metric not in _available_metrics:
-                logger.warning(f"Metric {metric} not available. Skipping")
+                LGR.warning(f"Metric {metric} not available. Skipping")
                 continue
+            LGR.debug(f"Computing {metric}")
 
-            args = select_input_args(metric, {})
-            phys, _ = globals()[metric](phys, **args)
-            logger.info(f"Computed {metric}")
-    else:
-        raise ValueError("metrics must be a list of strings")
+            if metric not in args or args[metric] is None:
+                metric_args = {}
+            else:
+                metric_args = args[metric]
+
+            input_args = select_input_args(locals()[metric], metric_args)
+            phys = locals()[metric](phys, **input_args)
     return phys
 
 

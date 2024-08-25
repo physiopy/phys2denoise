@@ -27,7 +27,7 @@ from phys2denoise.metrics.chest_belt import (
     respiratory_variance_time,
     rrf,
 )
-from phys2denoise.metrics.retroicor import retroicor
+from phys2denoise.metrics.multimodal import retroicor
 
 from . import __version__
 from .due import Doi, due
