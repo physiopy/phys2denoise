@@ -125,3 +125,6 @@ dmypy.json
 .pyre/
 
 .vscode/
+
+# Test Data
+phys2denoise/tests/test_output_data/

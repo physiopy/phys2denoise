@@ -1,4 +1,6 @@
 """Tests for phys2denoise.tasks"""
+import os
+
 import numpy as np
 import pydra
 from loguru import logger
@@ -70,3 +72,49 @@ def test_compute_metrics(fake_physio):
     )
     assert new_physio.computed_metrics["cardiac_phase"].args["n_scans"] is not None
     assert new_physio.computed_metrics["cardiac_phase"].args["t_r"] is not None
+
+
+def test_export_metrics(fake_physio_with_metrics):
+    """Test the export of metrics."""
+    file_dir = os.path.dirname(os.path.abspath(__file__))
+    outdir = os.path.join(file_dir, "test_output_data")
+    if not os.path.exists(outdir):
+        os.makedirs(outdir, exist_ok=True)
+
+    tr = 1.0
+
+    task = export_metrics(
+        phys=fake_physio_with_metrics,
+        metrics=["respiratory_variance", "respiratory_variance_time"],
+        outdir=outdir,
+        tr=tr,
+    )
+    assert task.inputs.metrics == ["respiratory_variance", "respiratory_variance_time"]
+    assert task.inputs.phys == fake_physio_with_metrics
+    assert task.inputs.outdir == outdir
+    assert task.inputs.tr == tr
+    task()
+
+    # Check if the output directory was created
+    assert os.path.exists(outdir)
+    assert task.result().output.out is None
+
+    # Check if the files were created
+    assert os.path.exists(
+        os.path.join(outdir, "respiratory_variance_orig_convolved.1D")
+    )
+    assert os.path.exists(os.path.join(outdir, "respiratory_variance_orig_raw.1D"))
+    assert os.path.exists(
+        os.path.join(outdir, "respiratory_variance_resampled_convolved.1D")
+    )
+    assert os.path.exists(os.path.join(outdir, "respiratory_variance_resampled_raw.1D"))
+    assert os.path.exists(
+        os.path.join(outdir, "respiratory_variance_time_orig_convolved.1D")
+    )
+    assert os.path.exists(os.path.join(outdir, "respiratory_variance_time_orig_raw.1D"))
+    assert os.path.exists(
+        os.path.join(outdir, "respiratory_variance_time_resampled_convolved.1D")
+    )
+    assert os.path.exists(
+        os.path.join(outdir, "respiratory_variance_time_resampled_raw.1D")
+    )

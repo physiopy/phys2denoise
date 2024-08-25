@@ -114,22 +114,32 @@ def export_metrics(
     phys: Physio, metrics: Union[list, str], outdir: str, tr: Union[int, float]
 ) -> None:
     if metrics == "all":
-        logger.info("Exporting all computed metrics")
+        LGR.info("Exporting all computed metrics")
         for metric in phys.computed_metrics.keys():
-            has_lags = True if "has_lags" in phys.computed_metrics[metric] else False
-            export_metric(
-                phys.computed_metrics[metric], phys.fs, tr, outdir, has_lags=has_lags
+            has_lags = (
+                True if "has_lags" in phys.computed_metrics[metric].args else False
             )
-            logger.info(f"Exported {metric}")
+            prefix = outdir + f"/{metric}"
+            export_metric(
+                phys.computed_metrics[metric], phys.fs, tr, prefix, has_lags=has_lags
+            )
+            LGR.info(f"Exported {metric}")
     elif isinstance(metrics, list):
         for metric in metrics:
             if metric not in phys.computed_metrics.keys():
-                logger.warning(f"Metric {metric} not computed. Skipping")
+                LGR.warning(f"Metric {metric} not computed. Skipping")
                 continue
-            has_lags = True if "has_lags" in phys.computed_metrics[metric] else False
-            export_metric(
-                phys.computed_metrics[metric], phys.fs, tr, outdir, has_lags=has_lags
+            has_lags = (
+                True if "has_lags" in phys.computed_metrics[metric].args else False
             )
-            logger.info(f"Exported {metric}")
+            prefix = outdir + f"/{metric}"
+            export_metric(
+                phys.computed_metrics[metric],
+                phys.fs,
+                tr,
+                prefix,
+                has_lags=has_lags,
+            )
+            LGR.info(f"Exported {metric}")
     else:
         raise ValueError("metrics must be a list of strings or 'all'")
