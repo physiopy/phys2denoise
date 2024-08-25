@@ -37,7 +37,7 @@ def print_metric_call(metric, args):
 
     msg = f"{msg}\n"
 
-    LGR.info(msg)
+    logger.info(msg)
 
 
 def mirrorpad_1d(arr, buffer=250):
@@ -62,7 +62,11 @@ def mirrorpad_1d(arr, buffer=250):
         post_mirror = np.take(mirror, idx, axis=0)
     except IndexError:
         len(arr)
-        LGR.warning(
+        # LGR.warning(
+        #     f"Requested buffer size ({buffer}) is longer than input array length "
+        #     f"({len(arr)}). Fixing buffer size to array length."
+        # )
+        logger.warning(
             f"Requested buffer size ({buffer}) is longer than input array length "
             f"({len(arr)}). Fixing buffer size to array length."
         )
