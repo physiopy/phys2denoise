@@ -7,11 +7,17 @@ from .. import references
 from ..due import due
 from .responses import crf
 from .utils import apply_function_in_sliding_window as afsw
-from .utils import convolve_and_rescale
+from .utils import convolve_and_rescale, return_physio_or_metric
 
 
 def _cardiac_metrics(
-    data, metric, fs=None, peaks=None, window=6, central_measure="mean"
+    data,
+    metric,
+    peaks=None,
+    fs=None,
+    window=6,
+    central_measure="mean",
+    **kwargs,
 ):
     """
     Compute cardiac metrics.
@@ -25,7 +31,7 @@ def _cardiac_metrics(
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded cardiac signal
     metrics : "hbi", "hr", "hrv", string
         Cardiac metric(s) to calculate.
@@ -146,8 +152,9 @@ def _cardiac_metrics(
 
 
 @due.dcite(references.CHANG_CUNNINGHAM_GLOVER_2009)
+@return_physio_or_metric()
 @physio.make_operation()
-def heart_rate(data, fs=None, peaks=None, window=6, central_measure="mean"):
+def heart_rate(data, peaks=None, fs=None, window=6, central_measure="mean", **kwargs):
     """
     Compute average heart rate (HR) in a sliding window.
 
@@ -157,7 +164,7 @@ def heart_rate(data, fs=None, peaks=None, window=6, central_measure="mean"):
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded cardiac signal
     fs : float, optional if data is a physutils.Physio
         Sampling rate of `data` in Hz
@@ -199,14 +206,25 @@ def heart_rate(data, fs=None, peaks=None, window=6, central_measure="mean"):
     Annual International Conference of the IEEE Engineering in Medicine and
     Biology Society (EMBC), doi: 10.1109/EMBC.2016.7591347.
     """
-    return _cardiac_metrics(
-        data, metric="hrv", fs=fs, peaks=peaks, window=6, central_measure="mean"
+    data, hr = _cardiac_metrics(
+        data,
+        metric="hr",
+        peaks=peaks,
+        fs=fs,
+        window=window,
+        central_measure=central_measure,
+        **kwargs,
     )
+
+    return data, hr
 
 
 @due.dcite(references.PINHERO_ET_AL_2016)
+@return_physio_or_metric()
 @physio.make_operation()
-def heart_rate_variability(data, fs=None, peaks=None, window=6, central_measure="mean"):
+def heart_rate_variability(
+    data, peaks=None, fs=None, window=6, central_measure="mean", **kwargs
+):
     """
     Compute average heart rate variability (HRV) in a sliding window.
 
@@ -216,7 +234,7 @@ def heart_rate_variability(data, fs=None, peaks=None, window=6, central_measure=
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded cardiac signal
     fs : float, optional if data is a physutils.Physio
         Sampling rate of `data` in Hz
@@ -256,20 +274,31 @@ def heart_rate_variability(data, fs=None, peaks=None, window=6, central_measure=
     Annual International Conference of the IEEE Engineering in Medicine and
     Biology Society (EMBC), doi: 10.1109/EMBC.2016.7591347.
     """
-    return _cardiac_metrics(
-        data, metric="hrv", fs=None, peaks=None, window=6, central_measure="std"
+    data, hrv = _cardiac_metrics(
+        data,
+        metric="hrv",
+        peaks=peaks,
+        fs=fs,
+        window=window,
+        central_measure=central_measure,
+        **kwargs,
     )
+
+    return data, hrv
 
 
 @due.dcite(references.CHEN_2020)
+@return_physio_or_metric()
 @physio.make_operation()
-def heart_beat_interval(data, fs=None, peaks=None, window=6, central_measure="mean"):
+def heart_beat_interval(
+    data, peaks=None, fs=None, window=6, central_measure="mean", **kwargs
+):
     """
     Compute average heart beat interval (HBI) in a sliding window.
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded cardiac signal
     fs : float, optional if data is a physutils.Physio
         Sampling rate of `data` in Hz
@@ -306,13 +335,22 @@ def heart_beat_interval(data, fs=None, peaks=None, window=6, central_measure="me
     .. [1] J. E. Chen et al., "Resting-state "physiological networks"", Neuroimage,
         vol. 213, pp. 116707, 2020.
     """
-    return _cardiac_metrics(
-        data, metric="hbi", fs=None, peaks=None, window=6, central_measure="mean"
+    data, hbi = _cardiac_metrics(
+        data,
+        metric="hbi",
+        peaks=peaks,
+        fs=fs,
+        window=window,
+        central_measure=central_measure,
+        **kwargs,
     )
 
+    return data, hbi
 
+
+@return_physio_or_metric()
 @physio.make_operation()
-def cardiac_phase(data, slice_timings, n_scans, t_r, fs=None, peaks=None):
+def cardiac_phase(data, slice_timings, n_scans, t_r, peaks=None, fs=None, **kwargs):
     """Calculate cardiac phase from cardiac peaks.
 
     Assumes that timing of cardiac events are given in same units
@@ -320,7 +358,7 @@ def cardiac_phase(data, slice_timings, n_scans, t_r, fs=None, peaks=None):
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded cardiac signal
     slice_timings : 1D array_like
         Slice times, in seconds.

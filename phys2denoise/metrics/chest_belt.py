@@ -9,13 +9,14 @@ from .. import references
 from ..due import due
 from .responses import rrf
 from .utils import apply_function_in_sliding_window as afsw
-from .utils import convolve_and_rescale, rms_envelope_1d
+from .utils import convolve_and_rescale, return_physio_or_metric, rms_envelope_1d
 
 
 @due.dcite(references.BIRN_2006)
+@return_physio_or_metric()
 @physio.make_operation()
 def respiratory_variance_time(
-    data, fs=None, peaks=None, troughs=None, lags=(0, 4, 8, 12)
+    data, peaks=None, troughs=None, fs=None, lags=(0, 4, 8, 12), **kwargs
 ):
     """
     Implement the Respiratory Variance over Time (Birn et al. 2006).
@@ -24,7 +25,7 @@ def respiratory_variance_time(
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded respiratory signal
     fs : float, optional if data is a physutils.Physio
         Sampling rate of `data` in Hz
@@ -110,13 +111,14 @@ def respiratory_variance_time(
 
 
 @due.dcite(references.POWER_2018)
+@return_physio_or_metric()
 @physio.make_operation()
-def respiratory_pattern_variability(data, window):
+def respiratory_pattern_variability(data, window, **kwargs):
     """Calculate respiratory pattern variability.
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded respiratory signal
     window : int
         Window length in samples.
@@ -152,17 +154,19 @@ def respiratory_pattern_variability(data, window):
 
     # Calculate standard deviation
     rpv_val = np.std(rpv_upper_env)
+
     return data, rpv_val
 
 
 @due.dcite(references.POWER_2020)
+@return_physio_or_metric()
 @physio.make_operation()
-def env(data, fs=None, window=10):
+def env(data, fs=None, window=10, **kwargs):
     """Calculate respiratory pattern variability across a sliding window.
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded respiratory signal
     fs : float, optional if data is a physutils.Physio
         Sampling rate of `data` in Hz
@@ -234,17 +238,19 @@ def env(data, fs=None, window=10):
         .apply(_respiratory_pattern_variability, args=(window,))
     )
     env_arr[np.isnan(env_arr)] = 0.0
+
     return data, env_arr
 
 
 @due.dcite(references.CHANG_GLOVER_2009)
+@return_physio_or_metric()
 @physio.make_operation()
-def respiratory_variance(data, fs=None, window=6):
+def respiratory_variance(data, fs=None, window=6, **kwargs):
     """Calculate respiratory variance.
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded respiratory signal
     fs : float, optional if data is a physutils.Physio
         Sampling rate of `data` in Hz
@@ -302,13 +308,14 @@ def respiratory_variance(data, fs=None, window=6):
     return data, rv_out
 
 
+@return_physio_or_metric()
 @physio.make_operation()
-def respiratory_phase(data, n_scans, slice_timings, t_r, fs=None):
+def respiratory_phase(data, n_scans, slice_timings, t_r, fs=None, **kwargs):
     """Calculate respiratory phase from respiratory signal.
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded respiratory signal
     n_scans
         Number of volumes in the imaging run.

@@ -16,12 +16,12 @@ def test_mirrorpad(short_arr):
     assert all(arr_mirror == expected_arr_mirror)
 
 
-def test_mirrorpad_exception(short_arr):
+def test_mirrorpad_exception(short_arr, caplog):
     """When passing array that is too short to perform mirrorpadding, the
     function should give an error."""
     arr = np.array(short_arr)
-    with pytest.raises(IndexError):
-        arr_mirror = mirrorpad_1d(short_arr)
+    arr_mirror = mirrorpad_1d(arr)
+    assert caplog.text.count("Fixing buffer size to array length.") > 0
 
 
 def test_rms_envelope():

@@ -7,9 +7,11 @@ from .. import references
 from ..due import due
 from .cardiac import cardiac_phase
 from .chest_belt import respiratory_phase
+from .utils import return_physio_or_metric
 
 
 @due.dcite(references.GLOVER_2000)
+@return_physio_or_metric()
 @physio.make_operation()
 def retroicor(
     data,
@@ -20,12 +22,13 @@ def retroicor(
     physio_type=None,
     fs=None,
     cardiac_peaks=None,
+    **kwargs,
 ):
     """Compute RETROICOR regressors.
 
     Parameters
     ----------
-    data : Physio_like
+    data : physutils.Physio, np.ndarray, or array-like object
         Object containing the timeseries of the recorded respiratory or cardiac signal
     t_r : float
         Imaging sample rate, in seconds.
@@ -134,4 +137,9 @@ def retroicor(
                 (j_harm + 1) * phase[i_slice]
             )
 
-    return data, retroicor_regressors, phase
+    data._computed_metrics["retroicor_regressors"] = dict(
+        metrics=retroicor_regressors, phase=phase
+    )
+    retroicor_regressors = dict(metrics=retroicor_regressors, phase=phase)
+
+    return data, retroicor_regressors

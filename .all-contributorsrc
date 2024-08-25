@@ -110,6 +110,29 @@
         "review",
         "userTesting"
       ]
+    },
+    {
+      "login": "maestroque",
+      "name": "George Kikas",
+      "avatar_url": "https://avatars.githubusercontent.com/u/74024609?v=4",
+      "profile": "https://github.com/maestroque",
+      "contributions": [
+        "code",
+        "ideas",
+        "infra",
+        "bug",
+        "review"
+      ]
+    },
+    {
+      "login": "RayStick",
+      "name": "Rachael Stickland",
+      "avatar_url": "https://avatars.githubusercontent.com/u/50215726?v=4",
+      "profile": "https://github.com/RayStick",
+      "contributions": [
+        "doc",
+        "infra"
+      ]
     }
   ],
   "contributorsPerLine": 8,
