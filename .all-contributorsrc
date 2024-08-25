@@ -110,6 +110,20 @@
         "review",
         "userTesting"
       ]
+    },
+    {
+      "login": "maestroque",
+      "name": "George Kikas",
+      "avatar_url": "https://avatars.githubusercontent.com/u/74024609?v=4",
+      "profile": "https://github.com/maestroque",
+      "contributions": [
+        "code",
+        "ideas",
+        "infra",
+        "docs",
+        "bug",
+        "review"
+      ]
     }
   ],
   "contributorsPerLine": 8,

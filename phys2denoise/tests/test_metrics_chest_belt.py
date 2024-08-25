@@ -14,17 +14,14 @@ def test_rrf_smoke():
     tr = 0.72
     rrf_arr = chest_belt.rrf(
         samplerate,
-        oversampling=oversampling,
         time_length=time_length,
         onset=onset,
-        tr=tr,
     )
-    pred_len = int(np.rint(time_length / (tr / oversampling)))
+    pred_len = int(np.rint(time_length * (1 / samplerate)))
     assert rrf_arr.ndim == 1
     assert rrf_arr.size == pred_len
 
 
-@mark.xfail
 def test_respiratory_phase_smoke():
     """Basic smoke test for respiratory phase calculation."""
     t_r = 1.0
@@ -35,7 +32,7 @@ def test_respiratory_phase_smoke():
     resp = np.random.normal(size=n_samples)
     resp_phase = chest_belt.respiratory_phase(
         resp,
-        sample_rate=sample_rate,
+        fs=sample_rate,
         slice_timings=slice_timings,
         n_scans=n_scans,
         t_r=t_r,
@@ -59,7 +56,7 @@ def test_env_smoke():
     resp = np.random.normal(size=n_samples)
     samplerate = 1 / 0.01
     window = 6
-    env_arr = chest_belt.env(resp, samplerate=samplerate, window=window)
+    env_arr = chest_belt.env(resp, fs=samplerate, window=window)
     assert env_arr.ndim == 1
     assert env_arr.shape == (n_samples,)
 
@@ -70,6 +67,6 @@ def test_respiratory_variance_smoke():
     resp = np.random.normal(size=n_samples)
     samplerate = 1 / 0.01
     window = 6
-    rv_arr = chest_belt.respiratory_variance(resp, samplerate=samplerate, window=window)
+    rv_arr = chest_belt.respiratory_variance(resp, fs=samplerate, window=window)
     assert rv_arr.ndim == 2
     assert rv_arr.shape == (n_samples, 2)

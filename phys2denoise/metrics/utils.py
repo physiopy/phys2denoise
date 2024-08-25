@@ -1,8 +1,12 @@
 """Miscellaneous utility functions for metric calculation."""
+import functools
+import inspect
 import logging
 
 import numpy as np
+from loguru import logger
 from numpy.lib.stride_tricks import sliding_window_view as swv
+from physutils.physio import Physio
 from scipy.interpolate import interp1d
 from scipy.stats import zscore
 
@@ -33,7 +37,7 @@ def print_metric_call(metric, args):
 
     msg = f"{msg}\n"
 
-    LGR.info(msg)
+    logger.info(msg)
 
 
 def mirrorpad_1d(arr, buffer=250):
@@ -58,7 +62,11 @@ def mirrorpad_1d(arr, buffer=250):
         post_mirror = np.take(mirror, idx, axis=0)
     except IndexError:
         len(arr)
-        LGR.warning(
+        # LGR.warning(
+        #     f"Requested buffer size ({buffer}) is longer than input array length "
+        #     f"({len(arr)}). Fixing buffer size to array length."
+        # )
+        logger.warning(
             f"Requested buffer size ({buffer}) is longer than input array length "
             f"({len(arr)}). Fixing buffer size to array length."
         )
@@ -332,3 +340,117 @@ def export_metric(
                 )
 
     return fileprefix
+
+
+def return_physio_or_metric(*, return_physio=True):
+    """
+    Decorator to check if the input is a Physio object.
+
+    Parameters
+    ----------
+    func : function
+        Function to be decorated
+
+    Returns
+    -------
+    function
+        Decorated function
+    """
+
+    def determine_return_type(func):
+        convolved_metrics = [
+            "respiratory_variance",
+            "heart_rate",
+            "heart_rate_variability",
+            "heart_beat_interval",
+        ]
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            physio, metric = func(*args, **kwargs)
+            default_args = get_default_args(func)
+            if isinstance(args[0], Physio):
+                if "lags" in kwargs:
+                    has_lags = True if len(kwargs["lags"]) > 1 else False
+                elif "lags" in default_args:
+                    has_lags = True if len(default_args["lags"]) > 1 else False
+                else:
+                    has_lags = False
+
+                is_convolved = True if func.__name__ in convolved_metrics else False
+
+                physio._computed_metrics[func.__name__] = Metric(
+                    func.__name__,
+                    metric,
+                    kwargs,
+                    has_lags=has_lags,
+                    is_convolved=is_convolved,
+                )
+
+                return_physio_value = kwargs.get("return_physio", return_physio)
+                if return_physio_value:
+                    return physio
+                else:
+                    return metric
+            else:
+                return metric
+
+        return wrapper
+
+    return determine_return_type
+
+
+def get_default_args(func):
+    # Get the signature of the function
+    sig = inspect.signature(func)
+
+    # Extract default values for each parameter
+    defaults = {
+        k: v.default
+        for k, v in sig.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }
+
+    return defaults
+
+
+class Metric:
+    def __init__(self, name, data, args, has_lags=False, is_convolved=False):
+        self.name = name
+        self._data = data
+        self._args = args
+        self._has_lags = has_lags
+        self._is_convolved = is_convolved
+
+    def __array__(self):
+        return self.data
+
+    def __getitem__(self, slicer):
+        return self.data[slicer]
+
+    def __len__(self):
+        return len(self.data)
+
+    @property
+    def ndim(self):
+        return self.data.ndim
+
+    @property
+    def shape(self):
+        return self.data.shape
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def args(self):
+        return self._args
+
+    @property
+    def has_lags(self):
+        return self._has_lags
+
+    @property
+    def is_convolved(self):
+        return self._is_convolved
