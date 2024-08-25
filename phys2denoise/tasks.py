@@ -112,7 +112,7 @@ def compute_metrics(phys: Physio, metrics: Union[list, str], args: dict) -> Phys
 @pydra.mark.task
 def export_metrics(
     phys: Physio, metrics: Union[list, str], outdir: str, tr: Union[int, float]
-) -> None:
+) -> int:
     if metrics == "all":
         LGR.info("Exporting all computed metrics")
         for metric in phys.computed_metrics.keys():
@@ -124,6 +124,7 @@ def export_metrics(
                 phys.computed_metrics[metric], phys.fs, tr, prefix, has_lags=has_lags
             )
             LGR.info(f"Exported {metric}")
+        return 0
     elif isinstance(metrics, list):
         for metric in metrics:
             if metric not in phys.computed_metrics.keys():
@@ -141,5 +142,6 @@ def export_metrics(
                 has_lags=has_lags,
             )
             LGR.info(f"Exported {metric}")
+        return 0
     else:
         raise ValueError("metrics must be a list of strings or 'all'")

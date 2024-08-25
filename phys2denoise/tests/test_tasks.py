@@ -77,7 +77,7 @@ def test_compute_metrics(fake_physio):
 def test_export_metrics(fake_physio_with_metrics):
     """Test the export of metrics."""
     file_dir = os.path.dirname(os.path.abspath(__file__))
-    outdir = os.path.join(file_dir, "test_output_data")
+    outdir = os.path.join(file_dir, "test_output_data/standalone")
     if not os.path.exists(outdir):
         os.makedirs(outdir, exist_ok=True)
 

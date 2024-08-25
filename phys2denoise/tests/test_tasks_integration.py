@@ -1,22 +1,65 @@
 """Tests for phys2denoise.tasks and their integration."""
+import os
+
+import nest_asyncio
+import numpy as np
 from loguru import logger
 from physutils import physio
 from physutils.tasks import transform_to_physio
-from pydra import Workflow
+from pydra import Submitter, Workflow
 
 import phys2denoise.tasks as tasks
 
-# def test_integration(fake_phys):
-#     """Test the integration of phys2denoise tasks."""
-#     # Create physio object data
-#     transform_to_physio.inputs.data = fake_phys
+nest_asyncio.apply()
 
-#     wf = Workflow(name="metric_calculation", input_spec=["data"])
-#     wf.add(transform_to_physio)
 
-#     # Test the integration of the tasks
-#     tasks.select_input_args(phys, {"physio": phys})
-#     tasks.select_input_args(phys, {"physio": phys, "window": 4})
-#     tasks.select_input_args(phys, {"physio": phys, "window": 4, "buffer": 2})
-#     tasks.select_input_args(phys, {"physio": phys, "window": 4, "buffer": 2, "inverse": False})
-#     tasks.compute_metrics(phys, metrics=["crf", "respiratory_variance"])
+def test_integration(fake_phys):
+    """Test the integration of phys2denoise tasks."""
+    file_dir = os.path.dirname(os.path.abspath(__file__))
+    export_dir = os.path.join(file_dir, "test_output_data/integration")
+
+    wf = Workflow(
+        name="metrics_wf",
+        input_spec=["phys", "fs"],
+        phys="phys2denoise/tests/data/ECG.csv",
+        fs=62.5,
+    )
+    wf.add(
+        transform_to_physio(
+            name="transform_to_physio", phys=wf.lzin.phys, fs=wf.lzin.fs, mode="physio"
+        )
+    )
+    wf.add(
+        tasks.compute_metrics(
+            name="compute_metrics",
+            phys=wf.transform_to_physio.lzout.out,
+            metrics=[
+                "respiratory_variance",
+                "respiratory_variance_time",
+                "cardiac_phase",
+            ],
+            args={
+                "cardiac_phase": {
+                    "slice_timings": np.linspace(0, 1, 22)[1:-1],
+                    "n_scans": 200,
+                    "t_r": 1.0,
+                },
+            },
+        )
+    )
+    wf.add(
+        tasks.export_metrics(
+            name="export_metrics",
+            phys=wf.compute_metrics.lzout.out,
+            metrics="all",
+            outdir=export_dir,
+            tr=1.0,
+        )
+    )
+    wf.set_output([("result", wf.export_metrics.lzout.out)])
+
+    with Submitter(plugin="cf") as sub:
+        sub(wf)
+    wf().result()
+
+    assert os.path.exists(export_dir)
