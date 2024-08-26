@@ -3,7 +3,7 @@ import peakdet
 import pytest
 from _pytest.logging import LogCaptureFixture
 from loguru import logger
-from physutils import Physio
+from physutils import Physio, io
 
 import phys2denoise.tasks as tasks
 

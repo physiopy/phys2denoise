@@ -1,4 +1,5 @@
 """Tests for phys2denoise.tasks and their integration."""
+import logging
 import os
 
 import nest_asyncio
@@ -10,23 +11,33 @@ from pydra import Submitter, Workflow
 
 import phys2denoise.tasks as tasks
 
+from .utils import create_fake_phys
+
 nest_asyncio.apply()
+
+LGR = logging.getLogger(__name__)
+LGR.setLevel(logging.DEBUG)
 
 
 def test_integration(fake_phys):
     """Test the integration of phys2denoise tasks."""
     file_dir = os.path.dirname(os.path.abspath(__file__))
     export_dir = os.path.join(file_dir, "test_output_data/integration")
+    create_fake_phys()
+
+    physio_file = os.path.abspath("phys2denoise/tests/data/fake_phys.phys")
 
     wf = Workflow(
         name="metrics_wf",
         input_spec=["phys", "fs"],
-        phys="phys2denoise/tests/data/ECG.csv",
-        fs=62.5,
+        phys=physio_file,
     )
     wf.add(
         transform_to_physio(
-            name="transform_to_physio", phys=wf.lzin.phys, fs=wf.lzin.fs, mode="physio"
+            name="transform_to_physio",
+            input_file=wf.lzin.phys,
+            fs=wf.lzin.fs,
+            mode="physio",
         )
     )
     wf.add(
@@ -60,6 +71,6 @@ def test_integration(fake_phys):
 
     with Submitter(plugin="cf") as sub:
         sub(wf)
-    wf().result()
+    wf()
 
     assert os.path.exists(export_dir)

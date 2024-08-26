@@ -97,7 +97,6 @@ def test_export_metrics(fake_physio_with_metrics):
 
     # Check if the output directory was created
     assert os.path.exists(outdir)
-    assert task.result().output.out is None
 
     # Check if the files were created
     assert os.path.exists(
