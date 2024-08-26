@@ -67,10 +67,52 @@ def test_integration(fake_phys):
             tr=1.0,
         )
     )
-    wf.set_output([("result", wf.export_metrics.lzout.out)])
+    wf.set_output([("result", wf.compute_metrics.lzout.out)])
 
     with Submitter(plugin="cf") as sub:
         sub(wf)
     wf()
 
+    output_physio = wf.result().output.result
+    LGR.debug(f"Output physio: {output_physio}")
+
+    # Physio object assertions
+    assert output_physio.computed_metrics["respiratory_variance"] is not None
+    assert output_physio.computed_metrics["respiratory_variance_time"] is not None
+    assert output_physio.computed_metrics["cardiac_phase"] is not None
+
+    assert output_physio.computed_metrics["respiratory_variance"].shape == (
+        len(output_physio.data),
+        2,
+    )
+    assert output_physio.computed_metrics["respiratory_variance_time"].shape == (
+        len(output_physio.data),
+        4,
+    )
+    assert output_physio.computed_metrics["cardiac_phase"].shape == (200, 20)
+
+    # Exported metrics assertions
     assert os.path.exists(export_dir)
+
+    assert os.path.exists(
+        os.path.join(export_dir, "respiratory_variance_orig_convolved.1D")
+    )
+    assert os.path.exists(os.path.join(export_dir, "respiratory_variance_orig_raw.1D"))
+    assert os.path.exists(
+        os.path.join(export_dir, "respiratory_variance_resampled_convolved.1D")
+    )
+    assert os.path.exists(
+        os.path.join(export_dir, "respiratory_variance_resampled_raw.1D")
+    )
+    assert os.path.exists(
+        os.path.join(export_dir, "respiratory_variance_time_orig_convolved.1D")
+    )
+    assert os.path.exists(
+        os.path.join(export_dir, "respiratory_variance_time_orig_raw.1D")
+    )
+    assert os.path.exists(
+        os.path.join(export_dir, "respiratory_variance_time_resampled_convolved.1D")
+    )
+    assert os.path.exists(
+        os.path.join(export_dir, "respiratory_variance_time_resampled_raw.1D")
+    )
