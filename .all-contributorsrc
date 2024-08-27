@@ -16,6 +16,15 @@
       ]
     },
     {
+      "login": "ineschh",
+      "name": "Inés Chavarría",
+      "avatar_url": "https://avatars.githubusercontent.com/u/72545702?v=4",
+      "profile": "https://github.com/ineschh",
+      "contributions": [
+        "infra"
+      ]
+    },
+    {
       "login": "eril892",
       "name": "Raphaël Fournier",
       "avatar_url": "https://avatars.githubusercontent.com/u/91672536?v=4",
@@ -24,6 +33,20 @@
         "code",
         "userTesting",
         "doc"
+      ]
+    },
+    {
+      "login": "maestroque",
+      "name": "George Kikas",
+      "avatar_url": "https://avatars.githubusercontent.com/u/74024609?v=4",
+      "profile": "https://github.com/maestroque",
+      "contributions": [
+        "code",
+        "ideas",
+        "infra",
+        "bug",
+        "test",
+        "review"
       ]
     },
     {
@@ -57,6 +80,16 @@
       ]
     },
     {
+      "login": "m-miedema",
+      "name": "m-miedema",
+      "avatar_url": "https://avatars.githubusercontent.com/u/39968233?v=4",
+      "profile": "https://github.com/m-miedema",
+      "contributions": [
+        "review",
+        "mentoring"
+      ]
+    },
+    {
       "login": "smoia",
       "name": "Stefano Moia",
       "avatar_url": "https://avatars3.githubusercontent.com/u/35300580?v=4",
@@ -81,6 +114,16 @@
       ]
     },
     {
+      "login": "me-pic",
+      "name": "Marie-Eve Picard",
+      "avatar_url": "https://avatars.githubusercontent.com/u/77584086?v=4",
+      "profile": "https://github.com/me-pic",
+      "contributions": [
+        "review",
+        "infra"
+      ]
+    },
+    {
       "login": "tsalo",
       "name": "Taylor Salo",
       "avatar_url": "https://avatars3.githubusercontent.com/u/8228902?v=4",
@@ -92,12 +135,13 @@
       ]
     },
     {
-      "login": "ineschh",
-      "name": "Inés Chavarría",
-      "avatar_url": "https://avatars.githubusercontent.com/u/72545702?v=4",
-      "profile": "https://github.com/ineschh",
+      "login": "RayStick",
+      "name": "Rachael Stickland",
+      "avatar_url": "https://avatars.githubusercontent.com/u/50215726?v=4",
+      "profile": "https://github.com/RayStick",
       "contributions": [
-        "infra"
+        "infra",
+        "doc"
       ]
     },
     {
@@ -109,29 +153,6 @@
         "infra",
         "review",
         "userTesting"
-      ]
-    },
-    {
-      "login": "maestroque",
-      "name": "George Kikas",
-      "avatar_url": "https://avatars.githubusercontent.com/u/74024609?v=4",
-      "profile": "https://github.com/maestroque",
-      "contributions": [
-        "code",
-        "ideas",
-        "infra",
-        "bug",
-        "review"
-      ]
-    },
-    {
-      "login": "RayStick",
-      "name": "Rachael Stickland",
-      "avatar_url": "https://avatars.githubusercontent.com/u/50215726?v=4",
-      "profile": "https://github.com/RayStick",
-      "contributions": [
-        "doc",
-        "infra"
       ]
     }
   ],
