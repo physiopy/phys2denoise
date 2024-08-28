@@ -104,6 +104,7 @@ def compute_metrics(phys: Physio, metrics: Union[list, str], args: dict) -> Phys
             else:
                 metric_args = args[metric]
 
+            LGR.debug(f"Arguments for {metric}: {metric_args}")
             input_args = select_input_args(locals()[metric], metric_args)
             phys = locals()[metric](phys, **input_args)
     return phys

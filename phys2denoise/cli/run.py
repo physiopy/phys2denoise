@@ -3,15 +3,28 @@
 
 
 import argparse
+import logging
+import sys
 
-from phys2denoise import __version__
-from phys2denoise.metrics.cardiac import heart_beat_interval, heart_rate_variability
+import numpy as np
+import pydra
+from loguru import logger
+
+from phys2denoise import __version__, tasks, workflow
+from phys2denoise.metrics.cardiac import (
+    cardiac_phase,
+    heart_beat_interval,
+    heart_rate,
+    heart_rate_variability,
+)
 from phys2denoise.metrics.chest_belt import (
     env,
     respiratory_pattern_variability,
+    respiratory_phase,
     respiratory_variance,
     respiratory_variance_time,
 )
+from phys2denoise.metrics.multimodal import retroicor
 from phys2denoise.metrics.responses import crf, icrf, rrf
 
 
@@ -50,11 +63,19 @@ def _get_parser():
         "physiological data, with or without extension.",
         required=True,
     )
+    required.add_argument(
+        "-md",
+        "--mode",
+        dest="mode",
+        type=str,
+        help="Format of the input physiological data. Options are: "
+        "physio or bids. Default is physio.",
+    )
 
     # Important optional arguments
     optional = parser.add_argument_group("Optional arguments")
     optional.add_argument(
-        "-outdir",
+        "-out",
         "--output-dir",
         dest="outdir",
         type=str,
@@ -89,7 +110,7 @@ def _get_parser():
         "--respiratory-variance",
         dest="metrics",
         action="append_const",
-        const=respiratory_variance,
+        const="respiratory_variance",
         help="Respiratory variance. Requires the following inputs: "
         "sample-rate, window and lags. If the input file "
         "not a .phys file, it also requires peaks and troughs",
@@ -100,7 +121,7 @@ def _get_parser():
         "--respiratory-variance-per-time",
         dest="metrics",
         action="append_const",
-        const=respiratory_variance_time,
+        const="respiratory_variance_time",
         help="Respiratory volume-per-time. Requires the following inputs: "
         "sample-rate, window, lags, peaks and troughs.",
         default=[],
@@ -122,7 +143,7 @@ def _get_parser():
         "--heart-rate-variability",
         dest="metrics",
         action="append_const",
-        const=heart_rate_variability,
+        const="heart_rate_variability",
         help="Computes heart rate variability. Requires the following "
         "inputs: peaks, samplerate, window and central measure operator.",
         default=[],
@@ -132,7 +153,7 @@ def _get_parser():
         "--heart-beat-interval",
         dest="metrics",
         action="append_const",
-        const=heart_beat_interval,
+        const="heart_beat_interval",
         help="Computes heart beat interval. Requires the following "
         "inputs: peaks, samplerate, window and central measure operator.",
         default=[],
@@ -178,6 +199,17 @@ def _get_parser():
         help="RETROICOR regressors for respiratory signal. Requires the following  "
         "inputs: tr, nscans and n_harm.",
         default=[],
+    )
+
+    export_met = parser.add_argument_group("Export metrics")
+    export_met.add_argument(
+        "-e",
+        "--exported-metrics",
+        dest="metrics_to_export",
+        nargs="+",
+        type=str,
+        help="Full path and filename of the list with the metrics to export.",
+        default=None,
     )
 
     rfs = parser.add_argument_group("Response Functions")
@@ -251,7 +283,7 @@ def _get_parser():
     metric_arg.add_argument(
         "-tr",
         "--tr",
-        dest="tr",
+        dest="t_r",
         type=float,
         help="TR of sequence in seconds.",
         default=None,
@@ -276,7 +308,7 @@ def _get_parser():
     metric_arg.add_argument(
         "-nscans",
         "--number-scans",
-        dest="nscans",
+        dest="n_scans",
         type=int,
         help="Number of timepoints in the imaging data. "
         "Also called sub-bricks, TRs, scans, volumes."
@@ -289,6 +321,66 @@ def _get_parser():
         dest="n_harm",
         type=int,
         help="Number of harmonics.",
+        default=None,
+    )
+    metric_arg.add_argument(
+        "-sl",
+        "--slice-timings",
+        dest="slice_timings",
+        nargs="*",
+        type=float,
+        help="Slice timings in seconds.",
+        default=None,
+    )
+
+    # BIDS arguments
+    bids = parser.add_argument_group("BIDS Arguments")
+    bids.add_argument(
+        "-sub",
+        "--subject",
+        dest="subject",
+        type=str,
+        help="Subject ID in BIDS format.",
+        default=None,
+    )
+    bids.add_argument(
+        "-ses",
+        "--session",
+        dest="session",
+        type=str,
+        help="Session ID in BIDS format.",
+        default=None,
+    )
+    bids.add_argument(
+        "-task",
+        "--task",
+        dest="task",
+        type=str,
+        help="Task ID in BIDS format.",
+        default=None,
+    )
+    bids.add_argument(
+        "-run",
+        "--run",
+        dest="run",
+        type=str,
+        help="Run ID in BIDS format.",
+        default=None,
+    )
+    bids.add_argument(
+        "-rec",
+        "--recording",
+        dest="recording",
+        type=str,
+        help="Recording ID in BIDS format.",
+        default=None,
+    )
+    bids.add_argument(
+        "-ch",
+        "--channel",
+        dest="bids_channel",
+        type=str,
+        help="Physiological signal channel ID in BIDS format.",
         default=None,
     )
 
@@ -335,8 +427,59 @@ def main():
     """
     parser = _get_parser()
     args = parser.parse_args()
+    LGR = logging.getLogger(__name__)
+    LGR.setLevel(logging.DEBUG)
 
-    return args
+    logger.add(sys.stderr, level="DEBUG")
+
+    logger.info(f"Running phys2denoise version: {__version__}")
+
+    LGR.debug(f"Arguments: {args}")
+    LGR.debug(f"Metrics to export: {args.metrics_to_export}")
+
+    if args.metrics_to_export is None or args.metrics_to_export == "all":
+        args.metrics_to_export = "all"
+
+    bids_parameters = {
+        "subject": args.subject,
+        "session": args.session,
+        "task": args.task,
+        "run": args.run,
+        "recording": args.recording,
+    }
+
+    # Conversions
+    args.slice_timings = (
+        np.array(args.slice_timings) if args.slice_timings is not None else None
+    )
+
+    metric_args = dict()
+    for metric in args.metrics:
+        metric_args[metric] = tasks.select_input_args(globals()[metric], vars(args))
+
+    logger.debug(f"Metric args: {metric_args}")
+
+    wf = workflow.build(
+        input_file=args.filename,
+        export_directory=args.outdir,
+        metrics=args.metrics,
+        metric_args=metric_args,
+        metrics_to_export=args.metrics_to_export,
+        mode=args.mode,
+        fs=args.sample_rate,
+        bids_parameters=bids_parameters,
+        bids_channel=args.bids_channel,
+        tr=args.t_r,
+        debug=args.debug,
+        quiet=args.quiet,
+    )
+
+    with pydra.Submitter(plugin="cf") as sub:
+        sub(wf)
+
+    wf()
+
+    return wf.result().output.result
 
 
 if __name__ == "__main__":
