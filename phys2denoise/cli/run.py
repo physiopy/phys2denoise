@@ -90,7 +90,7 @@ def _get_parser():
         "--respiratory-pattern-variability",
         dest="metrics",
         action="append_const",
-        const=respiratory_pattern_variability,
+        const="respiratory_pattern_variability",
         help="Respiratory pattern variability. Requires the following "
         "input: window.",
         default=[],
@@ -100,7 +100,7 @@ def _get_parser():
         "--envelope",
         dest="metrics",
         action="append_const",
-        const=env,
+        const="env",
         help="Respiratory pattern variability calculated across a sliding "
         "window. Requires the following inputs: sample-rate, window and lags.",
         default=[],
@@ -416,6 +416,7 @@ def _get_parser():
     return parser
 
 
+@logger.catch()
 def main():
     """
     Main function to run the parser.
@@ -434,8 +435,7 @@ def main():
 
     logger.info(f"Running phys2denoise version: {__version__}")
 
-    LGR.debug(f"Arguments: {args}")
-    LGR.debug(f"Metrics to export: {args.metrics_to_export}")
+    LGR.debug(f"Arguments Provided: {args}")
 
     if args.metrics_to_export is None or args.metrics_to_export == "all":
         args.metrics_to_export = "all"
@@ -452,12 +452,13 @@ def main():
     args.slice_timings = (
         np.array(args.slice_timings) if args.slice_timings is not None else None
     )
+    args.lags = np.array(args.lags) if args.lags is not None else None
 
     metric_args = dict()
     for metric in args.metrics:
         metric_args[metric] = tasks.select_input_args(globals()[metric], vars(args))
 
-    logger.debug(f"Metric args: {metric_args}")
+    logger.debug(f"Metrics: {args.metrics}")
 
     wf = workflow.build(
         input_file=args.filename,

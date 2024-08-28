@@ -117,10 +117,17 @@ def export_metrics(
     if metrics == "all":
         LGR.info("Exporting all computed metrics")
         for metric in phys.computed_metrics.keys():
+            if metric == "respiratory_pattern_variability":
+                LGR.warning(
+                    f"respiratory_pattern_variability will not be exported, since it is a single value metric "
+                    f"and not a timeseries. RPV value is {phys.computed_metrics[metric].data}"
+                )
+                continue
             has_lags = (
                 True if "has_lags" in phys.computed_metrics[metric].args else False
             )
             prefix = outdir + f"/{metric}"
+            LGR.debug(f"Exporting {metric} to {prefix}")
             export_metric(
                 phys.computed_metrics[metric], phys.fs, tr, prefix, has_lags=has_lags
             )
@@ -131,10 +138,17 @@ def export_metrics(
             if metric not in phys.computed_metrics.keys():
                 LGR.warning(f"Metric {metric} not computed. Skipping")
                 continue
+            if metric == "respiratory_pattern_variability":
+                LGR.warning(
+                    f"respiratory_pattern_variability will not be exported, since it is a single value metric"
+                    f"and not a timeseries. RPV value is {phys.computed_metrics[metric]}"
+                )
+                continue
             has_lags = (
                 True if "has_lags" in phys.computed_metrics[metric].args else False
             )
             prefix = outdir + f"/{metric}"
+            LGR.debug(f"Exporting {metric} to {prefix}")
             export_metric(
                 phys.computed_metrics[metric],
                 phys.fs,

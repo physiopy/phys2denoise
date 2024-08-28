@@ -1,6 +1,7 @@
 """Denoising metrics for chest belt recordings."""
 import numpy as np
 import pandas as pd
+from loguru import logger
 from physutils import io, physio
 from scipy.interpolate import interp1d
 from scipy.stats import zscore
@@ -229,6 +230,7 @@ def env(data, fs=None, window=10, **kwargs):
 
     # Convert window to Hertz
     window = int(window * data.fs)
+    logger.debug(f"Window size in samples: {window}")
 
     # Calculate RPV across a rolling window
 
