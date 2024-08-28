@@ -128,3 +128,4 @@ dmypy.json
 
 # Test Data
 phys2denoise/tests/test_output_data/
+phys2denoise/tests/data/fake_phys.phys

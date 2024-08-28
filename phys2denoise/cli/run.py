@@ -105,6 +105,16 @@ def _get_parser():
         "sample-rate, window, lags, peaks and troughs.",
         default=[],
     )
+    resp_met.add_argument(
+        "-rp",
+        "--respiratory-phase",
+        dest="metrics",
+        action="append_const",
+        const="respiratory_phase",
+        help="Respiratory phase. Requires the following inputs: "
+        "slice-timings, n_scans and t_r.",
+        default=[],
+    )
 
     card_met = parser.add_argument_group("Cardiac signal based metrics")
     card_met.add_argument(
@@ -125,6 +135,26 @@ def _get_parser():
         const=heart_beat_interval,
         help="Computes heart beat interval. Requires the following "
         "inputs: peaks, samplerate, window and central measure operator.",
+        default=[],
+    )
+    card_met.add_argument(
+        "-hr",
+        "--heart-rate",
+        dest="metrics",
+        action="append_const",
+        const="heart_rate",
+        help="Computes heart rate. Requires the following "
+        "inputs: peaks, samplerate, window and central measure operator.",
+        default=[],
+    )
+    card_met.add_argument(
+        "-cp",
+        "--cardiac-phase",
+        dest="metrics",
+        action="append_const",
+        const="cardiac_phase",
+        help="Computes cardiac phase. Requires the following "
+        "inputs: slice-timings, n_scans and t_r.",
         default=[],
     )
 
@@ -219,22 +249,6 @@ def _get_parser():
         default="mean",
     )
     metric_arg.add_argument(
-        "-tl",
-        "--time-length",
-        dest="time_length",
-        type=int,
-        help="RRF or CRF Kernel length in seconds.",
-        default=None,
-    )
-    metric_arg.add_argument(
-        "-onset",
-        "--onset",
-        dest="onset",
-        type=float,
-        help="Onset of the response in seconds. Default is 0.",
-        default=0,
-    )
-    metric_arg.add_argument(
         "-tr",
         "--tr",
         dest="tr",
@@ -278,17 +292,21 @@ def _get_parser():
         default=None,
     )
 
-    # Other optional arguments
-    otheropt = parser.add_argument_group("Other optional arguments")
-    otheropt.add_argument(
+    # Logging style
+    log_style_group = parser.add_argument_group(
+        "Logging style arguments (optional and mutually exclusive)",
+        "Options to specify the logging style",
+    )
+    log_style_group_exclusive = log_style_group.add_mutually_exclusive_group()
+    log_style_group_exclusive.add_argument(
         "-debug",
         "--debug",
         dest="debug",
         action="store_true",
-        help="Only print debugging info to log file. Default is False.",
+        help="Print additional debugging info and error diagnostics to log file. Default is False.",
         default=False,
     )
-    otheropt.add_argument(
+    log_style_group_exclusive.add_argument(
         "-quiet",
         "--quiet",
         dest="quiet",
@@ -299,16 +317,32 @@ def _get_parser():
     optional.add_argument(
         "-h", "--help", action="help", help="Show this help message and exit"
     )
-    otheropt.add_argument(
+    optional.add_argument(
         "-v", "--version", action="version", version=("%(prog)s " + __version__)
     )
 
     return parser
 
 
+def main():
+    """
+    Main function to run the parser.
+
+    Returns
+    -------
+    args : argparse dict
+        Dictionary with all arguments parsed by the parser.
+    """
+    parser = _get_parser()
+    args = parser.parse_args()
+
+    return args
+
+
 if __name__ == "__main__":
-    raise RuntimeError(
-        "phys2denoise/cli/run.py should not be run directly;\n"
-        "Please `pip install` phys2denoise and use the "
-        "`phys2denoise` command"
-    )
+    main()
+    # raise RuntimeError(
+    #     "phys2denoise/cli/run.py should not be run directly;\n"
+    #     "Please `pip install` phys2denoise and use the "
+    #     "`phys2denoise` command"
+    # )

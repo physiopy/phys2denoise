@@ -18,7 +18,11 @@ from inspect import _empty, signature
 
 import numpy as np
 import pandas as pd
+from loguru import logger
+from physutils.tasks import select_input_args, transform_to_physio
+from pydra import Submitter, Workflow
 
+import phys2denoise.tasks as tasks
 from phys2denoise.cli.run import _get_parser
 from phys2denoise.metrics.cardiac import crf
 from phys2denoise.metrics.chest_belt import (
@@ -59,49 +63,114 @@ def save_bash_call(outdir):
     f.close()
 
 
-def select_input_args(metric, metric_args):
-    """
-    Retrieve required args for metric from a dictionary of possible arguments.
+def build(
+    input_file,
+    export_directory,
+    metrics,
+    metric_args,
+    metrics_to_export,
+    mode="physio",
+    fs=None,
+    bids_parameters=dict(),
+    bids_channel=None,
+    tr=None,
+    debug=False,
+    quiet=False,
+    **kwargs,
+) -> Workflow:
+    # TODO: Use only loguru as the main logger, once the pydra/loguru issue is fixed
+    logger.remove(0)
+    if quiet:
+        logger.add(
+            sys.stderr,
+            level="WARNING",
+            colorize=True,
+            backtrace=False,
+            diagnose=False,
+        )
+        LGR.setLevel(logging.WARNING)
+    elif debug:
+        logger.add(
+            sys.stderr,
+            level="DEBUG",
+            colorize=True,
+            backtrace=True,
+            diagnose=True,
+        )
+        LGR.setLevel(logging.DEBUG)
+    else:
+        logger.add(
+            sys.stderr,
+            level="INFO",
+            colorize=True,
+            backtrace=True,
+            diagnose=False,
+        )
+        LGR.setLevel(logging.INFO)
 
-    This function checks what parameters are accepted by a metric.
-    Then, for each parameter, check if the user provided it or not.
-    If they did not, but the parameter is required, throw an error -
-    unless it's "physio", reserved name for the timeseries input to a metric.
-    Otherwise, use the default.
+    physio_file = os.path.abspath(input_file)
+    export_directory = os.path.abspath(export_directory)
 
-    Parameters
-    ----------
-    metric : function
-        Metric function to retrieve arguments for
-    metric_args : dict
-        Dictionary containing all arguments for all functions requested by the
-        user
+    wf = Workflow(
+        name="metrics_wf",
+        input_spec=[
+            "phys",
+            "fs",
+            "mode",
+            "metrics",
+            "metric_args",
+            "metrics_to_export",
+            "bids_parameters",
+            "bids_channel",
+            "tr",
+        ],
+        phys=physio_file,
+        fs=fs,
+        mode=mode,
+        metrics=metrics,
+        metric_args=metric_args,
+        bids_parameters=bids_parameters,
+        bids_channel=bids_channel,
+        metrics_to_export=metrics_to_export,
+        tr=tr,
+    )
+    wf.add(
+        transform_to_physio(
+            name="transform_to_physio",
+            input_file=wf.lzin.phys,
+            fs=wf.lzin.fs,
+            mode=wf.lzin.mode,
+            bids_parameters=wf.lzin.bids_parameters,
+            bids_channel=wf.lzin.bids_channel,
+        )
+    )
+    wf.add(
+        tasks.compute_metrics(
+            name="compute_metrics",
+            phys=wf.transform_to_physio.lzout.out,
+            metrics=wf.lzin.metrics,
+            args=wf.lzin.metric_args,
+        )
+    )
+    wf.add(
+        tasks.export_metrics(
+            name="export_metrics",
+            phys=wf.compute_metrics.lzout.out,
+            metrics=wf.lzin.metrics_to_export,
+            outdir=export_directory,
+            tr=wf.lzin.tr,
+        )
+    )
+    wf.set_output([("result", wf.compute_metrics.lzout.out)])
 
-    Returns
-    args : dict
-        Arguments to provide as input to metric
+    return wf
 
-    Raises
-    ------
-    ValueError
-        If a required argument is missing
 
-    """
-    args = {}
+def run(workflow: Workflow, plugin="cf", **plugin_args):
+    with Submitter(plugin=plugin, **plugin_args) as sub:
+        sub(workflow)
 
-    # Check the parameters required by the metric and given by the user (see docstring)
-    for param in signature(metric).parameters.values():
-        if param.name not in metric_args:
-            if param.default == _empty and param.name != "physio":
-                raise ValueError(
-                    f"Missing parameter {param} required " f"to run {metric}"
-                )
-            else:
-                args[param.name] = param.default
-        else:
-            args[param.name] = metric_args[param.name]
-
-    return args
+    return workflow.result()
 
 
 @due.dcite(
