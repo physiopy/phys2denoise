@@ -5,17 +5,255 @@
     "access_right":"open",
     "creators": [
       {
-        "affiliation": "BCBL - Basque Center on Cognition, Brain and Language",
-        "name": "C\u00e9sar Caballero Gaudes"
+        "affiliations": [
+          {
+            "name": "University of Southern California"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Bottenhorn",
+          "given_name": "Katherine",
+          "identifiers": [
+            {
+              "identifier": "0000-0002-7796-8795",
+              "scheme": "orcid"
+            }
+          ],
+          "name": "Bottenhorn, Katherine",
+          "type": "personal"
+        }
       },
       {
-        "affiliation": "McGill University",
-        "name": "Ross Markello"
+        "affiliations": [
+          {
+            "name": "BCBL - Basque Center on Cognition, Brain and Language"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Caballero Gaudes",
+          "given_name": "C\u00e9sar",
+          "identifiers": [
+            {
+              "identifier": "0000-0002-9068-5810",
+              "scheme": "orcid"
+            }
+          ],
+          "name": "Caballero Gaudes, C\u00e9sar",
+          "type": "personal"
+        }
       },
       {
-        "orcid": "0000-0002-2553-3327",
-        "affiliation": "BCBL - Basque Center on Cognition, Brain and Language",
-        "name": "Stefano Moia"
+        "affiliations": [
+          {
+            "id": "01a28zg77",
+            "name": "Basque Center on Cognition, Brain and Language"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Chavarria",
+          "given_name": "In\u00e9s",
+          "name": "Chavarria, In\u00e9s",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "id": "05a28rw58",
+            "name": "ETH Zurich"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Fournier",
+          "given_name": "Rapha\u00ebl",
+          "name": "Fournier, Rapha\u00ebl",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "id": "02j61yw88",
+            "name": "Aristotle University of Thessaloniki"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Kikas",
+          "given_name": "Georgios",
+          "name": "Kikas, Georgios",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "name": "Universit\u00e9 catholique de Louvain"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Lenc",
+          "given_name": "Tomas",
+          "identifiers": [
+            {
+              "identifier": "0000-0001-5796-1388",
+              "scheme": "orcid"
+            }
+          ],
+          "name": "Lenc, Tomas",
+          "type": "personal"
+        }
+      },
+      {
+        "person_or_org": {
+          "family_name": "Lim",
+          "given_name": "Ryan",
+          "name": "Lim, Ryan",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "name": "McGill University"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Markello",
+          "given_name": "Ross",
+          "identifiers": [
+            {
+              "identifier": "0000-0003-1057-1336",
+              "scheme": "orcid"
+            }
+          ],
+          "name": "Markello, Ross",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "id": "01pxwe438",
+            "name": "McGill University"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Miedema",
+          "given_name": "Mary",
+          "identifiers": [
+            {
+              "identifier": "0009-0008-3263-731X",
+              "scheme": "orcid"
+            }
+          ],
+          "name": "Miedema, Mary",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "id": "02jz4aj89",
+            "name": "Maastricht University"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Moia",
+          "given_name": "Stefano",
+          "identifiers": [
+            {
+              "identifier": "0000-0002-2553-3327",
+              "scheme": "orcid"
+            }
+          ],
+          "name": "Moia, Stefano",
+          "type": "personal"
+        }
+      },
+      {
+        "person_or_org": {
+          "family_name": "Patin",
+          "given_name": "Alice",
+          "name": "Patin, Alice",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "name": "Universit\u00e9 de Montr\u00e9al"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Picard",
+          "given_name": "Marie-Eve",
+          "identifiers": [
+            {
+              "identifier": "0009-0001-2412-7829",
+              "scheme": "orcid"
+            }
+          ],
+          "name": "Picard, Marie-Eve",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "name": "University of Pennsylvania"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Salo",
+          "given_name": "Taylor",
+          "identifiers": [
+            {
+              "identifier": "0000-0001-9813-3167",
+              "scheme": "orcid"
+            }
+          ],
+          "name": "Salo, Taylor",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "name": "Northwestern University"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Stickland",
+          "given_name": "Rachael",
+          "identifiers": [
+            {
+              "identifier": "0000-0003-3398-4272",
+              "scheme": "orcid"
+            }
+          ],
+          "name": "Stickland, Rachael",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "id": "00m6w7z96",
+            "name": "Northwestern University"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Zvolanek",
+          "given_name": "Kristina",
+          "identifiers": [
+            {
+              "identifier": "0000-0003-2239-7902",
+              "scheme": "orcid"
+            }
+          ],
+          "name": "Zvolanek, Kristina",
+          "type": "personal"
+        }
       }
     ]
 }

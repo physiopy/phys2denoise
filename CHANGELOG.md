@@ -1,3 +1,37 @@
+# 0.5.0 (Sun Aug 25 2024)
+
+:tada: This release contains work from new contributors! :tada:
+
+Thanks for all your work!
+
+:heart: George Kikas ([@maestroque](https://github.com/maestroque))
+
+:heart: Marie-Eve Picard ([@me-pic](https://github.com/me-pic))
+
+#### 💥 Breaking Change during development
+
+- Release Fix [#63](https://github.com/physiopy/phys2denoise/pull/63) ([@maestroque](https://github.com/maestroque))
+- Integrate physutils - Physio object usage [#54](https://github.com/physiopy/phys2denoise/pull/54) ([@maestroque](https://github.com/maestroque))
+
+#### 📝 Documentation
+
+- Fix readthedocs config [#61](https://github.com/physiopy/phys2denoise/pull/61) ([@me-pic](https://github.com/me-pic))
+- Generate docs [#56](https://github.com/physiopy/phys2denoise/pull/56) ([@maestroque](https://github.com/maestroque) [@me-pic](https://github.com/me-pic) [@pre-commit-ci[bot]](https://github.com/pre-commit-ci[bot]))
+
+#### 🏠 Internal
+
+- Update description in setup [#59](https://github.com/physiopy/phys2denoise/pull/59) ([@me-pic](https://github.com/me-pic))
+- Add auto-author and auto-label to github workflow [#52](https://github.com/physiopy/phys2denoise/pull/52) ([@RayStick](https://github.com/RayStick))
+
+#### Authors: 4
+
+- [@pre-commit-ci[bot]](https://github.com/pre-commit-ci[bot])
+- George Kikas ([@maestroque](https://github.com/maestroque))
+- Marie-Eve Picard ([@me-pic](https://github.com/me-pic))
+- Rachael Stickland ([@RayStick](https://github.com/RayStick))
+
+---
+
 # 0.4.0 (Mon Jul 15 2024)
 
 :tada: This release contains work from a new contributor! :tada:

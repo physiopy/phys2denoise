@@ -1,34 +1,35 @@
 """These functions compute RETROICOR regressors (Glover et al. 2000)."""
 
 import numpy as np
+from physutils import io, physio
 
 from .. import references
 from ..due import due
 from .cardiac import cardiac_phase
 from .chest_belt import respiratory_phase
+from .utils import return_physio_or_metric
 
 
 @due.dcite(references.GLOVER_2000)
+@return_physio_or_metric()
+@physio.make_operation()
 def retroicor(
-    physio,
-    sample_rate,
+    data,
     t_r,
     n_scans,
     slice_timings,
     n_harmonics,
-    card=False,
-    resp=False,
+    physio_type=None,
+    fs=None,
+    cardiac_peaks=None,
+    **kwargs,
 ):
     """Compute RETROICOR regressors.
 
     Parameters
     ----------
-    physio : array_like
-        1D array, whether cardiac or respiratory signal.
-        If cardiac, the array is a set of peaks in seconds.
-        If respiratory, the array is the actual respiratory signal.
-    sample_rate : float
-        Physio sample rate, in Hertz.
+    data : physutils.Physio, np.ndarray, or array-like object
+        Object containing the timeseries of the recorded respiratory or cardiac signal
     t_r : float
         Imaging sample rate, in seconds.
     n_scans : int
@@ -59,6 +60,44 @@ def retroicor(
        correction of physiological motion effects in fMRI: RETROICOR“, Magn. Reson. Med.,
        issue 1, vol. 44, pp. 162-167, 2000.
     """
+    if isinstance(data, physio.Physio):
+        # Initialize physio object
+        data = physio.check_physio(data, ensure_fs=True, copy=True)
+        if data.physio_type is None and physio_type is not None:
+            data._physio_type = physio_type
+        elif data.physio_type is None and physio_type is None:
+            raise ValueError(
+                """
+                Since the provided Physio object does not specify a `physio_type`,
+                this function's `physio_type` parameter must be specified as a
+                value from {'cardiac', 'respiratory'}
+                """
+            )
+
+    elif fs is not None and physio_type is not None:
+        data = io.load_physio(data, fs=fs)
+        data._physio_type = physio_type
+        if data.physio_type == "cardiac":
+            data._metadata["peaks"] = cardiac_peaks
+    else:
+        raise ValueError(
+            """
+            To use this function you should either provide a Physio object
+            with existing peaks metadata if it describes a cardiac signal
+            (e.g. using the peakdet module), or
+            by providing the physiological data timeseries, the sampling frequency,
+            the physio_type and the peak indices separately.
+            """
+        )
+    if not data.peaks and data.physio_type == "cardiac":
+        raise ValueError(
+            """
+            Peaks must be a non-empty list for cardiac data.
+            Make sure to run peak detection on your cardiac data first,
+            using the peakdet module, or other software of your choice.
+            """
+        )
+
     n_slices = np.shape(slice_timings)  # number of slices
 
     # initialize output variables
@@ -73,18 +112,17 @@ def retroicor(
 
         # Compute physiological phases using the timings of physio events (e.g. peaks)
         # slice sampling times
-        if card:
+        if data.physio_type == "cardiac":
             phase[:, i_slice] = cardiac_phase(
-                physio,
+                data,
                 crslice_timings,
                 n_scans,
                 t_r,
             )
 
-        if resp:
+        if data.physio_type == "respiratory":
             phase[:, i_slice] = respiratory_phase(
-                physio,
-                sample_rate,
+                data,
                 n_scans,
                 slice_timings,
                 t_r,
@@ -99,4 +137,9 @@ def retroicor(
                 (j_harm + 1) * phase[i_slice]
             )
 
-    return retroicor_regressors, phase
+    data._computed_metrics["retroicor_regressors"] = dict(
+        metrics=retroicor_regressors, phase=phase
+    )
+    retroicor_regressors = dict(metrics=retroicor_regressors, phase=phase)
+
+    return data, retroicor_regressors
