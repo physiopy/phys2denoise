@@ -1,4 +1,5 @@
 """Tests for phys2denoise.metrics.chest_belt."""
+
 import numpy as np
 from pytest import mark
 
