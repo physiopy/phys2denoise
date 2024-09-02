@@ -3,7 +3,6 @@
 import logging
 import os
 
-import nest_asyncio
 import numpy as np
 from loguru import logger
 from physutils import physio
@@ -13,8 +12,6 @@ from pydra import Submitter, Workflow
 import phys2denoise.tasks as tasks
 
 from .utils import create_fake_phys
-
-nest_asyncio.apply()
 
 LGR = logging.getLogger(__name__)
 LGR.setLevel(logging.DEBUG)
