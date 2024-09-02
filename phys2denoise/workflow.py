@@ -24,14 +24,21 @@ from pydra import Submitter, Workflow
 
 import phys2denoise.tasks as tasks
 from phys2denoise.cli.run import _get_parser
-from phys2denoise.metrics.cardiac import crf
+from phys2denoise.metrics.cardiac import (
+    cardiac_phase,
+    heart_beat_interval,
+    heart_rate,
+    heart_rate_variability,
+)
 from phys2denoise.metrics.chest_belt import (
+    env,
     respiratory_pattern_variability,
+    respiratory_phase,
     respiratory_variance,
     respiratory_variance_time,
-    rrf,
 )
 from phys2denoise.metrics.multimodal import retroicor
+from phys2denoise.metrics.responses import crf, icrf, rrf
 
 from . import __version__
 from .due import Doi, due
@@ -174,13 +181,80 @@ def run(workflow: Workflow, plugin="cf", **plugin_args):
     return workflow.result()
 
 
-# @due.dcite(
-#     Doi(""),
-#     path="phys2denoise",
-#     description="Creation of regressors for physiological denoising",
-#     version=__version__,
-#     cite_module=True,
-# )
+@logger.catch()
+@due.dcite(
+    Doi(""),
+    path="phys2denoise",
+    description="Creation of regressors for physiological denoising",
+    version=__version__,
+    cite_module=True,
+)
+def phys2denoise():
+    """
+    Main function to run the parser.
+
+    Returns
+    -------
+    args : argparse dict
+        Dictionary with all arguments parsed by the parser.
+    """
+    parser = _get_parser()
+    args = parser.parse_args()
+    LGR = logging.getLogger(__name__)
+    LGR.setLevel(logging.DEBUG)
+
+    logger.add(sys.stderr, level="DEBUG")
+
+    logger.info(f"Running phys2denoise version: {__version__}")
+
+    LGR.debug(f"Arguments Provided: {args}")
+
+    if args.metrics_to_export is None or args.metrics_to_export == "all":
+        args.metrics_to_export = "all"
+
+    bids_parameters = {
+        "subject": args.subject,
+        "session": args.session,
+        "task": args.task,
+        "run": args.run,
+        "recording": args.recording,
+    }
+
+    # Conversions
+    args.slice_timings = (
+        np.array(args.slice_timings) if args.slice_timings is not None else None
+    )
+    args.lags = np.array(args.lags) if args.lags is not None else None
+
+    metric_args = dict()
+    for metric in args.metrics:
+        metric_args[metric] = tasks.select_input_args(globals()[metric], vars(args))
+
+    logger.debug(f"Metrics: {args.metrics}")
+
+    wf = build(
+        input_file=args.filename,
+        export_directory=args.outdir,
+        metrics=args.metrics,
+        metric_args=metric_args,
+        metrics_to_export=args.metrics_to_export,
+        mode=args.mode,
+        fs=args.sample_rate,
+        bids_parameters=bids_parameters,
+        bids_channel=args.bids_channel,
+        tr=args.t_r,
+        debug=args.debug,
+        quiet=args.quiet,
+    )
+
+    with Submitter(plugin="cf") as sub:
+        sub(wf)
+
+    wf()
+
+    return wf.result().output.result
+
+
 # def phys2denoise(
 #     filename,
 #     outdir=".",
@@ -299,16 +373,16 @@ def run(workflow: Workflow, plugin="cf", **plugin_args):
 #     # #!# Add sidecar export
 
 
-# def _main(argv=None):
-#     options = _get_parser().parse_args(argv)
+def _main(argv=None):
+    options = _get_parser().parse_args(argv)
 
-#     save_bash_call(options.outdir)
+    save_bash_call(options.outdir)
 
-#     phys2denoise(**vars(options))
+    phys2denoise()
 
 
-# if __name__ == "__main__":
-#     _main(sys.argv[1:])
+if __name__ == "__main__":
+    _main(sys.argv[1:])
 
 """
 Copyright 2019, The phys2denoise community.

@@ -416,77 +416,9 @@ def _get_parser():
     return parser
 
 
-@logger.catch()
-def main():
-    """
-    Main function to run the parser.
-
-    Returns
-    -------
-    args : argparse dict
-        Dictionary with all arguments parsed by the parser.
-    """
-    parser = _get_parser()
-    args = parser.parse_args()
-    LGR = logging.getLogger(__name__)
-    LGR.setLevel(logging.DEBUG)
-
-    logger.add(sys.stderr, level="DEBUG")
-
-    logger.info(f"Running phys2denoise version: {__version__}")
-
-    LGR.debug(f"Arguments Provided: {args}")
-
-    if args.metrics_to_export is None or args.metrics_to_export == "all":
-        args.metrics_to_export = "all"
-
-    bids_parameters = {
-        "subject": args.subject,
-        "session": args.session,
-        "task": args.task,
-        "run": args.run,
-        "recording": args.recording,
-    }
-
-    # Conversions
-    args.slice_timings = (
-        np.array(args.slice_timings) if args.slice_timings is not None else None
-    )
-    args.lags = np.array(args.lags) if args.lags is not None else None
-
-    metric_args = dict()
-    for metric in args.metrics:
-        metric_args[metric] = tasks.select_input_args(globals()[metric], vars(args))
-
-    logger.debug(f"Metrics: {args.metrics}")
-
-    wf = workflow.build(
-        input_file=args.filename,
-        export_directory=args.outdir,
-        metrics=args.metrics,
-        metric_args=metric_args,
-        metrics_to_export=args.metrics_to_export,
-        mode=args.mode,
-        fs=args.sample_rate,
-        bids_parameters=bids_parameters,
-        bids_channel=args.bids_channel,
-        tr=args.t_r,
-        debug=args.debug,
-        quiet=args.quiet,
-    )
-
-    with pydra.Submitter(plugin="cf") as sub:
-        sub(wf)
-
-    wf()
-
-    return wf.result().output.result
-
-
 if __name__ == "__main__":
-    main()
-    # raise RuntimeError(
-    #     "phys2denoise/cli/run.py should not be run directly;\n"
-    #     "Please `pip install` phys2denoise and use the "
-    #     "`phys2denoise` command"
-    # )
+    raise RuntimeError(
+        "phys2denoise/cli/run.py should not be run directly;\n"
+        "Please `pip install` phys2denoise and use the "
+        "`phys2denoise` command"
+    )
