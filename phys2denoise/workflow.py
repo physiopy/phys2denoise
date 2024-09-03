@@ -77,7 +77,7 @@ def build(
     metrics,
     metric_args,
     metrics_to_export,
-    mode="physio",
+    mode="auto",
     fs=None,
     bids_parameters=dict(),
     bids_channel=None,

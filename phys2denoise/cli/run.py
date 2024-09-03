@@ -69,7 +69,8 @@ def _get_parser():
         dest="mode",
         type=str,
         help="Format of the input physiological data. Options are: "
-        "physio or bids. Default is physio.",
+        "auto, physio or bids. Default is auto, which determines the input file mode automatically.",
+        default="auto",
     )
 
     # Important optional arguments
