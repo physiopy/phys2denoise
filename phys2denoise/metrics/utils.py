@@ -3,6 +3,7 @@
 import functools
 import inspect
 import logging
+import os
 
 import numpy as np
 from loguru import logger
@@ -294,6 +295,10 @@ def export_metric(
     has_lags : bool, optional.
         If True, `metric` contains lagged versions of itself - default is False
     """
+    output_dir = os.path.dirname(fileprefix)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
+
     # Start resampling
     len_tp = metric.shape[0]
     len_newtp = int(np.around(metric.shape[0] * (1 / (sample_rate * tr))))

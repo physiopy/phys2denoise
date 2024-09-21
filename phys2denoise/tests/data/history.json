@@ -1,0 +1,12 @@
+[
+    [
+        "physutils.tests.utils.filter_physio",
+        {
+            "cutoffs": [
+                5.0,
+                15.0
+            ],
+            "method": "bandpass"
+        }
+    ]
+]
