@@ -136,7 +136,9 @@ def export_metrics(
     elif isinstance(metrics, list):
         for metric in metrics:
             if metric not in phys.computed_metrics.keys():
-                LGR.warning(f"Metric {metric} not computed. Skipping")
+                LGR.warning(
+                    f"Metric {metric} is not computed and thus cannot be exported. You should first compute the metric given the input Physio object (refer to compute_metrics). Skipping"
+                )
                 continue
             if metric == "respiratory_pattern_variability":
                 LGR.warning(
