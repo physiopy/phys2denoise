@@ -18,16 +18,27 @@ from inspect import _empty, signature
 
 import numpy as np
 import pandas as pd
+from loguru import logger
+from physutils.tasks import transform_to_physio
+from pydra import Submitter, Workflow
 
+import phys2denoise.tasks as tasks
 from phys2denoise.cli.run import _get_parser
-from phys2denoise.metrics.cardiac import crf
+from phys2denoise.metrics.cardiac import (
+    cardiac_phase,
+    heart_beat_interval,
+    heart_rate,
+    heart_rate_variability,
+)
 from phys2denoise.metrics.chest_belt import (
+    env,
     respiratory_pattern_variability,
+    respiratory_phase,
     respiratory_variance,
     respiratory_variance_time,
-    rrf,
 )
-from phys2denoise.metrics.retroicor import retroicor
+from phys2denoise.metrics.multimodal import retroicor
+from phys2denoise.metrics.responses import crf, icrf, rrf
 
 from . import __version__
 from .due import Doi, due
@@ -59,52 +70,118 @@ def save_bash_call(outdir):
     f.close()
 
 
-def select_input_args(metric, metric_args):
-    """
-    Retrieve required args for metric from a dictionary of possible arguments.
+def build(
+    *,
+    input_file,
+    export_directory,
+    metrics,
+    metric_args,
+    metrics_to_export,
+    mode="auto",
+    fs=None,
+    bids_parameters=dict(),
+    bids_channel=None,
+    tr=None,
+    debug=False,
+    quiet=False,
+    **kwargs,
+) -> Workflow:
+    # TODO: Use only loguru as the main logger, once the pydra/loguru issue is fixed
+    logger.remove(0)
+    if quiet:
+        logger.add(
+            sys.stderr,
+            level="WARNING",
+            colorize=True,
+            backtrace=False,
+            diagnose=False,
+        )
+        LGR.setLevel(logging.WARNING)
+    elif debug:
+        logger.add(
+            sys.stderr,
+            level="DEBUG",
+            colorize=True,
+            backtrace=True,
+            diagnose=True,
+        )
+        LGR.setLevel(logging.DEBUG)
+    else:
+        logger.add(
+            sys.stderr,
+            level="INFO",
+            colorize=True,
+            backtrace=True,
+            diagnose=False,
+        )
+        LGR.setLevel(logging.INFO)
 
-    This function checks what parameters are accepted by a metric.
-    Then, for each parameter, check if the user provided it or not.
-    If they did not, but the parameter is required, throw an error -
-    unless it's "physio", reserved name for the timeseries input to a metric.
-    Otherwise, use the default.
+    physio_file = os.path.abspath(input_file)
+    export_directory = os.path.abspath(export_directory)
 
-    Parameters
-    ----------
-    metric : function
-        Metric function to retrieve arguments for
-    metric_args : dict
-        Dictionary containing all arguments for all functions requested by the
-        user
+    wf = Workflow(
+        name="metrics_wf",
+        input_spec=[
+            "phys",
+            "fs",
+            "mode",
+            "metrics",
+            "metric_args",
+            "metrics_to_export",
+            "bids_parameters",
+            "bids_channel",
+            "tr",
+        ],
+        phys=physio_file,
+        fs=fs,
+        mode=mode,
+        metrics=metrics,
+        metric_args=metric_args,
+        bids_parameters=bids_parameters,
+        bids_channel=bids_channel,
+        metrics_to_export=metrics_to_export,
+        tr=tr,
+    )
+    wf.add(
+        transform_to_physio(
+            name="transform_to_physio",
+            input_file=wf.lzin.phys,
+            fs=wf.lzin.fs,
+            mode=wf.lzin.mode,
+            bids_parameters=wf.lzin.bids_parameters,
+            bids_channel=wf.lzin.bids_channel,
+        )
+    )
+    wf.add(
+        tasks.compute_metrics(
+            name="compute_metrics",
+            phys=wf.transform_to_physio.lzout.out,
+            metrics=wf.lzin.metrics,
+            args=wf.lzin.metric_args,
+        )
+    )
+    wf.add(
+        tasks.export_metrics(
+            name="export_metrics",
+            phys=wf.compute_metrics.lzout.out,
+            metrics=wf.lzin.metrics_to_export,
+            outdir=export_directory,
+            tr=wf.lzin.tr,
+        )
+    )
+    wf.set_output([("result", wf.compute_metrics.lzout.out)])
 
-    Returns
-    -------
-    args : dict
-        Arguments to provide as input to metric
-
-    Raises
-    ------
-    ValueError
-        If a required argument is missing
-
-    """
-    args = {}
-
-    # Check the parameters required by the metric and given by the user (see docstring)
-    for param in signature(metric).parameters.values():
-        if param.name not in metric_args:
-            if param.default == _empty and param.name != "physio":
-                raise ValueError(
-                    f"Missing parameter {param} required " f"to run {metric}"
-                )
-            else:
-                args[param.name] = param.default
-        else:
-            args[param.name] = metric_args[param.name]
-
-    return args
+    return wf
 
 
+def run(workflow: Workflow, plugin="cf", **plugin_args):
+    with Submitter(plugin=plugin, **plugin_args) as sub:
+        sub(workflow)
+
+    return workflow.result()
+
+
+@logger.catch()
 @due.dcite(
     Doi(""),
     path="phys2denoise",
@@ -112,122 +189,96 @@ def select_input_args(metric, metric_args):
     version=__version__,
     cite_module=True,
 )
-def phys2denoise(
-    filename,
-    outdir=".",
-    metrics=[
-        crf,
-        respiratory_pattern_variability,
-        respiratory_variance,
-        respiratory_variance_time,
-        rrf,
-        "retroicor_card",
-        "retroicor_resp",
-    ],
-    debug=False,
-    quiet=False,
-    **kwargs,
-):
+def phys2denoise():
     """
-    Run main workflow of phys2denoise.
+    Main function to run the parser.
 
-    Runs the parser, does some checks on input, then computes the required metrics.
-
-    Notes
-    -----
-    Any metric argument should go into kwargs!
-    The code was greatly copied from phys2bids (copyright the physiopy community)
-
+    Returns
+    -------
+    args : argparse dict
+        Dictionary with all arguments parsed by the parser.
     """
-    # Check options to make them internally coherent pt. I
-    # #!# This can probably be done while parsing?
-    outdir = os.path.abspath(outdir)
-    log_path = os.path.join(outdir, "code", "logs")
-    os.makedirs(log_path)
+    parser = _get_parser()
+    args = parser.parse_args()
 
-    # Create logfile name
-    basename = "phys2denoise_"
-    extension = "tsv"
-    isotime = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
-    logname = os.path.join(log_path, (basename + isotime + "." + extension))
+    LGR = logging.getLogger(__name__)
 
-    # Set logging format
-    log_formatter = logging.Formatter(
-        "%(asctime)s\t%(name)-12s\t%(levelname)-8s\t%(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%S",
+    if args.debug:
+        logger.add(
+            sys.stderr,
+            level="DEBUG",
+            colorize=True,
+            backtrace=True,
+            diagnose=True,
+        )
+        LGR.setLevel(logging.DEBUG)
+    elif args.quiet:
+        logger.add(
+            sys.stderr,
+            level="WARNING",
+            colorize=True,
+            backtrace=False,
+            diagnose=False,
+        )
+        LGR.setLevel(logging.WARNING)
+    else:
+        logger.add(
+            sys.stderr,
+            level="INFO",
+            colorize=True,
+            backtrace=True,
+            diagnose=False,
+        )
+        LGR.setLevel(logging.INFO)
+
+    logger.info(f"Running phys2denoise version: {__version__}")
+
+    LGR.debug(f"Arguments Provided: {args}")
+
+    if args.metrics_to_export is None or args.metrics_to_export == "all":
+        args.metrics_to_export = "all"
+
+    bids_parameters = {
+        "subject": args.subject,
+        "session": args.session,
+        "task": args.task,
+        "run": args.run,
+        "recording": args.recording,
+    }
+
+    # Conversions
+    args.slice_timings = (
+        np.array(args.slice_timings) if args.slice_timings is not None else None
+    )
+    args.lags = np.array(args.lags) if args.lags is not None else None
+
+    metric_args = dict()
+    for metric in args.metrics:
+        metric_args[metric] = tasks.select_input_args(globals()[metric], vars(args))
+
+    logger.debug(f"Metrics: {args.metrics}")
+
+    wf = build(
+        input_file=args.filename,
+        export_directory=args.outdir,
+        metrics=args.metrics,
+        metric_args=metric_args,
+        metrics_to_export=args.metrics_to_export,
+        mode=args.mode,
+        fs=args.sample_rate,
+        bids_parameters=bids_parameters,
+        bids_channel=args.bids_channel,
+        tr=args.t_r,
+        debug=args.debug,
+        quiet=args.quiet,
     )
 
-    # Set up logging file and open it for writing
-    log_handler = logging.FileHandler(logname)
-    log_handler.setFormatter(log_formatter)
-    sh = logging.StreamHandler()
+    with Submitter(plugin="cf") as sub:
+        sub(wf)
 
-    if quiet:
-        logging.basicConfig(
-            level=logging.WARNING,
-            handlers=[log_handler, sh],
-            format="%(levelname)-10s %(message)s",
-        )
-    elif debug:
-        logging.basicConfig(
-            level=logging.DEBUG,
-            handlers=[log_handler, sh],
-            format="%(levelname)-10s %(message)s",
-        )
-    else:
-        logging.basicConfig(
-            level=logging.INFO,
-            handlers=[log_handler, sh],
-            format="%(levelname)-10s %(message)s",
-        )
+    wf()
 
-    version_number = __version__
-    LGR.info(f"Currently running phys2denoise version {version_number}")
-    LGR.info(f"Input file is {filename}")
-
-    # Check options to make them internally coherent pt. II
-    # #!# This can probably be done while parsing?
-    # filename, ftype = utils.check_input_type(filename)
-
-    if not os.path.isfile(filename) and filename is not None:
-        raise FileNotFoundError(f"The file {filename} does not exist!")
-
-    # Read input file
-    physio = np.genfromtxt(filename)
-
-    # Prepare pandas dataset
-    regr = pd.DataFrame()
-
-    # Goes through the list of metrics and calls them
-    for metric in metrics:
-        if metric == "retroicor_card":
-            args = select_input_args(retroicor, kwargs)
-            args["card"] = True
-            retroicor_regrs = retroicor(physio, **args)
-            for vslice in range(len(args["slice_timings"])):
-                for harm in range(args["n_harm"]):
-                    key = f"rcor-card_s-{vslice}_hrm-{harm}"
-                    regr[f"{key}_cos"] = retroicor_regrs[vslice][:, harm * 2]
-                    regr[f"{key}_sin"] = retroicor_regrs[vslice][:, harm * 2 + 1]
-        elif metric == "retroicor_resp":
-            args = select_input_args(retroicor, kwargs)
-            args["resp"] = True
-            retroicor_regrs = retroicor(physio, **args)
-            for vslice in range(len(args["slice_timings"])):
-                for harm in range(args["n_harm"]):
-                    key = f"rcor-resp_s-{vslice}_hrm-{harm}"
-                    regr[f"{key}_cos"] = retroicor_regrs[vslice][:, harm * 2]
-                    regr[f"{key}_sin"] = retroicor_regrs[vslice][:, harm * 2 + 1]
-        else:
-            args = select_input_args(metric, kwargs)
-            regr[metric.__name__] = metric(physio, **args)
-
-    # #!# Add regressors visualisation
-
-    # Export regressors and sidecar
-    out_filename = os.join(outdir, "derivatives", filename)
-    regr.to_csv(out_filename, sep="\t", index=False, float_format="%.6e")
-    # #!# Add sidecar export
+    return wf.result().output.result
 
 
 def _main(argv=None):
@@ -235,7 +286,7 @@ def _main(argv=None):
 
     save_bash_call(options.outdir)
 
-    phys2denoise(**vars(options))
+    phys2denoise()
 
 
 if __name__ == "__main__":

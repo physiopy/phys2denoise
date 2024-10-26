@@ -3,15 +3,28 @@
 
 
 import argparse
+import logging
+import sys
 
-from phys2denoise import __version__
-from phys2denoise.metrics.cardiac import heart_beat_interval, heart_rate_variability
+import numpy as np
+import pydra
+from loguru import logger
+
+from phys2denoise import __version__, tasks, workflow
+from phys2denoise.metrics.cardiac import (
+    cardiac_phase,
+    heart_beat_interval,
+    heart_rate,
+    heart_rate_variability,
+)
 from phys2denoise.metrics.chest_belt import (
     env,
     respiratory_pattern_variability,
+    respiratory_phase,
     respiratory_variance,
     respiratory_variance_time,
 )
+from phys2denoise.metrics.multimodal import retroicor
 from phys2denoise.metrics.responses import crf, icrf, rrf
 
 
@@ -50,11 +63,20 @@ def _get_parser():
         "physiological data, with or without extension.",
         required=True,
     )
+    required.add_argument(
+        "-md",
+        "--mode",
+        dest="mode",
+        type=str,
+        help="Format of the input physiological data. Options are: "
+        "auto, physio or bids. Default is auto, which determines the input file mode automatically.",
+        default="auto",
+    )
 
     # Important optional arguments
     optional = parser.add_argument_group("Optional arguments")
     optional.add_argument(
-        "-outdir",
+        "-out",
         "--output-dir",
         dest="outdir",
         type=str,
@@ -69,7 +91,7 @@ def _get_parser():
         "--respiratory-pattern-variability",
         dest="metrics",
         action="append_const",
-        const=respiratory_pattern_variability,
+        const="respiratory_pattern_variability",
         help="Respiratory pattern variability. Requires the following "
         "input: window.",
         default=[],
@@ -79,7 +101,7 @@ def _get_parser():
         "--envelope",
         dest="metrics",
         action="append_const",
-        const=env,
+        const="env",
         help="Respiratory pattern variability calculated across a sliding "
         "window. Requires the following inputs: sample-rate, window and lags.",
         default=[],
@@ -89,7 +111,7 @@ def _get_parser():
         "--respiratory-variance",
         dest="metrics",
         action="append_const",
-        const=respiratory_variance,
+        const="respiratory_variance",
         help="Respiratory variance. Requires the following inputs: "
         "sample-rate, window and lags. If the input file "
         "not a .phys file, it also requires peaks and troughs",
@@ -100,9 +122,19 @@ def _get_parser():
         "--respiratory-variance-per-time",
         dest="metrics",
         action="append_const",
-        const=respiratory_variance_time,
+        const="respiratory_variance_time",
         help="Respiratory volume-per-time. Requires the following inputs: "
         "sample-rate, window, lags, peaks and troughs.",
+        default=[],
+    )
+    resp_met.add_argument(
+        "-rp",
+        "--respiratory-phase",
+        dest="metrics",
+        action="append_const",
+        const="respiratory_phase",
+        help="Respiratory phase. Requires the following inputs: "
+        "slice-timings, n_scans and t_r.",
         default=[],
     )
 
@@ -112,7 +144,7 @@ def _get_parser():
         "--heart-rate-variability",
         dest="metrics",
         action="append_const",
-        const=heart_rate_variability,
+        const="heart_rate_variability",
         help="Computes heart rate variability. Requires the following "
         "inputs: peaks, samplerate, window and central measure operator.",
         default=[],
@@ -122,9 +154,29 @@ def _get_parser():
         "--heart-beat-interval",
         dest="metrics",
         action="append_const",
-        const=heart_beat_interval,
+        const="heart_beat_interval",
         help="Computes heart beat interval. Requires the following "
         "inputs: peaks, samplerate, window and central measure operator.",
+        default=[],
+    )
+    card_met.add_argument(
+        "-hr",
+        "--heart-rate",
+        dest="metrics",
+        action="append_const",
+        const="heart_rate",
+        help="Computes heart rate. Requires the following "
+        "inputs: peaks, samplerate, window and central measure operator.",
+        default=[],
+    )
+    card_met.add_argument(
+        "-cp",
+        "--cardiac-phase",
+        dest="metrics",
+        action="append_const",
+        const="cardiac_phase",
+        help="Computes cardiac phase. Requires the following "
+        "inputs: slice-timings, n_scans and t_r.",
         default=[],
     )
 
@@ -148,6 +200,17 @@ def _get_parser():
         help="RETROICOR regressors for respiratory signal. Requires the following  "
         "inputs: tr, nscans and n_harm.",
         default=[],
+    )
+
+    export_met = parser.add_argument_group("Export metrics")
+    export_met.add_argument(
+        "-e",
+        "--exported-metrics",
+        dest="metrics_to_export",
+        nargs="+",
+        type=str,
+        help="Full path and filename of the list with the metrics to export.",
+        default=None,
     )
 
     rfs = parser.add_argument_group("Response Functions")
@@ -219,25 +282,9 @@ def _get_parser():
         default="mean",
     )
     metric_arg.add_argument(
-        "-tl",
-        "--time-length",
-        dest="time_length",
-        type=int,
-        help="RRF or CRF Kernel length in seconds.",
-        default=None,
-    )
-    metric_arg.add_argument(
-        "-onset",
-        "--onset",
-        dest="onset",
-        type=float,
-        help="Onset of the response in seconds. Default is 0.",
-        default=0,
-    )
-    metric_arg.add_argument(
         "-tr",
         "--tr",
-        dest="tr",
+        dest="t_r",
         type=float,
         help="TR of sequence in seconds.",
         default=None,
@@ -262,7 +309,7 @@ def _get_parser():
     metric_arg.add_argument(
         "-nscans",
         "--number-scans",
-        dest="nscans",
+        dest="n_scans",
         type=int,
         help="Number of timepoints in the imaging data. "
         "Also called sub-bricks, TRs, scans, volumes."
@@ -277,18 +324,82 @@ def _get_parser():
         help="Number of harmonics.",
         default=None,
     )
+    metric_arg.add_argument(
+        "-sl",
+        "--slice-timings",
+        dest="slice_timings",
+        nargs="*",
+        type=float,
+        help="Slice timings in seconds.",
+        default=None,
+    )
 
-    # Other optional arguments
-    otheropt = parser.add_argument_group("Other optional arguments")
-    otheropt.add_argument(
+    # BIDS arguments
+    bids = parser.add_argument_group("BIDS Arguments")
+    bids.add_argument(
+        "-sub",
+        "--subject",
+        dest="subject",
+        type=str,
+        help="Subject ID in BIDS format.",
+        default=None,
+    )
+    bids.add_argument(
+        "-ses",
+        "--session",
+        dest="session",
+        type=str,
+        help="Session ID in BIDS format.",
+        default=None,
+    )
+    bids.add_argument(
+        "-task",
+        "--task",
+        dest="task",
+        type=str,
+        help="Task ID in BIDS format.",
+        default=None,
+    )
+    bids.add_argument(
+        "-run",
+        "--run",
+        dest="run",
+        type=str,
+        help="Run ID in BIDS format.",
+        default=None,
+    )
+    bids.add_argument(
+        "-rec",
+        "--recording",
+        dest="recording",
+        type=str,
+        help="Recording ID in BIDS format.",
+        default=None,
+    )
+    bids.add_argument(
+        "-ch",
+        "--channel",
+        dest="bids_channel",
+        type=str,
+        help="Physiological signal channel ID in BIDS format.",
+        default=None,
+    )
+
+    # Logging style
+    log_style_group = parser.add_argument_group(
+        "Logging style arguments (optional and mutually exclusive)",
+        "Options to specify the logging style",
+    )
+    log_style_group_exclusive = log_style_group.add_mutually_exclusive_group()
+    log_style_group_exclusive.add_argument(
         "-debug",
         "--debug",
         dest="debug",
         action="store_true",
-        help="Only print debugging info to log file. Default is False.",
+        help="Print additional debugging info and error diagnostics to log file. Default is False.",
         default=False,
     )
-    otheropt.add_argument(
+    log_style_group_exclusive.add_argument(
         "-quiet",
         "--quiet",
         dest="quiet",
@@ -299,7 +410,7 @@ def _get_parser():
     optional.add_argument(
         "-h", "--help", action="help", help="Show this help message and exit"
     )
-    otheropt.add_argument(
+    optional.add_argument(
         "-v", "--version", action="version", version=("%(prog)s " + __version__)
     )
 
