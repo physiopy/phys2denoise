@@ -6,7 +6,7 @@ import os
 import numpy as np
 from loguru import logger
 from physutils import physio
-from physutils.tasks import transform_to_physio
+from physutils.tasks import generate_physio
 from pydra import Submitter, Workflow
 
 import phys2denoise.tasks as tasks
@@ -31,8 +31,8 @@ def test_integration(fake_phys):
         phys=physio_file,
     )
     wf.add(
-        transform_to_physio(
-            name="transform_to_physio",
+        generate_physio(
+            name="generate_physio",
             input_file=wf.lzin.phys,
             fs=wf.lzin.fs,
             mode="physio",
@@ -41,7 +41,7 @@ def test_integration(fake_phys):
     wf.add(
         tasks.compute_metrics(
             name="compute_metrics",
-            phys=wf.transform_to_physio.lzout.out,
+            phys=wf.generate_physio.lzout.out,
             metrics=[
                 "respiratory_variance",
                 "respiratory_variance_time",
