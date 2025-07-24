@@ -89,7 +89,10 @@ def retroicor(
             the physio_type and the peak indices separately.
             """
         )
-    if not data.peaks and data.physio_type == "cardiac":
+    if (
+        not (hasattr(data, "peaks") and np.any(data.peaks))
+        and data.physio_type == "cardiac"
+    ):
         raise ValueError(
             """
             Peaks must be a non-empty list for cardiac data.
@@ -98,7 +101,14 @@ def retroicor(
             """
         )
 
-    n_slices = np.shape(slice_timings)  # number of slices
+    slice_timings = np.asarray(slice_timings)
+    if slice_timings.squeeze().ndim > 1:
+        raise ValueError(
+            "The provided slice timings are in a multidimensional array. Please "
+            "provide a single 1D array-like data."
+        )
+
+    n_slices = slice_timings.size
 
     # initialize output variables
     retroicor_regressors = []
@@ -124,7 +134,7 @@ def retroicor(
             phase[:, i_slice] = respiratory_phase(
                 data,
                 n_scans,
-                slice_timings,
+                crslice_timings,
                 t_r,
             )
 
