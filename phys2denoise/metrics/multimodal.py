@@ -1,4 +1,5 @@
 """These functions compute RETROICOR regressors (Glover et al. 2000)."""
+
 from copy import deepcopy as dc
 
 import numpy as np
