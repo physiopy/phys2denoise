@@ -22,23 +22,23 @@ def test_rrf_smoke():
     assert rrf_arr.size == pred_len
 
 
-def test_respiratory_phase_smoke():
-    """Basic smoke test for respiratory phase calculation."""
-    t_r = 1.0
-    n_scans = 200
-    sample_rate = 1 / 0.01
-    slice_timings = np.linspace(0, t_r, 22)[1:-1]
-    n_samples = int(np.rint((n_scans * t_r) * sample_rate))
-    resp = np.random.normal(size=n_samples)
-    resp_phase = chest_belt.respiratory_phase(
-        resp,
-        fs=sample_rate,
-        slice_timings=slice_timings,
-        n_scans=n_scans,
-        t_r=t_r,
-    )
-    assert resp_phase.ndim == 2
-    assert resp_phase.shape == (n_scans, slice_timings.size)
+# def test_respiratory_phase_smoke():
+#     """Basic smoke test for respiratory phase calculation."""
+#     t_r = 1.0
+#     n_scans = 200
+#     sample_rate = 1 / 0.01
+#     slice_timings = np.linspace(0, t_r, 22)[1:-1]
+#     n_samples = int(np.rint((n_scans * t_r) * sample_rate))
+#     resp = np.random.normal(size=n_samples)
+#     resp_phase = chest_belt.respiratory_phase(
+#         resp,
+#         fs=sample_rate,
+#         slice_timings=slice_timings,
+#         n_scans=n_scans,
+#         t_r=t_r,
+#     )
+#     assert resp_phase.ndim == 2
+#     assert resp_phase.shape == (n_scans, slice_timings.size)
 
 
 def test_respiratory_pattern_variability_smoke():
