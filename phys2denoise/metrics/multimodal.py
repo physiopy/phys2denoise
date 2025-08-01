@@ -194,21 +194,21 @@ def retroicor(
         # It's not computationally efficient to loop multiple times per if statement,
         # but organising regressors this way is better for users.
         if card_data is not None:
-            for m in n_harmonics:
+            for m in range(1, n_harmonics + 1):
                 retroicor_regressors[n] = retroicor_regressors[n] + [
                     np.cos(m * phases[n]["card"]),
                     np.sin(m * phases[n]["card"]),
                 ]
 
         if resp_data is not None:
-            for m in n_harmonics:
+            for m in range(1, n_harmonics + 1):
                 retroicor_regressors[n] = retroicor_regressors[n] + [
                     np.cos(m * phases[n]["resp"]),
                     np.sin(m * phases[n]["resp"]),
                 ]
 
             if compute_interaction and card_data is not None:
-                for m in n_harmonics:
+                for m in range(1, n_harmonics + 1):
                     retroicor_regressors[n] = retroicor_regressors[n] + [
                         np.cos(m * phases[n]["card"]) * np.cos(m * phases[n]["resp"]),
                         np.cos(m * phases[n]["card"]) * np.sin(m * phases[n]["resp"]),
