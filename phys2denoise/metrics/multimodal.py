@@ -185,7 +185,7 @@ def retroicor(
 
             if card_data is not None:
                 # Cut to same length. It'll be better later.
-                length = np.min(phases[n]["card"].size, phases[n]["resp"].size)
+                length = np.min((phases[n]["card"].size, phases[n]["resp"].size))
                 phases[n]["card"] = phases[n]["card"][:length]
                 phases[n]["resp"] = phases[n]["resp"][:length]
 
