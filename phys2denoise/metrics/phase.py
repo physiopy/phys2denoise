@@ -2,7 +2,7 @@
 
 import numpy as np
 from loguru import logger
-from scipy.interpolation import interp1d
+from scipy.interpolate import interp1d
 
 
 def cardiac(peaks, fs, offset=0):
