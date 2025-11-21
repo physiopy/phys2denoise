@@ -1,4 +1,5 @@
 """References to be imported and injected throughout the package."""
+
 from .due import Doi
 
 BIRN_2006 = Doi("10.1016/j.neuroimage.2006.02.048")
