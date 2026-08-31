@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser for phys2denoise."""
 
-
 import argparse
 
 from phys2denoise import __version__

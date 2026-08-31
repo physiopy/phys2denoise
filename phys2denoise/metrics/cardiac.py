@@ -89,22 +89,18 @@ def _cardiac_metrics(
         data = io.load_physio(data, fs=fs)
         data._metadata["peaks"] = peaks
     else:
-        raise ValueError(
-            """
+        raise ValueError("""
             To use this function you should either provide a Physio object
             with existing peaks metadata (e.g. using the peakdet module), or
             by providing the physiological data timeseries, the sampling frequency,
             and the peak indices separately.
-            """
-        )
+            """)
     if data.peaks.size == 0:
-        raise ValueError(
-            """
+        raise ValueError("""
             Peaks must be a non-empty list.
             Make sure to run peak detection on your physiological data first,
             using the peakdet module, or other software of your choice.
-            """
-        )
+            """)
 
     # Convert window to samples, but halves it.
     halfwindow_samples = int(round(window * data.fs / 2))
@@ -384,22 +380,18 @@ def cardiac_phase(data, slice_timings, n_scans, t_r, peaks=None, fs=None, **kwar
         data = io.load_physio(data, fs=fs)
         data._metadata["peaks"] = peaks
     else:
-        raise ValueError(
-            """
+        raise ValueError("""
             To use this function you should either provide a Physio object
             with existing peaks metadata (e.g. using the peakdet module), or
             by providing the physiological data timeseries, the sampling frequency,
             and the peak indices separately.
-            """
-        )
+            """)
     if data.peaks.size == 0:
-        raise ValueError(
-            """
+        raise ValueError("""
             Peaks must be a non-empty list.
             Make sure to run peak detection on your physiological data first,
             using the peakdet module, or other software of your choice.
-            """
-        )
+            """)
 
     assert slice_timings.ndim == 1, "Slice times must be a 1D array"
     n_slices = np.size(slice_timings)

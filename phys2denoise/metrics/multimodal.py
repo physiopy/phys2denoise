@@ -66,13 +66,11 @@ def retroicor(
         if data.physio_type is None and physio_type is not None:
             data._physio_type = physio_type
         elif data.physio_type is None and physio_type is None:
-            raise ValueError(
-                """
+            raise ValueError("""
                 Since the provided Physio object does not specify a `physio_type`,
                 this function's `physio_type` parameter must be specified as a
                 value from {'cardiac', 'respiratory'}
-                """
-            )
+                """)
 
     elif fs is not None and physio_type is not None:
         data = io.load_physio(data, fs=fs)
@@ -80,23 +78,19 @@ def retroicor(
         if data.physio_type == "cardiac":
             data._metadata["peaks"] = cardiac_peaks
     else:
-        raise ValueError(
-            """
+        raise ValueError("""
             To use this function you should either provide a Physio object
             with existing peaks metadata if it describes a cardiac signal
             (e.g. using the peakdet module), or
             by providing the physiological data timeseries, the sampling frequency,
             the physio_type and the peak indices separately.
-            """
-        )
+            """)
     if not data.peaks and data.physio_type == "cardiac":
-        raise ValueError(
-            """
+        raise ValueError("""
             Peaks must be a non-empty list for cardiac data.
             Make sure to run peak detection on your cardiac data first,
             using the peakdet module, or other software of your choice.
-            """
-        )
+            """)
 
     n_slices = np.shape(slice_timings)  # number of slices
 
