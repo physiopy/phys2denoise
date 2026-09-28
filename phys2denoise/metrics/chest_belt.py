@@ -56,22 +56,18 @@ def respiratory_variance_time(
         data._metadata["peaks"] = peaks
         data._metadata["troughs"] = troughs
     else:
-        raise ValueError(
-            """
+        raise ValueError("""
             To use this function you should either provide a Physio object
             with existing peaks and troughs metadata (e.g. using the peakdet module), or
             by providing the physiological data timeseries, the sampling frequency,
             and the peak and trough indices separately.
-            """
-        )
+            """)
     if data.peaks.size == 0 or data.troughs.size == 0:
-        raise ValueError(
-            """
+        raise ValueError("""
             Peaks and troughs must be non-empty lists.
             Make sure to run peak/trough detection on your physiological data first,
             using the peakdet module, or other software of your choice.
-            """
-        )
+            """)
 
     timestep = 1 / data.fs
     # respiration belt timing
@@ -219,14 +215,12 @@ def env(data, fs=None, window=10, **kwargs):
     elif fs is not None:
         data = io.load_physio(data, fs=fs)
     else:
-        raise ValueError(
-            """
+        raise ValueError("""
             To use this function you should either provide a Physio object
             with the sampling frequency encapsulated, or
             by providing the physiological data timeseries and the sampling
             frequency separately.
-            """
-        )
+            """)
 
     # Convert window to Hertz
     window = int(window * data.fs)
@@ -288,14 +282,12 @@ def respiratory_variance(data, fs=None, window=6, **kwargs):
     elif fs is not None:
         data = io.load_physio(data, fs=fs)
     else:
-        raise ValueError(
-            """
+        raise ValueError("""
             To use this function you should either provide a Physio object
             with the sampling frequency encapsulated, or
             by providing the physiological data timeseries and the sampling
             frequency separately.
-            """
-        )
+            """)
 
     # Convert window to Hertz
     halfwindow_samples = int(round(window * data.fs / 2))
@@ -338,14 +330,12 @@ def respiratory_phase(data, n_scans, slice_timings, t_r, fs=None, **kwargs):
     elif fs is not None:
         data = io.load_physio(data, fs=fs)
     else:
-        raise ValueError(
-            """
+        raise ValueError("""
             To use this function you should either provide a Physio object
             with the sampling frequency encapsulated, or
             by providing the physiological data timeseries and the sampling
             frequency separately.
-            """
-        )
+            """)
 
     assert slice_timings.ndim == 1, "Slice times must be a 1D array"
     n_slices = np.size(slice_timings)
